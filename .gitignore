@@ -1,0 +1,44 @@
+# Binaries for programs and plugins
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+#env files
+*.env
+
+# Test binary, built with `go test -c`
+*.test
+
+# Output of the go coverage tool, specifically when used with LiteIDE
+*.out
+
+# Generated files
+.generated
+
+# MacOS
+.DS_Store
+
+## JetBrains
+.idea
+
+## Vscode
+.vscode
+
+## Sqlite
+*.sqlite
+*.sqlite3
+
+## Yarn
+yarn-error*
+
+b0
+
+.turbo
+
+# Dependency directories (remove the comment below to include it)
+node_modules
+dist
+
+dump.rdb
