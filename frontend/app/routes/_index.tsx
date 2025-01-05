@@ -6,6 +6,7 @@ import {
 } from "@phosphor-icons/react";
 import type { MetaFunction } from "@remix-run/node";
 import AnimatedGradient from "~/components/animated-bg";
+import { AIModelPicker2 } from "~/components/builder/model-picker";
 import { Button } from "~/components/ui/button";
 import { Textarea } from "~/components/ui/textarea";
 
@@ -36,6 +37,7 @@ export default function Index() {
             ></Textarea>
             <div className="flex items-center px-3 pb-2">
               <div className="flex gap-2">
+                <AIModelPicker2 />
                 <button
                   type="button"
                   className="border border-input h-6 w-6 p-1 inline-flex items-center justify-center"
