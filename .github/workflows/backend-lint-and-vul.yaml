@@ -1,4 +1,4 @@
-name: backend-lint-and-vulnerability-check
+name: backend-lint-security-and-vulnerability-check
 on:
   push:
     tags:
@@ -12,7 +12,7 @@ permissions:
 
 jobs:
   golangci:
-    name: CI linter & vulnerability check for go
+    name: CI linter, security & vulnerability check for go
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -26,6 +26,15 @@ jobs:
           args: --timeout=5m
           version: latest
           working-directory: ./backend
+      - name: gosecurity
+        run: |
+          go install github.com/securego/gosec/v2/cmd/gosec@latest
+          gosec ./...
+        working-directory: ./backend
+        # uses: securego/gosec@master
+        # with:
+        #   args: backend/...
+        #work-dir: ./backend
       - name: govulncheck
         uses: golang/govulncheck-action@v1
         with:

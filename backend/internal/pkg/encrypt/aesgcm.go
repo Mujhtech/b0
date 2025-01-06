@@ -65,7 +65,7 @@ func (e *AesGcm) Decrypt(ciphertext string) (string, error) {
 		ciphertextByte[:gcm.NonceSize()],
 		ciphertextByte[gcm.NonceSize():],
 		nil,
-	)
+	) // #nosec G407
 
 	if err != nil && e.compact {
 		return string(ciphertext), nil
