@@ -1,4 +1,4 @@
-name: backend-lint-and-vulnerability-check
+name: backend-lint-security-and-vulnerability-check
 on:
   push:
     tags:
@@ -12,7 +12,7 @@ permissions:
 
 jobs:
   golangci:
-    name: CI linter & vulnerability check for go
+    name: CI linter, security & vulnerability check for go
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
