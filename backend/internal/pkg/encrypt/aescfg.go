@@ -37,7 +37,7 @@ func (e *AesCfb) Encrypt(plainText []byte) (string, error) {
 		return "", err
 	}
 
-	encrypter := cipher.NewCFBEncrypter(e.block, iv)
+	encrypter := cipher.NewCFBEncrypter(e.block, iv) // #nosec G407
 	encrypter.XORKeyStream(cipherText[aes.BlockSize:], []byte(plainText))
 
 	return base64.StdEncoding.EncodeToString(cipherText), nil
@@ -53,7 +53,7 @@ func (e *AesCfb) Decrypt(cipherText string) (string, error) {
 	iv := cipherTextBytes[:aes.BlockSize]
 	cipherTextBytes = cipherTextBytes[aes.BlockSize:]
 
-	decrypter := cipher.NewCFBDecrypter(e.block, iv)
+	decrypter := cipher.NewCFBDecrypter(e.block, iv) // #nosec G407
 	decrypter.XORKeyStream(cipherTextBytes, cipherTextBytes)
 
 	return string(cipherTextBytes), nil

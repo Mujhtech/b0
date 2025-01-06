@@ -10,7 +10,7 @@ import (
 )
 
 const (
-	tokenBaseTable    = "tokens"
+	tokenBaseTable    = "tokens" // #nosec G101
 	tokenSelectColumn = "id, value, is_app, type, expired_at, issued_at, metadata, created_at, updated_at, deleted_at"
 )
 
