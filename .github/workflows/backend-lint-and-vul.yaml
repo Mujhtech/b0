@@ -29,7 +29,8 @@ jobs:
       - name: Run GoSec
         uses: securego/gosec@master
         with:
-          work-dir: ./backend
+          args: ./...
+          #work-dir: ./backend
       - name: govulncheck
         uses: golang/govulncheck-action@v1
         with:
