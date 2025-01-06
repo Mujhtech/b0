@@ -28,7 +28,7 @@ jobs:
           working-directory: ./backend
       - name: gosecurity
         run: |
-          go get -u github.com/securego/gosec/v2/cmd/gosec@latest
+          go install github.com/securego/gosec/v2/cmd/gosec@latest
           gosec ./...
         working-directory: ./backend
         # uses: securego/gosec@master
