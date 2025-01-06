@@ -27,10 +27,14 @@ jobs:
           version: latest
           working-directory: ./backend
       - name: gosecurity
-        uses: securego/gosec@master
-        with:
-          args: ./...
-          #work-dir: ./backend
+        run: |
+          go get -u github.com/securego/gosec/v2/cmd/gosec@latest
+          gosec ./...
+        working-directory: ./backend
+        # uses: securego/gosec@master
+        # with:
+        #   args: backend/...
+        #work-dir: ./backend
       - name: govulncheck
         uses: golang/govulncheck-action@v1
         with:
