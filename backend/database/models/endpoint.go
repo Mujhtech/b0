@@ -8,6 +8,10 @@ import (
 
 type Endpoint struct {
 	ID        string      `json:"id" db:"id"`
+	OwnerID   string      `json:"owner_id" db:"owner_id"`
+	ProjectID string      `json:"project_id" db:"project_id"`
+	Name      string      `json:"name" db:"name"`
+	Slug      string      `json:"slug" db:"slug"`
 	Metadata  interface{} `json:"metadata" db:"metadata"`
 	CreatedAt time.Time   `json:"created_at,omitempty" db:"created_at,omitempty"`
 	UpdatedAt time.Time   `json:"updated_at,omitempty" db:"updated_at,omitempty"`

@@ -18,3 +18,20 @@ type TokenRepository interface {
 	FindTokenByID(ctx context.Context, id string) (*models.Token, error)
 	DeleteToken(ctx context.Context, id string) error
 }
+
+type EndpointRepository interface {
+	CreateEndpoint(ctx context.Context, endpoint *models.Endpoint) error
+	UpdateEndpoint(ctx context.Context, endpoint *models.Endpoint) error
+	FindEndpointByID(ctx context.Context, id string) (*models.Endpoint, error)
+	FindEndpointByProjectID(ctx context.Context, projectID string) ([]*models.Endpoint, error)
+	FindEndpointByOwnerID(ctx context.Context, ownerID string) ([]*models.Endpoint, error)
+	DeleteEndpoint(ctx context.Context, id string) error
+}
+
+type ProjectRepository interface {
+	CreateProject(ctx context.Context, project *models.Project) error
+	UpdateProject(ctx context.Context, project *models.Project) error
+	FindProjectByID(ctx context.Context, id string) (*models.Project, error)
+	FindProjectByOwnerID(ctx context.Context, ownerID string) ([]*models.Project, error)
+	DeleteProject(ctx context.Context, id string) error
+}
