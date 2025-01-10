@@ -32,7 +32,7 @@ func (m *MockProjectRepository) EXPECT() *MockProjectRepositoryMockRecorder {
 }
 
 // CreateProject mocks base method
-func (m *MockProjectRepository) CreateProject(arg0 context.Context, arg1 any) error {
+func (m *MockProjectRepository) CreateProject(arg0 context.Context, arg1 *models.Project) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "CreateProject", arg0, arg1)
 	ret0, _ := ret[0].(error)
@@ -46,7 +46,7 @@ func (mr *MockProjectRepositoryMockRecorder) CreateProject(arg0, arg1 any) *gomo
 }
 
 // UpdateProject mocks base method
-func (m *MockProjectRepository) UpdateProject(arg0, arg1 any) error {
+func (m *MockProjectRepository) UpdateProject(arg0 context.Context, arg1 *models.Project) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "UpdateProject", arg0, arg1)
 	ret0, _ := ret[0].(error)
@@ -60,7 +60,7 @@ func (mr *MockProjectRepositoryMockRecorder) UpdateProject(arg0, arg1 any) *gomo
 }
 
 // FindProjectByOwnerID mocks base method
-func (m *MockProjectRepository) FindProjectByOwnerID(arg0, arg1 any) ([]*models.Project, error) {
+func (m *MockProjectRepository) FindProjectByOwnerID(arg0 context.Context, arg1 string) ([]*models.Project, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "FindProjectByOwnerID", arg0, arg1)
 	ret0, _ := ret[0].([]*models.Project)
@@ -75,7 +75,7 @@ func (mr *MockProjectRepositoryMockRecorder) FindProjectByOwnerID(arg0, arg1 any
 }
 
 // FindProjectByID mocks base method
-func (m *MockProjectRepository) FindProjectByID(arg0, arg1 any) (*models.Project, error) {
+func (m *MockProjectRepository) FindProjectByID(arg0 context.Context, arg1 string) (*models.Project, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "FindProjectByID", arg0, arg1)
 	ret0, _ := ret[0].(*models.Project)
@@ -91,7 +91,7 @@ func (mr *MockProjectRepositoryMockRecorder) FindProjectByID(arg0, arg1 any) *go
 }
 
 // DeleteProject mocks base method
-func (m *MockProjectRepository) DeleteProject(arg0 context.Context, arg1 any) error {
+func (m *MockProjectRepository) DeleteProject(arg0 context.Context, arg1 string) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "DeleteProject", arg0, arg1)
 	ret0, _ := ret[0].(error)
@@ -156,7 +156,7 @@ func (mr *MockEndpointRepositoryMockRecorder) UpdateEndpoint(arg0, arg1 any) *go
 }
 
 // FindEndpointByID mocks base method
-func (m *MockEndpointRepository) FindEndpointByID(arg0 context.Context, arg1 any) (*models.Endpoint, error) {
+func (m *MockEndpointRepository) FindEndpointByID(arg0 context.Context, arg1 string) (*models.Endpoint, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "FindEndpointByID", arg0, arg1)
 	ret0, _ := ret[0].(*models.Endpoint)
@@ -171,7 +171,7 @@ func (mr *MockEndpointRepositoryMockRecorder) FindEndpointByID(arg0, arg1 any) *
 }
 
 // FindEndpointByProjectID mocks base method
-func (m *MockEndpointRepository) FindEndpointByProjectID(arg0 context.Context, arg1 any) ([]*models.Endpoint, error) {
+func (m *MockEndpointRepository) FindEndpointByProjectID(arg0 context.Context, arg1 string) ([]*models.Endpoint, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "FindEndpointByProjectID", arg0, arg1)
 	ret0, _ := ret[0].([]*models.Endpoint)
@@ -186,7 +186,7 @@ func (mr *MockEndpointRepositoryMockRecorder) FindEndpointByProjectID(arg0, arg1
 }
 
 // FindEndpointByOwnerID mocks base method
-func (m *MockEndpointRepository) FindEndpointByOwnerID(arg0 context.Context, arg1 any) ([]*models.Endpoint, error) {
+func (m *MockEndpointRepository) FindEndpointByOwnerID(arg0 context.Context, arg1 string) ([]*models.Endpoint, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "FindEndpointByOwnerID", arg0, arg1)
 	ret0, _ := ret[0].([]*models.Endpoint)
@@ -201,7 +201,7 @@ func (mr *MockEndpointRepositoryMockRecorder) FindEndpointByOwnerID(arg0, arg1 a
 }
 
 // DeleteEndpoint mocks base method
-func (m *MockEndpointRepository) DeleteEndpoint(arg0 context.Context, arg1 any) error {
+func (m *MockEndpointRepository) DeleteEndpoint(arg0 context.Context, arg1 string) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "DeleteEndpoint", arg0, arg1)
 	ret0, _ := ret[0].(error)
