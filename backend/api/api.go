@@ -79,6 +79,25 @@ func (a *Api) BuildRouter() *chi.Mux {
 			// features
 			r.Get("/features", a.handler.GetFeatures)
 
+			// user route
+			r.Route("/user", func(r chi.Router) {
+				r.Get("/", a.handler.GetUser)
+			})
+
+			// projects route
+			r.Route("/projects", func(r chi.Router) {
+				r.Get("/", a.handler.GetProjects)
+				r.Post("/", a.handler.CreateProject)
+				r.Put(fmt.Sprintf("/{%s}", handler.ProjectParamId), a.handler.UpdateProject)
+			})
+
+			// projects route
+			r.Route("/endpoints", func(r chi.Router) {
+				r.Get("/", a.handler.GetEndpoints)
+				r.Post("/", a.handler.CreateEndpoint)
+				r.Put(fmt.Sprintf("/{%s}", handler.EndpointParamId), a.handler.UpdateEndpoint)
+			})
+
 		})
 	})
 

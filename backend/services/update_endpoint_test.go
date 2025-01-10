@@ -17,6 +17,7 @@ func TestUpdateEndpointService_Run(t *testing.T) {
 		ctx      context.Context
 		endpoint *models.Endpoint
 		user     *models.User
+		project  *models.Project
 		dto      *dto.CreateEndpointRequestDto
 	}
 
@@ -31,23 +32,58 @@ func TestUpdateEndpointService_Run(t *testing.T) {
 		{
 			name: "user is owner, should update endpoint",
 			args: args{
-				ctx:      context.Background(),
-				endpoint: &models.Endpoint{ID: "endpoint-id", OwnerID: "user-id", Name: "test endpoint", Description: null.NewString("test description", true)},
-				user:     &models.User{ID: "user-id"},
+				ctx: context.Background(),
+				endpoint: &models.Endpoint{
+					ID:          "endpoint-id",
+					OwnerID:     "user-id",
+					ProjectID:   "project-id",
+					Name:        "test endpoint",
+					Description: null.NewString("test description", true),
+				},
+				project: &models.Project{
+					ID:      "project-id",
+					OwnerID: "user-id",
+				},
+				user: &models.User{
+					ID: "user-id",
+				},
 				dto: &dto.CreateEndpointRequestDto{
 					Name:        "updated endpoint",
 					Description: "updated description",
 				},
 			},
 			mockFn: func(s *UpdateEndpointService) {
-				em, _ := s.EndpointRepo.(*mocks.MockEndpointRepository)
+				em := s.EndpointRepo.(*mocks.MockEndpointRepository)
+				pm := s.ProjectRepo.(*mocks.MockProjectRepository)
+
+				// First expect FindEndpointByID
 				em.EXPECT().
 					FindEndpointByID(gomock.Any(), "endpoint-id").
 					Times(1).
-					Return(&models.Endpoint{ID: "endpoint-id", OwnerID: "user-id"}, nil)
+					Return(&models.Endpoint{
+						ID:        "endpoint-id",
+						ProjectID: "project-id",
+						OwnerID:   "user-id",
+					}, nil)
 
+				// Then expect FindProjectByID
+				pm.EXPECT().
+					FindProjectByID(gomock.Any(), "project-id").
+					Times(1).
+					Return(&models.Project{
+						ID:      "project-id",
+						OwnerID: "user-id",
+					}, nil)
+
+				// Finally expect UpdateEndpoint
 				em.EXPECT().
-					UpdateEndpoint(gomock.Any(), gomock.Any()).
+					UpdateEndpoint(gomock.Any(), &models.Endpoint{
+						ID:          "endpoint-id",
+						OwnerID:     "user-id",
+						ProjectID:   "project-id",
+						Name:        "updated endpoint",
+						Description: null.NewString("updated description", true),
+					}).
 					Times(1).
 					Return(nil)
 			},
@@ -62,6 +98,7 @@ func TestUpdateEndpointService_Run(t *testing.T) {
 
 			service := &UpdateEndpointService{
 				EndpointRepo: mocks.NewMockEndpointRepository(ctrl),
+				ProjectRepo:  mocks.NewMockProjectRepository(ctrl),
 				User:         tt.args.user,
 				Body:         tt.args.dto,
 				EndpointID:   tt.args.endpoint.ID,

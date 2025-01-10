@@ -20,6 +20,12 @@ type UpdateEndpointService struct {
 
 func (u *UpdateEndpointService) Run(ctx context.Context) (*models.Endpoint, error) {
 
+	endpoint, err := u.EndpointRepo.FindEndpointByID(ctx, u.EndpointID)
+
+	if err != nil {
+		return nil, err
+	}
+
 	project, err := u.ProjectRepo.FindProjectByID(ctx, u.Body.ProjectID)
 
 	if err != nil {
@@ -28,12 +34,6 @@ func (u *UpdateEndpointService) Run(ctx context.Context) (*models.Endpoint, erro
 
 	if project.OwnerID != u.User.ID {
 		return nil, errors.ErrNotAuthorized
-	}
-
-	endpoint, err := u.EndpointRepo.FindEndpointByID(ctx, u.EndpointID)
-
-	if err != nil {
-		return nil, err
 	}
 
 	if endpoint.OwnerID != u.User.ID {
