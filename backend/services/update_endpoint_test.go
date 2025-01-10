@@ -7,6 +7,7 @@ import (
 	"github.com/guregu/null"
 	"github.com/mujhtech/b0/api/dto"
 	"github.com/mujhtech/b0/database/models"
+	"github.com/mujhtech/b0/errors"
 	"github.com/mujhtech/b0/mocks"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
@@ -50,6 +51,7 @@ func TestUpdateEndpointService_Run(t *testing.T) {
 				dto: &dto.CreateEndpointRequestDto{
 					Name:        "updated endpoint",
 					Description: "updated description",
+					ProjectID:   "project-id",
 				},
 			},
 			mockFn: func(s *UpdateEndpointService) {
@@ -82,12 +84,57 @@ func TestUpdateEndpointService_Run(t *testing.T) {
 						OwnerID:     "user-id",
 						ProjectID:   "project-id",
 						Name:        "updated endpoint",
+						Slug:        "updated-endpoint",
 						Description: null.NewString("updated description", true),
 					}).
 					Times(1).
 					Return(nil)
 			},
 			wantErr: nil,
+		},
+		{
+			name: "unauthorized - different owner",
+			args: args{
+				ctx: context.Background(),
+				endpoint: &models.Endpoint{
+					ID:          "endpoint-id",
+					OwnerID:     "other-user-id",
+					ProjectID:   "project-id",
+					Name:        "test endpoint",
+					Description: null.NewString("test description", true),
+				},
+				user: &models.User{
+					ID: "user-id",
+				},
+				dto: &dto.CreateEndpointRequestDto{
+					Name:        "updated endpoint",
+					Description: "updated description",
+					ProjectID:   "project-id",
+				},
+			},
+			mockFn: func(s *UpdateEndpointService) {
+				em := s.EndpointRepo.(*mocks.MockEndpointRepository)
+				pm := s.ProjectRepo.(*mocks.MockProjectRepository)
+
+				em.EXPECT().
+					FindEndpointByID(gomock.Any(), "endpoint-id").
+					Times(1).
+					Return(&models.Endpoint{
+						ID:        "endpoint-id",
+						ProjectID: "project-id",
+						OwnerID:   "other-user-id",
+					}, nil)
+
+				pm.EXPECT().
+					FindProjectByID(gomock.Any(), "project-id").
+					Times(1).
+					Return(&models.Project{
+						ID:      "project-id",
+						OwnerID: "user-id",
+					}, nil)
+				// Remove the UpdateEndpoint expectation since it should fail before that
+			},
+			wantErr: errors.ErrNotAuthorized,
 		},
 	}
 

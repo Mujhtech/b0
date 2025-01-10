@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"net/url"
 
+	"github.com/mujhtech/b0/api/dto"
 	jwtAuth "github.com/mujhtech/b0/auth"
 	"github.com/mujhtech/b0/config"
 	"github.com/mujhtech/b0/internal/pkg/auth"
@@ -133,11 +134,28 @@ func (h *Handler) AuthenticateCallback(w http.ResponseWriter, r *http.Request) {
 		AuthUser: authUser,
 	}
 
-	user, err := createOrLinkUserService.Run(ctx)
+	user, err, isNewUser := createOrLinkUserService.Run(ctx)
 
 	if err != nil {
 		_ = response.BadRequest(w, r, err)
 		return
+	}
+
+	// if new user, create default project using user display name
+	if isNewUser {
+		createDefaultProjectService := &services.CreateProjectService{
+			ProjectRepo: h.store.ProjectRepo,
+			User:        user,
+			Body: &dto.CreateProjectRequestDto{
+				Name:        user.DisplayName,
+				Description: "Default project created by " + user.DisplayName,
+			},
+		}
+
+		if _, err = createDefaultProjectService.Run(ctx); err != nil {
+			// log error
+			log.Error().Err(err).Msg("failed to create default project")
+		}
 	}
 
 	// create token
