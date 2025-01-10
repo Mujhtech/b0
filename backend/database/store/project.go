@@ -41,6 +41,7 @@ func (p *projectRepo) CreateProject(ctx context.Context, project *models.Project
 	stmt := Builder.
 		Insert(projectBaseTable).
 		Columns(
+			"id",
 			"owner_id",
 			"name",
 			"slug",
@@ -48,6 +49,7 @@ func (p *projectRepo) CreateProject(ctx context.Context, project *models.Project
 			"metadata",
 		).
 		Values(
+			project.ID,
 			project.OwnerID,
 			project.Name,
 			project.Slug,

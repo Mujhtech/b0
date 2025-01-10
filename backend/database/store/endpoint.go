@@ -41,17 +41,21 @@ func (e *endpointRepo) CreateEndpoint(ctx context.Context, endpoint *models.Endp
 	stmt := Builder.
 		Insert(endpointBaseTable).
 		Columns(
+			"id",
 			"owner_id",
 			"project_id",
 			"name",
 			"slug",
+			"description",
 			"metadata",
 		).
 		Values(
+			endpoint.ID,
 			endpoint.OwnerID,
 			endpoint.ProjectID,
 			endpoint.Name,
 			endpoint.Slug,
+			endpoint.Description,
 			metadata,
 		)
 
