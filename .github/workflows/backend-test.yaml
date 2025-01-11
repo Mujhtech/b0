@@ -28,7 +28,7 @@ jobs:
 
       - name: 🏗️ Build backend
         working-directory: ./backend
-        run: go build -o s3ase ./cmd
+        run: go build -o b0 ./cmd
 
       - name: 🔍️ Go vet
         working-directory: ./backend
