@@ -75,3 +75,11 @@ func Slugify(s string) string {
 
 	return s
 }
+
+func ToLower(s string) string {
+	return strings.ToLower(s)
+}
+
+func ToUpper(s string) string {
+	return strings.ToUpper(s)
+}

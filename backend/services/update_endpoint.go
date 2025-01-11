@@ -52,7 +52,7 @@ func (u *UpdateEndpointService) Run(ctx context.Context) (*models.Endpoint, erro
 			return nil, err
 		}
 
-		endpoint.Slug = slug
+		endpoint.Slug = util.ToLower(slug)
 		endpoint.Name = u.Body.Name
 	}
 

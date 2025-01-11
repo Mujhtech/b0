@@ -42,7 +42,7 @@ func (c *CreateEndpointService) Run(ctx context.Context) (*models.Endpoint, erro
 		ID:          uuid.New().String(),
 		OwnerID:     c.User.ID,
 		Name:        c.Body.Name,
-		Slug:        slug,
+		Slug:        util.ToLower(slug),
 		Description: null.NewString(c.Body.Description, c.Body.Description != ""),
 		Metadata:    null.NewString("{}", true),
 		ProjectID:   project.OwnerID,

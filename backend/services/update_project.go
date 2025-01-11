@@ -39,7 +39,7 @@ func (u *UpdateProjectService) Run(ctx context.Context) (*models.Project, error)
 			return nil, err
 		}
 
-		project.Slug = slug
+		project.Slug = util.ToLower(slug)
 	}
 
 	if u.Body.Description != "" {

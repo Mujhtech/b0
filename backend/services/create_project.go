@@ -30,7 +30,7 @@ func (c *CreateProjectService) Run(ctx context.Context) (*models.Project, error)
 		ID:          uuid.New().String(),
 		OwnerID:     c.User.ID,
 		Name:        c.Body.Name,
-		Slug:        slug,
+		Slug:        util.ToLower(slug),
 		Description: null.NewString(c.Body.Description, c.Body.Description != ""),
 		Metadata:    null.NewString("{}", true),
 		CreatedAt:   time.Now(),

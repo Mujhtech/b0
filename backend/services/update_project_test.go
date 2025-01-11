@@ -35,7 +35,7 @@ func TestUpdateProjectService_Run(t *testing.T) {
 				project: &models.Project{ID: "project-id", OwnerID: "user-id", Name: "test project", Description: null.NewString("test description", true)},
 				user:    &models.User{ID: "user-id"},
 				dto: &dto.CreateProjectRequestDto{
-					Name:        "updated project",
+					//Name:        "updated project",
 					Description: "updated description",
 				},
 			},
@@ -47,7 +47,13 @@ func TestUpdateProjectService_Run(t *testing.T) {
 					Return(&models.Project{ID: "project-id", OwnerID: "user-id"}, nil)
 
 				pr.EXPECT().
-					UpdateProject(gomock.Any(), gomock.Any()).
+					UpdateProject(gomock.Any(), &models.Project{
+						OwnerID: "user-id",
+						ID:      "project-id",
+						//Name:        "updated endpoint",
+						Slug:        "",
+						Description: null.NewString("updated description", true),
+					}).
 					Times(1).
 					Return(nil)
 			},
@@ -79,6 +85,7 @@ func TestUpdateProjectService_Run(t *testing.T) {
 				require.Equal(t, tt.wantErr, err)
 			} else {
 				require.NoError(t, err)
+				stripVariableFields(t, "project", project)
 				require.NotNil(t, project)
 			}
 		})

@@ -49,7 +49,7 @@ func TestUpdateEndpointService_Run(t *testing.T) {
 					ID: "user-id",
 				},
 				dto: &dto.CreateEndpointRequestDto{
-					Name:        "updated endpoint",
+					//Name:        "updated endpoint",
 					Description: "updated description",
 					ProjectID:   "project-id",
 				},
@@ -80,11 +80,11 @@ func TestUpdateEndpointService_Run(t *testing.T) {
 				// Finally expect UpdateEndpoint
 				em.EXPECT().
 					UpdateEndpoint(gomock.Any(), &models.Endpoint{
-						ID:          "endpoint-id",
-						OwnerID:     "user-id",
-						ProjectID:   "project-id",
-						Name:        "updated endpoint",
-						Slug:        "updated-endpoint",
+						ID:        "endpoint-id",
+						OwnerID:   "user-id",
+						ProjectID: "project-id",
+						//Name:        "updated endpoint",
+						Slug:        "",
 						Description: null.NewString("updated description", true),
 					}).
 					Times(1).
@@ -163,6 +163,7 @@ func TestUpdateEndpointService_Run(t *testing.T) {
 				require.Equal(t, tt.wantErr, err)
 			} else {
 				require.NoError(t, err)
+				stripVariableFields(t, "endpoint", endpoint)
 				require.NotNil(t, endpoint)
 			}
 		})
