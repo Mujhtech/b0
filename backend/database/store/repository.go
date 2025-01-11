@@ -31,6 +31,7 @@ type EndpointRepository interface {
 type ProjectRepository interface {
 	CreateProject(ctx context.Context, project *models.Project) error
 	UpdateProject(ctx context.Context, project *models.Project) error
+	FindProjectBySlug(ctx context.Context, slug string) (*models.Project, error)
 	FindProjectByID(ctx context.Context, id string) (*models.Project, error)
 	FindProjectByOwnerID(ctx context.Context, ownerID string) ([]*models.Project, error)
 	DeleteProject(ctx context.Context, id string) error

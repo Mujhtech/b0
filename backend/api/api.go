@@ -56,6 +56,7 @@ func (a *Api) BuildRouter() *chi.Mux {
 	router.Use(middleware.WriteRequestIDHeader())
 	router.Use(middleware.HLogAccessLogHandler())
 	router.Use(middleware.ApplyCORS(a.cfg))
+	router.Use(middleware.InstrumentRequests("api", router))
 
 	//
 	router.Route("/api", func(r chi.Router) {
@@ -88,6 +89,7 @@ func (a *Api) BuildRouter() *chi.Mux {
 			r.Route("/projects", func(r chi.Router) {
 				r.Get("/", a.handler.GetProjects)
 				r.Post("/", a.handler.CreateProject)
+				r.Get(fmt.Sprintf("/{%s}", handler.ProjectParamId), a.handler.GetProject)
 				r.Put(fmt.Sprintf("/{%s}", handler.ProjectParamId), a.handler.UpdateProject)
 			})
 

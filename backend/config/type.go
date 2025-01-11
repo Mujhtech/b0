@@ -9,6 +9,7 @@ import (
 type DatabaseDriver string
 type PubsubProvider string
 type CacheProvider string
+type TelemetryProvider string
 
 const (
 	DatabaseDriverPostgres DatabaseDriver = "postgres"
@@ -25,20 +26,47 @@ const (
 
 	CacheProviderRedis    CacheProvider = "redis"
 	CacheProviderInMemory CacheProvider = "inmemory"
+
+	TelemetryProviderSentry TelemetryProvider = "sentry"
+	TelemetryProviderOtel   TelemetryProvider = "otel"
+	TelemetryProviderNone   TelemetryProvider = "none"
 )
 
 type Config struct {
-	EncryptionKey string   `json:"encryption_key" envconfig:"ENCRYPTION_KEY"`
-	Database      Database `json:"database"`
-	Redis         Redis    `json:"redis"`
-	Aws           Aws      `json:"aws"`
-	Server        Server   `json:"server"`
-	Auth          Auth     `json:"auth"`
-	Email         Email    `json:"email"`
-	Job           Job      `json:"job"`
-	Pubsub        Pubsub   `json:"pubsub"`
-	Cors          Cors     `json:"cors"`
-	Cache         Cache    `json:"cache"`
+	EncryptionKey string    `json:"encryption_key" envconfig:"ENCRYPTION_KEY"`
+	Database      Database  `json:"database"`
+	Redis         Redis     `json:"redis"`
+	Aws           Aws       `json:"aws"`
+	Server        Server    `json:"server"`
+	Auth          Auth      `json:"auth"`
+	Email         Email     `json:"email"`
+	Job           Job       `json:"job"`
+	Pubsub        Pubsub    `json:"pubsub"`
+	Cors          Cors      `json:"cors"`
+	Cache         Cache     `json:"cache"`
+	Telemetry     Telemetry `json:"telemetry"`
+}
+
+type Telemetry struct {
+	Provider TelemetryProvider `json:"provider" envconfig:"TELEMETRY_PROVIDER"`
+	Sentry   Sentry            `json:"sentry"`
+	OTEL     OTEL              `json:"otel"`
+}
+
+type Sentry struct {
+	DSN string `json:"dsn" envconfig:"SENTRY_DSN"`
+}
+
+type OTEL struct {
+	CollectorURL       string                `json:"collector_url" envconfig:"OTEL_COLLECTOR_URL"`
+	InsecureSkipVerify bool                  `json:"insecure_skip_verify" envconfig:"OTEL_INSECURE_SKIP_VERIFY"`
+	SampleRate         float64               `json:"sample_rate" envconfig:"OTEL_SAMPLE_RATE"`
+	OTelAuth           OTelAuthConfiguration `json:"otel_auth"`
+}
+
+type OTelAuthConfiguration struct {
+	HeaderName  string `json:"header_name" envconfig:"OTEL_HEADER_NAME"`
+	HeaderValue string `json:"header_value" envconfig:"OTEL_HEADER_VALUE"`
 }
 
 type Cache struct {

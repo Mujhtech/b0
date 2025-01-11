@@ -8,6 +8,7 @@ import (
 	"github.com/mujhtech/b0/database/models"
 	"github.com/mujhtech/b0/database/store"
 	"github.com/mujhtech/b0/errors"
+	"github.com/mujhtech/b0/internal/util"
 )
 
 type UpdateEndpointService struct {
@@ -45,8 +46,13 @@ func (u *UpdateEndpointService) Run(ctx context.Context) (*models.Endpoint, erro
 	}
 
 	if u.Body.Name != "" {
-		slug := slugify(u.Body.Name)
-		endpoint.Slug = slug
+		slug, err := util.GeneratePrefixedID(util.Slugify(u.Body.Name), "-", 6)
+
+		if err != nil {
+			return nil, err
+		}
+
+		endpoint.Slug = util.ToLower(slug)
 		endpoint.Name = u.Body.Name
 	}
 

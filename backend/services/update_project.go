@@ -8,6 +8,7 @@ import (
 	"github.com/mujhtech/b0/database/models"
 	"github.com/mujhtech/b0/database/store"
 	"github.com/mujhtech/b0/errors"
+	"github.com/mujhtech/b0/internal/util"
 )
 
 type UpdateProjectService struct {
@@ -31,7 +32,14 @@ func (u *UpdateProjectService) Run(ctx context.Context) (*models.Project, error)
 
 	if u.Body.Name != "" {
 		project.Name = u.Body.Name
-		project.Slug = slugify(u.Body.Name)
+
+		slug, err := util.GeneratePrefixedID(util.Slugify(u.Body.Name), "-", 6)
+
+		if err != nil {
+			return nil, err
+		}
+
+		project.Slug = util.ToLower(slug)
 	}
 
 	if u.Body.Description != "" {

@@ -10,6 +10,7 @@ import (
 	"github.com/mujhtech/b0/database/models"
 	"github.com/mujhtech/b0/database/store"
 	"github.com/mujhtech/b0/errors"
+	"github.com/mujhtech/b0/internal/util"
 )
 
 type CreateEndpointService struct {
@@ -31,13 +32,17 @@ func (c *CreateEndpointService) Run(ctx context.Context) (*models.Endpoint, erro
 		return nil, errors.ErrNotAuthorized
 	}
 
-	slug := slugify(c.Body.Name)
+	slug, err := util.GeneratePrefixedID(util.Slugify(c.Body.Name), "-", 6)
+
+	if err != nil {
+		return nil, err
+	}
 
 	endpoint := &models.Endpoint{
 		ID:          uuid.New().String(),
 		OwnerID:     c.User.ID,
 		Name:        c.Body.Name,
-		Slug:        slug,
+		Slug:        util.ToLower(slug),
 		Description: null.NewString(c.Body.Description, c.Body.Description != ""),
 		Metadata:    null.NewString("{}", true),
 		ProjectID:   project.OwnerID,

@@ -10,8 +10,8 @@ import (
 )
 
 const (
-	tokenBaseTable    = "tokens"                                                                                       // #nosec G101
-	tokenSelectColumn = "id, value, is_app, type, expired_at, issued_at, metadata, created_at, updated_at, deleted_at" // #nosec G101
+	tokenBaseTable    = "tokens"                                                                               // #nosec G101
+	tokenSelectColumn = "id, value, type, expired_at, issued_at, metadata, created_at, updated_at, deleted_at" // #nosec G101
 )
 
 type tokenRepo struct {

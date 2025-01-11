@@ -26,8 +26,8 @@ var DefaultConfig = &Config{
 		Driver:   DatabaseDriverPostgres,
 		Host:     "localhost",
 		Port:     5432,
-		User:     ProjectName,
-		Password: ProjectName,
+		User:     "postgres",
+		Password: "postgres",
 		Database: ProjectName,
 		Options:  "sslmode=disable&connect_timeout=30",
 	},
@@ -49,7 +49,7 @@ var DefaultConfig = &Config{
 	},
 	Auth: Auth{
 		RedirectUrl:   "http://localhost:5555",
-		UIRedirectUrl: "http://localhost:3000/auth/callback",
+		UIRedirectUrl: "http://localhost:5173/auth/callback",
 	},
 	Email: Email{
 		FromAddress: "b0 <no-reply@b0.dev>",
@@ -64,6 +64,12 @@ var DefaultConfig = &Config{
 		HealthInterval: 2,
 		SendTimeout:    60,
 		ChannelSize:    500,
+	},
+	Telemetry: Telemetry{
+		Provider: TelemetryProviderSentry,
+		Sentry: Sentry{
+			DSN: "",
+		},
 	},
 }
 
