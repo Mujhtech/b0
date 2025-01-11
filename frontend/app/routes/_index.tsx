@@ -4,20 +4,69 @@ import {
   GlobeHemisphereWest,
   PaperPlaneTilt,
 } from "@phosphor-icons/react";
-import type { MetaFunction } from "@remix-run/node";
-import AnimatedGradient from "~/components/animated-bg";
+import {
+  redirect,
+  type ActionFunction,
+  type MetaFunction,
+} from "@remix-run/node";
+import { parseWithZod } from "@conform-to/zod";
 import { AIModelPicker2 } from "~/components/builder/model-picker";
 import { Button } from "~/components/ui/button";
 import { Textarea } from "~/components/ui/textarea";
+import { requireUser } from "~/services/user.server";
+import { CreateProjectFormSchema } from "~/models/project";
+import { createProject } from "~/services/project.server";
+import { useFetcher } from "@remix-run/react";
+import { useForm } from "@conform-to/react";
+
+export const action: ActionFunction = async ({ request, params }) => {
+  const user = await requireUser(request);
+
+  const formData = await request.formData();
+
+  const submission = parseWithZod(formData, {
+    schema: CreateProjectFormSchema,
+  });
+
+  if (submission.status !== "success") {
+    return redirect("/");
+  }
+
+  try {
+    // handle creation of project
+    const project = await createProject(request, submission.value);
+
+    let headers = new Headers({});
+
+    return redirect(`/${project.data.slug}`, {
+      headers,
+    });
+  } catch (e) {
+    return redirect("/");
+  }
+};
 
 export const meta: MetaFunction = () => {
   return [
-    { title: "New Remix App" },
-    { name: "description", content: "Welcome to Remix!" },
+    { title: "b0 - Your AI backend builder" },
+    { name: "description", content: "Build backend in 1 minute with b0" },
   ];
 };
 
 export default function Index() {
+  const fetcher = useFetcher();
+
+  const [form, fields] = useForm({
+    id: "create-project-form",
+    shouldValidate: "onBlur",
+    shouldRevalidate: "onSubmit",
+    onValidate({ formData }) {
+      return parseWithZod(formData, {
+        schema: CreateProjectFormSchema,
+      });
+    },
+  });
+
   return (
     <main className="relative h-full w-full flex flex-col flex-1">
       {/* <AnimatedGradient
@@ -30,8 +79,15 @@ export default function Index() {
           b0, Your AI backend builder
         </h1>
         <div className="mt-4 flex flex-col gap-4 w-full">
-          <form className="w-full border border-input bg-background shadow-lg">
+          <fetcher.Form
+            onSubmit={form.onSubmit}
+            method="post"
+            className="w-full border border-input bg-background shadow-lg"
+          >
             <Textarea
+              name={fields.prompt.name}
+              value={fields.prompt.value}
+              key={fields.prompt.key}
               placeholder="What are you building today?"
               className=" resize-none border-none focus-visible:ring-0 min-h-[100px] shadow-none"
             ></Textarea>
@@ -53,14 +109,14 @@ export default function Index() {
               </div>
               <div className="ml-auto flex items-center gap-2">
                 <button
-                  type="button"
+                  type="submit"
                   className="border border-input h-6 w-6 p-1 inline-flex items-center justify-center"
                 >
                   <PaperPlaneTilt className="h-5 w-5" />
                 </button>
               </div>
             </div>
-          </form>
+          </fetcher.Form>
         </div>
         <div className="mt-12 flex flex-wrap justify-center gap-3 w-full">
           {Array.from({ length: 10 }).map((_, i) => (

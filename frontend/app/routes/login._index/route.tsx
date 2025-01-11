@@ -1,9 +1,48 @@
-import { GithubLogo, GoogleLogo } from "@phosphor-icons/react";
+import { GoogleLogo, GithubLogo } from "@phosphor-icons/react";
 import React from "react";
 import { Button } from "~/components/ui/button";
+import { Form } from "@remix-run/react";
+import { LoaderFunctionArgs } from "@remix-run/node";
+import { redirect, typedjson, useTypedLoaderData } from "remix-typedjson";
+import { commitSession, setRedirectTo } from "~/services/redirect-to.server";
+import { requestUrl } from "~/services/request-url.server";
+import { env } from "~/env.server";
 import { Input } from "~/components/ui/input";
+import { useFeature } from "~/hooks/use-feature";
+
+export async function loader({ request }: LoaderFunctionArgs) {
+  // redirect user to home is already logged in
+
+  const url = requestUrl(request);
+  const redirectTo = url.searchParams.get("redirectTo");
+  const platformUrl = env.PLATFORM_URL;
+
+  if (redirectTo) {
+    const session = await setRedirectTo(request, redirectTo);
+
+    return typedjson(
+      {
+        platformUrl,
+      },
+      {
+        headers: {
+          "Set-Cookie": await commitSession(session),
+        },
+      }
+    );
+  } else {
+    return typedjson({
+      platformUrl,
+    });
+  }
+}
 
 export default function Page() {
+  const data = useTypedLoaderData<typeof loader>();
+  const { is_github_auth_enabled, is_google_auth_enabled } = useFeature();
+
+  const isSocialAuthEnabled = is_github_auth_enabled || is_google_auth_enabled;
+
   return (
     <main className="h-full text-white">
       <div className="relative h-full ">
@@ -15,7 +54,7 @@ export default function Page() {
               <h1 className="text-4xl font-sans font-bold">Welcome</h1>
               <p className="text-sm">Create an account or login to continue</p>
               <div className="flex flex-col gap-y-3 mt-6">
-                <form
+                <Form
                   method="post"
                   action="/login"
                   className="grid grid-cols-1 gap-4"
@@ -25,41 +64,47 @@ export default function Page() {
                     className="w-full"
                     type="button"
                     onClick={() => {
-                      //   window.location.href = `${data.backendUrl}/ui/auth/github`;
-                      //   window.close();
+                      window.location.href = `${data.platformUrl}/auth/github`;
+                      window.close();
                     }}
                   >
                     Continue
                   </Button>
-                </form>
+                </Form>
 
-                <>
-                  <p className="text-sm text-center">Or</p>
+                {isSocialAuthEnabled && (
+                  <>
+                    <p className="text-sm text-center">Or</p>
 
-                  <Button
-                    className="w-full"
-                    type="button"
-                    onClick={() => {
-                      //   window.location.href = `${data.backendUrl}/ui/auth/github`;
-                      //   window.close();
-                    }}
-                  >
-                    <GithubLogo size={20} className="mr-3 h-5 w-5" /> Continue
-                    with Github
-                  </Button>
+                    {is_github_auth_enabled && (
+                      <Button
+                        className="w-full"
+                        type="button"
+                        onClick={() => {
+                          window.location.href = `${data.platformUrl}/auth/github`;
+                          window.close();
+                        }}
+                      >
+                        <GithubLogo className="mr-3 h-5 w-5" /> Continue with
+                        Github
+                      </Button>
+                    )}
 
-                  <Button
-                    className="w-full"
-                    type="button"
-                    onClick={() => {
-                      //   window.location.href = `${data.backendUrl}/ui/auth/google`;
-                      //   window.close();
-                    }}
-                  >
-                    <GoogleLogo size={20} className="mr-3 h-5 w-5" />
-                    Continue with Google
-                  </Button>
-                </>
+                    {is_google_auth_enabled && (
+                      <Button
+                        className="w-full"
+                        type="button"
+                        onClick={() => {
+                          window.location.href = `${data.platformUrl}/auth/google`;
+                          window.close();
+                        }}
+                      >
+                        <GoogleLogo className="mr-3 h-5 w-5" />
+                        Continue with Google
+                      </Button>
+                    )}
+                  </>
+                )}
               </div>
             </div>
           </div>
