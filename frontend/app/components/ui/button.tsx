@@ -3,6 +3,7 @@ import { Slot } from "@radix-ui/react-slot";
 import { cva, type VariantProps } from "class-variance-authority";
 
 import { cn } from "~/lib/utils";
+import { Link, LinkProps } from "@remix-run/react";
 
 const buttonVariants = cva(
   "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-5 [&_svg]:shrink-0",
@@ -54,4 +55,49 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
 );
 Button.displayName = "Button";
 
-export { Button, buttonVariants };
+type LinkButtonProps = Pick<
+  LinkProps,
+  | "to"
+  | "target"
+  | "onClick"
+  | "onMouseDown"
+  | "onMouseEnter"
+  | "onMouseLeave"
+  | "download"
+> &
+  VariantProps<typeof buttonVariants> & {
+    isExternal?: boolean;
+    to: string;
+    className?: string;
+    disabled?: boolean;
+    children?: React.ReactNode;
+  };
+
+const LinkButton = React.forwardRef<HTMLAnchorElement, LinkButtonProps>(
+  ({ className, variant, size, to, isExternal, ...props }, ref) => {
+    if (isExternal) {
+      return (
+        <a
+          href={to}
+          target="_blank"
+          rel="noopener noreferrer"
+          className={cn(buttonVariants({ variant, size, className }))}
+          ref={ref}
+          {...props}
+        />
+      );
+    }
+
+    return (
+      <Link
+        to={to}
+        className={cn(buttonVariants({ variant, size, className }))}
+        ref={ref}
+        {...props}
+      />
+    );
+  }
+);
+LinkButton.displayName = "LinkButton";
+
+export { Button, LinkButton, buttonVariants };
