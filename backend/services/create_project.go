@@ -2,7 +2,6 @@ package services
 
 import (
 	"context"
-	"strings"
 	"time"
 
 	"github.com/google/uuid"
@@ -10,6 +9,7 @@ import (
 	"github.com/mujhtech/b0/api/dto"
 	"github.com/mujhtech/b0/database/models"
 	"github.com/mujhtech/b0/database/store"
+	"github.com/mujhtech/b0/internal/util"
 )
 
 type CreateProjectService struct {
@@ -20,7 +20,11 @@ type CreateProjectService struct {
 
 func (c *CreateProjectService) Run(ctx context.Context) (*models.Project, error) {
 
-	slug := slugify(c.Body.Name)
+	slug, err := util.GeneratePrefixedID(util.Slugify(c.Body.Name), "-", 6)
+
+	if err != nil {
+		return nil, err
+	}
 
 	project := &models.Project{
 		ID:          uuid.New().String(),
@@ -33,15 +37,11 @@ func (c *CreateProjectService) Run(ctx context.Context) (*models.Project, error)
 		UpdatedAt:   time.Now(),
 	}
 
-	err := c.ProjectRepo.CreateProject(ctx, project)
+	err = c.ProjectRepo.CreateProject(ctx, project)
 
 	if err != nil {
 		return nil, err
 	}
 
 	return project, nil
-}
-
-func slugify(name string) string {
-	return strings.ToLower(strings.ReplaceAll(name, " ", "-"))
 }

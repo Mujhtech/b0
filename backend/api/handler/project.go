@@ -66,8 +66,8 @@ func (h *Handler) GetProject(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	findProjectService := services.FindProjectService{
-		ProjectID:   projectId,
+	findProjectService := services.FindProjectBySlugService{
+		Slug:        projectId,
 		ProjectRepo: h.store.ProjectRepo,
 		User:        session.User,
 	}
@@ -79,7 +79,7 @@ func (h *Handler) GetProject(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	_ = response.Ok(w, r, "projects retrieved", project)
+	_ = response.Ok(w, r, "project retrieved", project)
 }
 
 func (h *Handler) CreateProject(w http.ResponseWriter, r *http.Request) {

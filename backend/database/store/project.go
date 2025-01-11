@@ -10,8 +10,8 @@ import (
 )
 
 const (
-	projectBaseTable    = "projects"                                                                            // #nosec G101
-	projectSelectColumn = "id, owner_id, name, slug, description, metadata, created_at, updated_at, deleted_at" // #nosec G101
+	projectBaseTable    = "projects"
+	projectSelectColumn = "id, owner_id, name, slug, description, metadata, created_at, updated_at, deleted_at"
 )
 
 type projectRepo struct {
@@ -89,6 +89,28 @@ func (p *projectRepo) FindProjectByID(ctx context.Context, id string) (*models.P
 	dst := new(models.Project)
 	if err := p.db.GetDB().GetContext(ctx, dst, sql, args...); err != nil {
 		return nil, ProcessSQLErrorfWithCtx(ctx, sql, err, "failed to find project by id")
+	}
+
+	return dst, nil
+}
+
+// FindProjectBySlug implements ProjectRepository.
+func (p *projectRepo) FindProjectBySlug(ctx context.Context, slug string) (*models.Project, error) {
+	stmt := Builder.
+		Select(projectSelectColumn).
+		From(projectBaseTable).
+		Where(squirrel.Eq{"slug": slug}).
+		Where(excludeDeleted)
+
+	sql, args, err := stmt.ToSql()
+
+	if err != nil {
+		return nil, err
+	}
+
+	dst := new(models.Project)
+	if err := p.db.GetDB().GetContext(ctx, dst, sql, args...); err != nil {
+		return nil, ProcessSQLErrorfWithCtx(ctx, sql, err, "failed to find project by slug")
 	}
 
 	return dst, nil

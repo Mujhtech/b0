@@ -90,6 +90,22 @@ func (mr *MockProjectRepositoryMockRecorder) FindProjectByID(arg0, arg1 any) *go
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindProjectByID", reflect.TypeOf((*MockProjectRepository)(nil).FindProjectByID), arg0, arg1)
 }
 
+// FindProjectBySlug mocks base method
+func (m *MockProjectRepository) FindProjectBySlug(arg0 context.Context, arg1 string) (*models.Project, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "FindProjectBySlug", arg0, arg1)
+	ret0, _ := ret[0].(*models.Project)
+	ret1, _ := ret[1].(error)
+
+	return ret0, ret1
+}
+
+// FindProjectBySlug indicates an expected call of FindProjectBySlug.
+func (mr *MockProjectRepositoryMockRecorder) FindProjectBySlug(arg0, arg1 any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindProjectBySlug", reflect.TypeOf((*MockProjectRepository)(nil).FindProjectByID), arg0, arg1)
+}
+
 // DeleteProject mocks base method
 func (m *MockProjectRepository) DeleteProject(arg0 context.Context, arg1 string) error {
 	m.ctrl.T.Helper()
