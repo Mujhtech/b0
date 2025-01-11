@@ -137,13 +137,15 @@ func startServer(configFile string, logLevel string) error {
 	stop()
 	logger.Info().Msg("shutting down gracefully (press Ctrl+C again to force)")
 
-	telemetry.Shutdown(ctx)
-
 	shutdownCtx, cancel := context.WithTimeout(context.Background(), 300*time.Second)
 	defer cancel()
 
 	if shutdownErr := shutdownHTTP(shutdownCtx); shutdownErr != nil {
 		return fmt.Errorf("failed to shutdown server gracefully: %w", shutdownErr)
+	}
+
+	if err = telemetry.Shutdown(shutdownCtx); err != nil {
+		return fmt.Errorf("failed to shutdown telemetry: %w", err)
 	}
 
 	//job.Executor.Stop()
