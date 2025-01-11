@@ -5,6 +5,7 @@ CREATE TABLE IF NOT EXISTS endpoints (
     project_id uuid NOT NULL REFERENCES projects (id),
 	name TEXT NOT NULL,
     slug TEXT NOT NULL,
+	description TEXT NULL DEFAULT NULL,
 
 
 	metadata jsonb NOT NULL DEFAULT '{}'::jsonb,

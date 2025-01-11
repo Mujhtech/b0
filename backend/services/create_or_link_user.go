@@ -15,7 +15,7 @@ type CreateOrLinkUserService struct {
 	AuthUser *auth.User
 }
 
-func (c *CreateOrLinkUserService) Run(ctx context.Context) (*models.User, error) {
+func (c *CreateOrLinkUserService) Run(ctx context.Context) (*models.User, error, bool) {
 
 	dst := &models.User{
 		Email:                c.AuthUser.Emails[0].Email,
@@ -31,23 +31,29 @@ func (c *CreateOrLinkUserService) Run(ctx context.Context) (*models.User, error)
 	user, err := c.UserRepo.FindUserByEmail(ctx, dst.Email)
 
 	if err != nil && !errors.Is(err, store.ErrNotFound) {
-		return nil, err
+		return nil, err, false
 	}
+
+	isNewUser := false
 
 	if user == nil {
 		err = c.UserRepo.CreateUser(ctx, dst)
 
 		if err != nil {
-			return nil, err
+			return nil, err, false
 		}
+
+		isNewUser = true
 	} else {
 		dst.ID = user.ID
 		err = c.UserRepo.UpdateUser(ctx, dst)
 
 		if err != nil {
-			return nil, err
+			return nil, err, false
 		}
 	}
 
-	return c.UserRepo.FindUserByEmail(ctx, dst.Email)
+	updatedUser, err := c.UserRepo.FindUserByEmail(ctx, dst.Email)
+
+	return updatedUser, err, isNewUser
 }
