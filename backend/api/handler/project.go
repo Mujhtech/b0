@@ -49,6 +49,39 @@ func (h *Handler) GetProjects(w http.ResponseWriter, r *http.Request) {
 	_ = response.Ok(w, r, "projects retrieved", projects)
 }
 
+func (h *Handler) GetProject(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	session, ok := middleware.GetAuthSession(ctx)
+
+	if !ok {
+		_ = response.Unauthorized(w, r, nil)
+		return
+	}
+
+	projectId, err := getProjectIdFromPath(r)
+
+	if err != nil {
+		_ = response.BadRequest(w, r, err)
+		return
+	}
+
+	findProjectService := services.FindProjectService{
+		ProjectID:   projectId,
+		ProjectRepo: h.store.ProjectRepo,
+		User:        session.User,
+	}
+
+	project, err := findProjectService.Run(ctx)
+
+	if err != nil {
+		_ = response.InternalServerError(w, r, err)
+		return
+	}
+
+	_ = response.Ok(w, r, "projects retrieved", project)
+}
+
 func (h *Handler) CreateProject(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 

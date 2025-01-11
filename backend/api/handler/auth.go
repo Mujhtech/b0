@@ -6,7 +6,6 @@ import (
 	"net/http"
 	"net/url"
 
-	"github.com/mujhtech/b0/api/dto"
 	jwtAuth "github.com/mujhtech/b0/auth"
 	"github.com/mujhtech/b0/config"
 	"github.com/mujhtech/b0/internal/pkg/auth"
@@ -134,7 +133,7 @@ func (h *Handler) AuthenticateCallback(w http.ResponseWriter, r *http.Request) {
 		AuthUser: authUser,
 	}
 
-	user, err, isNewUser := createOrLinkUserService.Run(ctx)
+	user, err, _ := createOrLinkUserService.Run(ctx)
 
 	if err != nil {
 		_ = response.BadRequest(w, r, err)
@@ -142,21 +141,21 @@ func (h *Handler) AuthenticateCallback(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// if new user, create default project using user display name
-	if isNewUser {
-		createDefaultProjectService := &services.CreateProjectService{
-			ProjectRepo: h.store.ProjectRepo,
-			User:        user,
-			Body: &dto.CreateProjectRequestDto{
-				Name:        user.DisplayName,
-				Description: "Default project created by " + user.DisplayName,
-			},
-		}
+	// if isNewUser {
+	// 	createDefaultProjectService := &services.CreateProjectService{
+	// 		ProjectRepo: h.store.ProjectRepo,
+	// 		User:        user,
+	// 		Body: &dto.CreateProjectRequestDto{
+	// 			Name:        user.DisplayName,
+	// 			Description: "Default project created by " + user.DisplayName,
+	// 		},
+	// 	}
 
-		if _, err = createDefaultProjectService.Run(ctx); err != nil {
-			// log error
-			log.Error().Err(err).Msg("failed to create default project")
-		}
-	}
+	// 	if _, err = createDefaultProjectService.Run(ctx); err != nil {
+	// 		// log error
+	// 		log.Error().Err(err).Msg("failed to create default project")
+	// 	}
+	// }
 
 	// create token
 	tokenManager := jwtAuth.NewJWTAuth(h.cfg, h.store.UserRepo, h.store.TokenRepo, h.cache)
@@ -243,7 +242,7 @@ func getProvider(cfg *config.Config, r *http.Request) (auth.AuthProvider, string
 	redirectUrl := queryParamOrDefault(r, AuthRedirectUrl, "")
 
 	if redirectUrl == "" {
-		redirectUrl = fmt.Sprintf("%s/api/ui/auth/%s/callback", cfg.Auth.RedirectUrl, authProvider)
+		redirectUrl = fmt.Sprintf("%s/api/platform/auth/%s/callback", cfg.Auth.RedirectUrl, authProvider)
 	}
 
 	provider, err := auth.GetAuthProvider(cfg, authProvider, redirectUrl)
