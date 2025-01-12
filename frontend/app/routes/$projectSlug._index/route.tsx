@@ -62,8 +62,13 @@ export default function Page() {
               <UserMenu />
               <ZoomInAndOut />
             </div>
-            <div>
+            <div className="flex flex-col gap-0.5">
               <AskB0 />
+              <div className="flex items-center justify-center">
+                <p className="font-mono text-[10px] text-muted-foreground text-center">
+                  b0 can make mistakes. Please double-check it.
+                </p>
+              </div>
             </div>
             <div className="mr-4">
               <DeployAndTestBtn />
