@@ -17,6 +17,8 @@ import {
 import React from "react";
 import { usePlayground } from "./playground/provider";
 import { cn } from "~/lib/utils";
+import Draggable from "react-draggable";
+import { Icons } from "../icons";
 
 export default function BuilderTools() {
   const { handleExpandToolPanel, expandToolPanel } = usePlayground();
@@ -99,8 +101,13 @@ export default function BuilderTools() {
                 <ToolCard>
                   <DiscordLogo className="mr-1" /> Discord
                 </ToolCard>
-                <ToolCard> Supabase</ToolCard>
-                <ToolCard>Resend</ToolCard>
+                <ToolCard>
+                  <Icons.Supabase className="mr-1 h-3 w-3 grayscale" /> Supabase
+                </ToolCard>
+                <ToolCard>
+                  <Icons.Resend className="mr-1 h-3 w-3 grayscale" />
+                  Resend
+                </ToolCard>
               </div>
             </div>
           </div>
@@ -112,8 +119,10 @@ export default function BuilderTools() {
 
 const ToolCard = ({ children }: { children: React.ReactNode }) => {
   return (
-    <div className="cursor-grab border border-input px-2 py-1 flex items-center text-sm bg-background drop-shadow-md">
-      {children}
-    </div>
+    <Draggable>
+      <div className="cursor-grab border border-input px-2 py-1 flex items-center text-sm bg-background drop-shadow-md">
+        {children}
+      </div>
+    </Draggable>
   );
 };

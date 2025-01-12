@@ -14,8 +14,8 @@ export default function Playground() {
 
   return (
     <div className="w-full h-full overflow-y-auto flex-1 pointer-events-auto scrollbar-none">
-      <div className="h-[1500px] w-full transition-all">
-        <div className="translate-x-[-5160px] flex w-[10000px] h-[10000px] left-1/2 relative p-4 pt-10 justify-center transition-all overflow-x-hidden">
+      <div className="h-full w-full transition-all">
+        <div className="flex w-full h-full relative p-4 pt-10 justify-center transition-all overflow-x-hidden">
           <div
             ref={canvasRef}
             onMouseDown={handleMouseDown}
@@ -23,13 +23,15 @@ export default function Playground() {
             onMouseUp={handleMouseUp}
             onMouseLeave={handleMouseUp}
             onContextMenu={(e) => e.preventDefault()}
-            className="flex select-none w-[10000px] h-[10000px]  absolute inset-0 flex-nowrap flex-col justify-start"
-            style={{
-              transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})`,
-              transformOrigin: "0 0",
-            }}
+            className="flex select-none w-full h-full absolute inset-0 flex-nowrap flex-col justify-start"
+            // style={{
+            //   transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})`,
+            //   transformOrigin: "0 0",
+            // }}
           >
-            <Connector />
+            <div className="mt-5 ml-20 flex flex-col justify-center">
+              <Connector />
+            </div>
           </div>
         </div>
       </div>
