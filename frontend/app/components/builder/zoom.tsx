@@ -22,7 +22,7 @@ export default function ZoomInAndOut() {
           <Minus size={28} className="h-4 w-4" />
         </button>
         <Input
-          className="h-8 border-none focus-visible:ring-0 w-10 max-w-10 px-2 items-center justify-center text-center"
+          className="h-8 border-none focus-visible:ring-0 w-12 max-w-12 px-2 items-center justify-center text-center"
           type="number"
           value={zoom}
           onChange={handleZoomInputChange}

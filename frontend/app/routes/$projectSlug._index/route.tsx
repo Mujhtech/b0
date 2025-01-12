@@ -58,9 +58,11 @@ export default function Page() {
 
         <div className="absolute bottom-4 w-full">
           <div className="flex justify-between">
-            <div className="flex items-center gap-2 ml-4">
-              <UserMenu />
-              <ZoomInAndOut />
+            <div className=" ml-4">
+              <div className="flex items-center gap-2">
+                <UserMenu />
+                <ZoomInAndOut />
+              </div>
             </div>
             <div className="flex flex-col gap-0.5">
               <AskB0 />
