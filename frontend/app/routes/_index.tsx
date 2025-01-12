@@ -117,6 +117,11 @@ export default function Index() {
               </div>
             </div>
           </fetcher.Form>
+          <div className="flex items-center justify-center">
+            <p className="font-mono text-[10px] text-muted-foreground text-center">
+              b0 can make mistakes. Please double-check it.
+            </p>
+          </div>
         </div>
         <div className="mt-12 flex flex-wrap justify-center gap-3 w-full">
           {Array.from({ length: 10 }).map((_, i) => (

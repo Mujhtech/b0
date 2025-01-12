@@ -1,42 +1,38 @@
 import { ArrowsIn, Minus, Plus, ArrowsOut } from "@phosphor-icons/react";
-import React from "react";
 import { Input } from "../ui/input";
+import { usePlayground } from "./playground/provider";
 
-export default function ZoomInAndOut({
-  handleZoomOut,
-  handleZoomIn,
-  handleResetZoom,
-  handleZoomInputChange,
-  zoom,
-}: {
-  handleZoomOut?: () => void;
-  handleZoomIn?: () => void;
-  handleResetZoom?: () => void;
-  handleZoomInputChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
-  zoom?: number;
-}) {
+export default function ZoomInAndOut() {
+  const {
+    handleZoomIn,
+    handleZoomOut,
+    handleResetZoom,
+    handleZoomInputChange,
+    zoom,
+  } = usePlayground();
+
   return (
     <div className="flex items-center gap-2">
       <div className="flex border border-input h-8 bg-background shadow-lg">
         <button
           type="button"
-          onClick={handleZoomIn}
+          onClick={handleZoomOut}
           className="px-2 border-r border-input"
         >
-          <Plus size={28} className="h-4 w-4" />
+          <Minus size={28} className="h-4 w-4" />
         </button>
         <Input
-          className="h-8 border-none focus-visible:ring-0 w-10 max-w-10 px-2 items-center justify-center text-center"
+          className="h-8 border-none focus-visible:ring-0 w-12 max-w-12 px-2 items-center justify-center text-center"
           type="number"
           value={zoom}
           onChange={handleZoomInputChange}
         />
         <button
           type="button"
-          onClick={handleZoomOut}
+          onClick={handleZoomIn}
           className="px-2 border-l border-input"
         >
-          <Minus size={28} className="h-4 w-4" />
+          <Plus size={28} className="h-4 w-4" />
         </button>
       </div>
       <button
