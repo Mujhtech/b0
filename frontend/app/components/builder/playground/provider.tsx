@@ -44,6 +44,8 @@ interface PlaygroundProviderProps {
   handleZoomIn: () => void;
   handleResetZoom: () => void;
   handleZoomInputChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  expandToolPanel: boolean;
+  handleExpandToolPanel: () => void;
 }
 
 const PlaygroundProviderContext = createContext<
@@ -64,6 +66,7 @@ export const PlaygroundProvider = ({ children }: { children: ReactNode }) => {
   const [pan, setPan] = useState<Position>({ x: 0, y: 0 });
   const [isPanning, setIsPanning] = useState(false);
   const [lastMousePos, setLastMousePos] = useState<Position>({ x: 0, y: 0 });
+  const [expandToolPanel, setExpandToolPanel] = useState(false);
 
   const handleWheel = useCallback((e: WheelEvent) => {
     if (e.ctrlKey) {
@@ -216,8 +219,12 @@ export const PlaygroundProvider = ({ children }: { children: ReactNode }) => {
     (e: React.ChangeEvent<HTMLInputElement>) => {
       setZoom(parseFloat(e.target.value));
     },
-    []
+    [zoom, setZoom]
   );
+
+  const handleExpandToolPanel = useCallback(() => {
+    setExpandToolPanel(!expandToolPanel);
+  }, [expandToolPanel, setExpandToolPanel]);
 
   const value = useMemo<PlaygroundProviderProps>(
     () => ({
@@ -230,6 +237,7 @@ export const PlaygroundProvider = ({ children }: { children: ReactNode }) => {
       pan,
       isPanning,
       lastMousePos,
+      expandToolPanel,
       handleWheel,
       handleMouseDown,
       handleMouseMove,
@@ -246,6 +254,7 @@ export const PlaygroundProvider = ({ children }: { children: ReactNode }) => {
       handleZoomIn,
       handleResetZoom,
       handleZoomInputChange,
+      handleExpandToolPanel,
     }),
     [
       canvasRef,
@@ -257,6 +266,7 @@ export const PlaygroundProvider = ({ children }: { children: ReactNode }) => {
       pan,
       isPanning,
       lastMousePos,
+      expandToolPanel,
       handleWheel,
       handleMouseDown,
       handleMouseMove,
@@ -273,6 +283,7 @@ export const PlaygroundProvider = ({ children }: { children: ReactNode }) => {
       handleZoomIn,
       handleResetZoom,
       handleZoomInputChange,
+      handleExpandToolPanel,
     ]
   );
 
