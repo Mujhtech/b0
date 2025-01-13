@@ -66,9 +66,14 @@ var DefaultConfig = &Config{
 		ChannelSize:    500,
 	},
 	Telemetry: Telemetry{
-		Provider: TelemetryProviderSentry,
+		Provider: TelemetryProviderOtel,
 		Sentry: Sentry{
 			DSN: "",
+		},
+		OTEL: OTEL{
+			CollectorURL:       "localhost:4317",
+			InsecureSkipVerify: true,
+			SampleRate:         1.0,
 		},
 	},
 }

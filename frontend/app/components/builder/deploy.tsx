@@ -4,7 +4,7 @@ import { RocketLaunch, TestTube } from "@phosphor-icons/react";
 
 export default function DeployAndTestBtn() {
   return (
-    <div className="flex items-center gap-2">
+    <div className="flex items-center gap-2 ">
       <Button variant="outline" className="h-8 shadow-lg">
         <TestTube size={20} className="h-4 w-4" />
         Test

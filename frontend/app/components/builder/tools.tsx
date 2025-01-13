@@ -24,7 +24,7 @@ export default function BuilderTools() {
   const { handleExpandToolPanel, expandToolPanel } = usePlayground();
 
   return (
-    <div className="absolute right-4 top-4">
+    <div className="absolute right-4 top-4 z-10">
       <div
         className={cn(
           "bg-background shadow-lg border border-input w-[24rem] select-none max-h-[calc(100%-60px)]",

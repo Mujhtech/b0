@@ -62,19 +62,22 @@ export const PlaygroundProvider = ({ children }: { children: ReactNode }) => {
     startPos: Position;
   } | null>(null);
   const [mousePosition, setMousePosition] = useState<Position>({ x: 0, y: 0 });
-  const [zoom, setZoom] = useState(25);
+  const [zoom, setZoom] = useState(100);
   const [pan, setPan] = useState<Position>({ x: 0, y: 0 });
   const [isPanning, setIsPanning] = useState(false);
   const [lastMousePos, setLastMousePos] = useState<Position>({ x: 0, y: 0 });
   const [expandToolPanel, setExpandToolPanel] = useState(false);
 
-  const handleWheel = useCallback((e: WheelEvent) => {
-    if (e.ctrlKey) {
-      e.preventDefault();
-      const delta = e.deltaY > 0 ? -25 : 25;
-      setZoom((z) => Math.min(Math.max(z + delta, 25), 300));
-    }
-  }, []);
+  const handleWheel = useCallback(
+    (e: WheelEvent) => {
+      if (e.ctrlKey) {
+        e.preventDefault();
+        const delta = e.deltaY > 0 ? -25 : 25;
+        setZoom((z) => Math.min(Math.max(z + delta, 25), 300));
+      }
+    },
+    [zoom, setZoom]
+  );
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -195,18 +198,12 @@ export const PlaygroundProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   const handleZoomOut = useCallback(() => {
-    setZoom((z) => {
-      if (z <= 25) return z;
-
-      return z - 25;
-    });
-  }, [zoom, setZoom]);
+    setZoom((z) => Math.max(z - 25, 25));
+  }, []);
 
   const handleZoomIn = useCallback(() => {
     setZoom((z) => {
-      if (z >= 300) return z;
-
-      return z + 25;
+      return Math.max(z + 25, 300);
     });
   }, [zoom, setZoom]);
 
