@@ -124,8 +124,14 @@ export default function Index() {
           </div>
         </div>
         <div className="mt-12 flex flex-wrap justify-center gap-3 w-full">
-          {Array.from({ length: 10 }).map((_, i) => (
-            <TemplateCard key={i} />
+          {[
+            "Hello world",
+            "Stripe webhook",
+            "Telegram Bot",
+            "Discord Bot",
+            "Open AI",
+          ].map((template, i) => (
+            <TemplateCard key={i} template={template} />
           ))}
         </div>
       </div>
@@ -133,14 +139,21 @@ export default function Index() {
   );
 }
 
-const TemplateCard = () => {
+const TemplateCard = ({ template }: { template: string }) => {
+  const fetcher = useFetcher();
+
+  const handleOnClick = () => {
+    fetcher.submit({ template }, { method: "post", action: "/" });
+  };
+
   return (
     <Button
       variant="outline"
       type="button"
+      onClick={handleOnClick}
       className="border border-input shadow-lg"
     >
-      TemplateCard <ArrowUpRight className="!h-4 !w-4" />
+      {template} <ArrowUpRight className="!h-4 !w-4" />
     </Button>
   );
 };

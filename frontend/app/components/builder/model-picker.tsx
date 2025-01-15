@@ -7,6 +7,7 @@ import {
   SelectGroup,
   SelectItem,
   SelectTrigger,
+  SelectValue,
 } from "~/components/ui/select";
 
 export function AIModelPicker() {
@@ -28,13 +29,15 @@ export function AIModelPicker() {
 export function AIModelPicker2() {
   return (
     <Select>
-      <SelectTrigger className="focus:outline-none focus-visible:ring-0 border border-input h-6 w-auto p-1 inline-flex items-center justify-center">
+      <SelectTrigger className="focus:outline-none focus-visible:ring-0 border border-input h-6 w-auto p-1 inline-flex items-center justify-center focus:ring-0">
         <Sparkle size={20} className="h-4 w-4 mr-1" />
+        <SelectValue placeholder="Select a model" />
       </SelectTrigger>
       <SelectContent side="top">
         <SelectGroup>
           <SelectItem value="claude-sonnet-3.5">Claude Sonnet 3.5</SelectItem>
           <SelectItem value="gpt-4o">GPT 4o</SelectItem>
+          <SelectItem value="gpt-3.5">GPT 3.5</SelectItem>
         </SelectGroup>
       </SelectContent>
     </Select>

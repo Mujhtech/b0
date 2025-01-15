@@ -16,19 +16,28 @@ import { getUser } from "./services/user.server";
 export const links: LinksFunction = () => [];
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
-  const backendUrl = env.BACKEND_URL;
-  const feature = await getFeatures(request);
+  try {
+    const backendUrl = env.BACKEND_URL;
+    const feature = await getFeatures(request);
 
-  const accessToken = await getAuthTokenFromSession(request);
+    const accessToken = await getAuthTokenFromSession(request);
 
-  const user = await getUser(request);
+    const user = await getUser(request);
 
-  return typedjson({
-    user: user,
-    feature: feature,
-    accessToken: accessToken,
-    backendUrl,
-  });
+    return typedjson({
+      user: user,
+      feature: feature,
+      accessToken: accessToken,
+      backendUrl,
+    });
+  } catch (e) {
+    return typedjson({
+      user: null,
+      feature: null,
+      accessToken: null,
+      backendUrl: null,
+    });
+  }
 };
 
 export type RootLoaderType = typeof loader;
