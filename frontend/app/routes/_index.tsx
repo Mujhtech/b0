@@ -143,7 +143,10 @@ const TemplateCard = ({ template }: { template: string }) => {
   const fetcher = useFetcher();
 
   const handleOnClick = () => {
-    fetcher.submit({ template }, { method: "post", action: "/" });
+    const formData = new FormData();
+    formData.append("prompt", template);
+    formData.append("isTemplate", "true");
+    fetcher.submit(formData, { method: "POST" });
   };
 
   return (
