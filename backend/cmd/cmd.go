@@ -18,8 +18,9 @@ func main() {
 	}
 
 	cmd := &cobra.Command{
-		Use:   "b0",
-		Short: "Your AI backend builder",
+		Use:     "b0",
+		Version: version.Version,
+		Short:   "Your AI backend builder",
 	}
 
 	// regiser hooks

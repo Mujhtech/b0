@@ -22,7 +22,7 @@ export function useUser(matches?: UIMatch[]): User {
   return maybeUser;
 }
 
-export function useAuthToken(matches?: UIMatch[]): string | undefined {
+export function useAuthToken(matches?: UIMatch[]): string | undefined | null {
   const routeMatch = useTypedMatchesData<typeof loader>({
     id: "root",
     matches,

@@ -12,16 +12,34 @@ import { env } from "./env.server";
 import { getAuthTokenFromSession } from "./services/auth.server";
 import { getFeatures } from "./services/feature.server";
 import { getUser } from "./services/user.server";
+import { User } from "./models/user";
+import { Feature } from "./models/feature";
 
 export const links: LinksFunction = () => [];
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
   const backendUrl = env.BACKEND_URL;
-  const feature = await getFeatures(request);
+  let user: User | null = null;
+  let feature: Feature | null = null;
+  let accessToken: string | null = null;
 
-  const accessToken = await getAuthTokenFromSession(request);
+  try {
+    feature = await getFeatures(request);
+  } catch (e) {
+    //
+  }
 
-  const user = await getUser(request);
+  try {
+    accessToken = await getAuthTokenFromSession(request);
+  } catch (e) {
+    //
+  }
+
+  try {
+    user = await getUser(request);
+  } catch (e) {
+    //
+  }
 
   return typedjson({
     user: user,

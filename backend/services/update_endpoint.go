@@ -8,7 +8,6 @@ import (
 	"github.com/mujhtech/b0/database/models"
 	"github.com/mujhtech/b0/database/store"
 	"github.com/mujhtech/b0/errors"
-	"github.com/mujhtech/b0/internal/util"
 )
 
 type UpdateEndpointService struct {
@@ -46,18 +45,27 @@ func (u *UpdateEndpointService) Run(ctx context.Context) (*models.Endpoint, erro
 	}
 
 	if u.Body.Name != "" {
-		slug, err := util.GeneratePrefixedID(util.Slugify(u.Body.Name), "-", 6)
-
-		if err != nil {
-			return nil, err
-		}
-
-		endpoint.Slug = util.ToLower(slug)
 		endpoint.Name = u.Body.Name
+	}
+
+	if u.Body.Path != "" {
+		endpoint.Path = u.Body.Path
+	}
+
+	if u.Body.Method != "" {
+		endpoint.Metadata = u.Body.Method
 	}
 
 	if u.Body.Description != "" {
 		endpoint.Description = null.NewString(u.Body.Description, true)
+	}
+
+	if u.Body.Status != "" && endpoint.Status != u.Body.Status {
+		endpoint.Status = u.Body.Status
+	}
+
+	if endpoint.IsPublic != u.Body.IsPublic {
+		endpoint.IsPublic = u.Body.IsPublic
 	}
 
 	err = u.EndpointRepo.UpdateEndpoint(ctx, endpoint)

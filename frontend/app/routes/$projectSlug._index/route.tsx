@@ -15,6 +15,7 @@ import { RouteErrorDisplay } from "~/components/error-boundary";
 import { Position } from "~/models/flow";
 import { PlaygroundProvider } from "~/components/builder/playground/provider";
 import Playground from "~/components/builder/playground/playground";
+import BuilderMenu from "~/components/builder/builder-menu";
 
 export const ProjectSlugParamSchema = z.object({
   projectSlug: z.string(),
@@ -56,7 +57,7 @@ export default function Page() {
       <main className="h-full w-full relative canvas-bg">
         <Playground />
 
-        <div className="absolute bottom-4 w-full">
+        <div className="absolute bottom-4 w-full z-10">
           <div className="flex justify-between">
             <div className=" ml-4">
               <div className="flex items-center gap-2">
@@ -77,6 +78,7 @@ export default function Page() {
             </div>
           </div>
         </div>
+        <BuilderMenu />
         <BuilderTools />
       </main>
     </PlaygroundProvider>

@@ -30,10 +30,10 @@ func (u *UpdateProjectService) Run(ctx context.Context) (*models.Project, error)
 		return nil, errors.ErrNotAuthorized
 	}
 
-	if u.Body.Name != "" {
-		project.Name = u.Body.Name
+	if u.Body.Prompt != "" {
+		project.Name = u.Body.Prompt
 
-		slug, err := util.GeneratePrefixedID(util.Slugify(u.Body.Name), "-", 6)
+		slug, err := util.GeneratePrefixedID(util.Slugify(u.Body.Prompt), "-", 6)
 
 		if err != nil {
 			return nil, err
@@ -42,8 +42,8 @@ func (u *UpdateProjectService) Run(ctx context.Context) (*models.Project, error)
 		project.Slug = util.ToLower(slug)
 	}
 
-	if u.Body.Description != "" {
-		project.Description = null.NewString(u.Body.Description, true)
+	if u.Body.Prompt != "" {
+		project.Description = null.NewString(u.Body.Prompt, true)
 	}
 
 	err = u.ProjectRepo.UpdateProject(ctx, project)
