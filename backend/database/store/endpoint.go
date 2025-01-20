@@ -10,8 +10,8 @@ import (
 )
 
 const (
-	endpointBaseTable    = "endpoints"                                                                          // #nosec G101
-	endpointSelectColumn = "id, owner_id, project_id, name, slug, metadata, created_at, updated_at, deleted_at" // #nosec G101
+	endpointBaseTable    = "endpoints"
+	endpointSelectColumn = "id, owner_id, project_id, name, description, path, method, is_public, status, metadata, created_at, updated_at, deleted_at"
 )
 
 type endpointRepo struct {
@@ -45,8 +45,11 @@ func (e *endpointRepo) CreateEndpoint(ctx context.Context, endpoint *models.Endp
 			"owner_id",
 			"project_id",
 			"name",
-			"slug",
 			"description",
+			"path",
+			"method",
+			"is_public",
+			"status",
 			"metadata",
 		).
 		Values(
@@ -54,8 +57,11 @@ func (e *endpointRepo) CreateEndpoint(ctx context.Context, endpoint *models.Endp
 			endpoint.OwnerID,
 			endpoint.ProjectID,
 			endpoint.Name,
-			endpoint.Slug,
 			endpoint.Description,
+			endpoint.Path,
+			endpoint.Method,
+			endpoint.IsPublic,
+			endpoint.Status,
 			metadata,
 		)
 
@@ -145,6 +151,13 @@ func (e *endpointRepo) UpdateEndpoint(ctx context.Context, endpoint *models.Endp
 
 	stmt := Builder.
 		Update(endpointBaseTable).
+		Set("name", endpoint.Name).
+		Set("description", endpoint.Description).
+		Set("path", endpoint.Path).
+		Set("method", endpoint.Method).
+		Set("status", endpoint.Status).
+		Set("metadata", endpoint.Metadata).
+		Set("updated_at", squirrel.Expr("NOW()")).
 		Where(squirrel.Eq{"id": endpoint.ID}).
 		Where(excludeDeleted)
 
