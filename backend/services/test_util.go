@@ -15,7 +15,7 @@ func stripVariableFields(t *testing.T, obj string, v interface{}) {
 	case "endpoint":
 		e := v.(*models.Endpoint)
 
-		e.Slug = ""
+		e.Path = ""
 	default:
 		t.Errorf("invalid data body - %v of type %T", obj, obj)
 		t.FailNow()

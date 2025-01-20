@@ -35,8 +35,8 @@ func TestCreateProjectService_Run(t *testing.T) {
 				project: &models.Project{ID: "project-id", OwnerID: "user-id", Name: "test project", Description: null.NewString("test description", true)},
 				user:    &models.User{ID: "user-id"},
 				dto: &dto.CreateProjectRequestDto{
-					Name:        "test project",
-					Description: "test description",
+					Prompt:     "test project",
+					IsTemplate: false,
 				},
 			},
 			mockFn: func(s *CreateProjectService) {

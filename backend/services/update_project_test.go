@@ -34,9 +34,9 @@ func TestUpdateProjectService_Run(t *testing.T) {
 				ctx:     context.Background(),
 				project: &models.Project{ID: "project-id", OwnerID: "user-id", Name: "test project", Description: null.NewString("test description", true)},
 				user:    &models.User{ID: "user-id"},
-				dto: &dto.CreateProjectRequestDto{
+				dto:     &dto.CreateProjectRequestDto{
 					//Name:        "updated project",
-					Description: "updated description",
+					//Description: "updated description",
 				},
 			},
 			mockFn: func(s *UpdateProjectService) {
@@ -51,8 +51,8 @@ func TestUpdateProjectService_Run(t *testing.T) {
 						OwnerID: "user-id",
 						ID:      "project-id",
 						//Name:        "updated endpoint",
-						Slug:        "",
-						Description: null.NewString("updated description", true),
+						Slug: "",
+						//Description: null.NewString("updated description", true),
 					}).
 					Times(1).
 					Return(nil)

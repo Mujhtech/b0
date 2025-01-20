@@ -84,7 +84,7 @@ func TestUpdateEndpointService_Run(t *testing.T) {
 						OwnerID:   "user-id",
 						ProjectID: "project-id",
 						//Name:        "updated endpoint",
-						Slug:        "",
+						Path:        "",
 						Description: null.NewString("updated description", true),
 					}).
 					Times(1).
