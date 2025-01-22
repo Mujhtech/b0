@@ -14,14 +14,26 @@ const models = [
   {
     name: "Claude Sonnet 3.5",
     value: "claude-sonnet-3.5",
+    isExperimental: true,
+    disabled: true,
   },
   {
     name: "GPT 4o",
     value: "gpt-4o",
+    isExperimental: true,
+    disabled: true,
   },
   {
     name: "GPT 3.5",
     value: "gpt-3.5",
+    isExperimental: true,
+    disabled: true,
+  },
+  {
+    name: "Gemini 1.5 flash",
+    value: "gemini-1.5-flash",
+    isExperimental: true,
+    disabled: false,
   },
 ];
 

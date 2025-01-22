@@ -1,6 +1,7 @@
-import { ArrowsIn, Minus, Plus, ArrowsOut } from "@phosphor-icons/react";
+import { ArrowsIn, Minus, Plus, Hand } from "@phosphor-icons/react";
 import { Input } from "../ui/input";
 import { usePlayground } from "./playground/provider";
+import { cn } from "~/lib/utils";
 
 export default function ZoomInAndOut() {
   const {
@@ -8,6 +9,8 @@ export default function ZoomInAndOut() {
     handleZoomOut,
     handleResetZoom,
     handleZoomInputChange,
+    handleSetIsPanning,
+    isPanning,
     zoom,
   } = usePlayground();
 
@@ -42,6 +45,19 @@ export default function ZoomInAndOut() {
         className="px-2 bg-background h-8 w-8 border border-input shadow-lg disabled:cursor-not-allowed"
       >
         <ArrowsIn size={28} className="h-4 w-4" />
+      </button>
+      <button
+        type="button"
+        onClick={handleSetIsPanning}
+        className={cn(
+          "px-2 h-8 w-8 border border-input shadow-lg disabled:cursor-not-allowed",
+          isPanning ? "bg-white" : "bg-background"
+        )}
+      >
+        <Hand
+          size={28}
+          className={cn("h-4 w-4", isPanning ? "text-background" : "")}
+        />
       </button>
     </div>
   );
