@@ -12,6 +12,7 @@ import (
 	"github.com/mujhtech/b0/cache"
 	"github.com/mujhtech/b0/config"
 	"github.com/mujhtech/b0/database/store"
+	"github.com/mujhtech/b0/internal/pkg/agent"
 	"github.com/rs/zerolog/hlog"
 
 	chiMiddleware "github.com/go-chi/chi/v5/middleware"
@@ -29,9 +30,10 @@ func New(
 	ctx context.Context,
 	store *store.Store,
 	cache cache.Cache,
+	agent *agent.Agent,
 ) (*Api, error) {
 
-	h, err := handler.New(cfg, ctx, store, cache)
+	h, err := handler.New(cfg, ctx, store, cache, agent)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create handler: %w", err)
 	}

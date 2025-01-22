@@ -11,7 +11,7 @@ import (
 
 const (
 	endpointBaseTable    = "endpoints"
-	endpointSelectColumn = "id, owner_id, project_id, name, description, path, method, is_public, status, metadata, created_at, updated_at, deleted_at"
+	endpointSelectColumn = "id, owner_id, project_id, name, description, path, method, is_public, connectors, status, metadata, created_at, updated_at, deleted_at"
 )
 
 type endpointRepo struct {

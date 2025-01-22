@@ -1,14 +1,19 @@
 package handler
 
 import (
+	"encoding/json"
+	"fmt"
 	"net/http"
 	"net/url"
+	"strings"
 
 	"github.com/mujhtech/b0/api/dto"
 	"github.com/mujhtech/b0/api/middleware"
+	"github.com/mujhtech/b0/internal/pkg/agent"
 	"github.com/mujhtech/b0/internal/pkg/request"
 	"github.com/mujhtech/b0/internal/pkg/response"
 	"github.com/mujhtech/b0/services"
+	"github.com/rs/zerolog"
 )
 
 const (
@@ -99,10 +104,44 @@ func (h *Handler) CreateProject(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	projectTitleAndSlug, err := h.agent.GenerateTitleAndSlug(ctx, dst.Prompt)
+
+	if err != nil {
+		_ = response.InternalServerError(w, r, err)
+		return
+	}
+
+	zerolog.Ctx(ctx).Info().Msgf("Generated title and slug: %s", projectTitleAndSlug)
+
+	if strings.HasPrefix(projectTitleAndSlug, "I'm b0, an AI assistant") {
+		_ = response.BadRequest(w, r, fmt.Errorf("invalid prompt"))
+		return
+	}
+
+	// cleanup the message
+	projectTitleAndSlug = strings.ReplaceAll(projectTitleAndSlug, "Generated title and slug:", "")
+	projectTitleAndSlug = strings.ReplaceAll(projectTitleAndSlug, "json", "")
+	projectTitleAndSlug = strings.ReplaceAll(projectTitleAndSlug, "```", "")
+	projectTitleAndSlug = strings.ReplaceAll(projectTitleAndSlug, "\n", "")
+	projectTitleAndSlug = strings.ReplaceAll(projectTitleAndSlug, `\`, "")
+
+	zerolog.Ctx(ctx).Info().Msgf("cleanup response: %s", strings.TrimSpace(projectTitleAndSlug))
+
+	// unmarshal the projectTitleAndSlug
+	var agentProjectTitleAndSlug *agent.ProjectTitleAndSlug
+
+	if err := json.Unmarshal([]byte(projectTitleAndSlug), &agentProjectTitleAndSlug); err != nil {
+		_ = response.InternalServerError(w, r, err)
+		return
+	}
+
+	zerolog.Ctx(ctx).Info().Msgf("%s", agentProjectTitleAndSlug)
+
 	createProjectService := services.CreateProjectService{
-		Body:        dst,
-		ProjectRepo: h.store.ProjectRepo,
-		User:        session.User,
+		Body:                dst,
+		ProjectTitleAndSlug: agentProjectTitleAndSlug,
+		ProjectRepo:         h.store.ProjectRepo,
+		User:                session.User,
 	}
 
 	project, err := createProjectService.Run(ctx)
