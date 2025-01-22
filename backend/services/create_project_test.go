@@ -7,6 +7,7 @@ import (
 	"github.com/guregu/null"
 	"github.com/mujhtech/b0/api/dto"
 	"github.com/mujhtech/b0/database/models"
+	"github.com/mujhtech/b0/internal/pkg/agent"
 	"github.com/mujhtech/b0/mocks"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
@@ -14,10 +15,11 @@ import (
 
 func TestCreateProjectService_Run(t *testing.T) {
 	type args struct {
-		ctx     context.Context
-		project *models.Project
-		user    *models.User
-		dto     *dto.CreateProjectRequestDto
+		ctx                 context.Context
+		project             *models.Project
+		user                *models.User
+		dto                 *dto.CreateProjectRequestDto
+		projectTitleAndSlug *agent.ProjectTitleAndSlug
 	}
 
 	type testCase struct {
@@ -38,6 +40,11 @@ func TestCreateProjectService_Run(t *testing.T) {
 					Prompt:     "test project",
 					IsTemplate: false,
 				},
+				projectTitleAndSlug: &agent.ProjectTitleAndSlug{
+					Title:       "test project",
+					Slug:        "test-project",
+					Description: "test description",
+				},
 			},
 			mockFn: func(s *CreateProjectService) {
 				pr, _ := s.ProjectRepo.(*mocks.MockProjectRepository)
@@ -56,9 +63,10 @@ func TestCreateProjectService_Run(t *testing.T) {
 			defer ctrl.Finish()
 
 			service := &CreateProjectService{
-				ProjectRepo: mocks.NewMockProjectRepository(ctrl),
-				User:        tt.args.user,
-				Body:        tt.args.dto,
+				ProjectRepo:         mocks.NewMockProjectRepository(ctrl),
+				User:                tt.args.user,
+				Body:                tt.args.dto,
+				ProjectTitleAndSlug: tt.args.projectTitleAndSlug,
 			}
 
 			if tt.mockFn != nil {
