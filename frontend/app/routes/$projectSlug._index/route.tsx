@@ -16,6 +16,7 @@ import { Position } from "~/models/flow";
 import { PlaygroundProvider } from "~/components/builder/playground/provider";
 import Playground from "~/components/builder/playground/playground";
 import BuilderMenu from "~/components/builder/builder-menu";
+import { PlaygroundBuilderProvider } from "~/components/builder/provider";
 
 export const ProjectSlugParamSchema = z.object({
   projectSlug: z.string(),
@@ -53,35 +54,37 @@ export const loader = async ({ request, params }: LoaderFunctionArgs) => {
 
 export default function Page() {
   return (
-    <PlaygroundProvider>
-      <main className="h-full w-full relative canvas-bg">
-        <Playground />
+    <PlaygroundBuilderProvider>
+      <PlaygroundProvider>
+        <main className="h-full w-full relative canvas-bg">
+          <Playground />
 
-        <div className="absolute bottom-4 w-full z-10">
-          <div className="flex justify-between">
-            <div className=" ml-4">
-              <div className="flex items-center gap-2">
-                <UserMenu />
-                <ZoomInAndOut />
+          <div className="absolute bottom-4 w-full z-10">
+            <div className="flex justify-between">
+              <div className=" ml-4">
+                <div className="flex items-center gap-2">
+                  <UserMenu />
+                  <ZoomInAndOut />
+                </div>
               </div>
-            </div>
-            <div className="flex flex-col gap-0.5">
-              <AskB0 />
-              <div className="flex items-center justify-center">
-                <p className="font-mono text-[10px] text-muted-foreground text-center">
-                  b0 can make mistakes. Please double-check it.
-                </p>
+              <div className="flex flex-col gap-0.5">
+                <AskB0 />
+                <div className="flex items-center justify-center">
+                  <p className="font-mono text-[10px] text-muted-foreground text-center">
+                    b0 can make mistakes. Please double-check it.
+                  </p>
+                </div>
               </div>
-            </div>
-            <div className="mr-4">
-              <DeployAndTestBtn />
+              <div className="mr-4">
+                <DeployAndTestBtn />
+              </div>
             </div>
           </div>
-        </div>
-        <BuilderMenu />
-        <BuilderTools />
-      </main>
-    </PlaygroundProvider>
+          <BuilderMenu />
+          <BuilderTools />
+        </main>
+      </PlaygroundProvider>
+    </PlaygroundBuilderProvider>
   );
 }
 

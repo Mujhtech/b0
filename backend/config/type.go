@@ -45,12 +45,20 @@ type Config struct {
 	Cors          Cors      `json:"cors"`
 	Cache         Cache     `json:"cache"`
 	Telemetry     Telemetry `json:"telemetry"`
+	Agent         Agent     `json:"agent"`
 }
 
 type Telemetry struct {
 	Provider TelemetryProvider `json:"provider" envconfig:"TELEMETRY_PROVIDER"`
 	Sentry   Sentry            `json:"sentry"`
 	OTEL     OTEL              `json:"otel"`
+}
+
+type Agent struct {
+	OpenAIKey    string `json:"openai_key" envconfig:"AGENT_OPENAI_KEY"`
+	DeepSeekKey  string `json:"deepseek_key" envconfig:"AGENT_DEEPSEEK_KEY"`
+	AnthropicKey string `json:"anthropic_key" envconfig:"AGENT_ANTHROPIC_KEY"`
+	GeminiKey    string `json:"gemini_key" envconfig:"AGENT_GEMINI_KEY"`
 }
 
 type Sentry struct {

@@ -14,6 +14,7 @@ import (
 	"github.com/mujhtech/b0/database"
 	"github.com/mujhtech/b0/database/store"
 	"github.com/mujhtech/b0/http"
+	"github.com/mujhtech/b0/internal/pkg/agent"
 	"github.com/mujhtech/b0/internal/pkg/telemetry"
 	"github.com/mujhtech/b0/internal/redis"
 	"github.com/rs/zerolog"
@@ -101,11 +102,14 @@ func startServer(configFile string, logLevel string) error {
 
 	store := store.NewStore(db)
 
+	agent := agent.New(cfg)
+
 	app, err := api.New(
 		cfg,
 		ctx,
 		store,
 		cache,
+		agent,
 	)
 
 	if err != nil {

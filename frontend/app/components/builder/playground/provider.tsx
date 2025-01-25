@@ -28,6 +28,7 @@ interface PlaygroundProviderProps {
   handleMouseDown: (e: React.MouseEvent) => void;
   handleMouseMove: (e: React.MouseEvent) => void;
   handleMouseUp: () => void;
+  handleDrag: (e: React.MouseEvent) => void;
   handleNodeDragStart: (nodeId: string) => void;
   handleNodeDrag: (e: React.MouseEvent, nodeId: string) => void;
   handleNodeDragEnd: () => void;
@@ -46,6 +47,7 @@ interface PlaygroundProviderProps {
   handleZoomInputChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   expandToolPanel: boolean;
   handleExpandToolPanel: () => void;
+  handleSetIsPanning: () => void;
 }
 
 const PlaygroundProviderContext = createContext<
@@ -63,7 +65,7 @@ export const PlaygroundProvider = ({ children }: { children: ReactNode }) => {
   } | null>(null);
   const [mousePosition, setMousePosition] = useState<Position>({ x: 0, y: 0 });
   const [zoom, setZoom] = useState(100);
-  const [pan, setPan] = useState<Position>({ x: 0, y: 0 });
+  const [pan, setPan] = useState<Position>({ x: 39.15, y: 55.5222 });
   const [isPanning, setIsPanning] = useState(false);
   const [lastMousePos, setLastMousePos] = useState<Position>({ x: 0, y: 0 });
   const [expandToolPanel, setExpandToolPanel] = useState(false);
@@ -89,7 +91,7 @@ export const PlaygroundProvider = ({ children }: { children: ReactNode }) => {
 
   const handleMouseDown = useCallback((e: React.MouseEvent) => {
     if (e.button === 1 || e.button === 2) {
-      setIsPanning(true);
+      //setIsPanning(true);
       setLastMousePos({ x: e.clientX, y: e.clientY });
     }
   }, []);
@@ -98,21 +100,31 @@ export const PlaygroundProvider = ({ children }: { children: ReactNode }) => {
     (e: React.MouseEvent) => {
       setMousePosition({ x: e.clientX, y: e.clientY });
 
-      if (isPanning) {
-        const dx = e.clientX - lastMousePos.x;
-        const dy = e.clientY - lastMousePos.y;
-        setPan((p) => ({ x: p.x + dx, y: p.y + dy }));
-        setLastMousePos({ x: e.clientX, y: e.clientY });
-      }
+      // if (isPanning) {
+      //   const dx = e.clientX - lastMousePos.x;
+      //   const dy = e.clientY - lastMousePos.y;
+      //   setPan((p) => ({ x: p.x + dx, y: p.y + dy }));
+      //   setLastMousePos({ x: e.clientX, y: e.clientY });
+      // }
     },
     [isPanning, lastMousePos]
   );
 
+  const handleDrag = useCallback(
+    (e: React.MouseEvent) => {
+      const dx = e.clientX - lastMousePos.x;
+      const dy = e.clientY - lastMousePos.y;
+
+      console.log("dx", dx, "dy", dy);
+    },
+    [pan, zoom]
+  );
+
   const handleMouseUp = useCallback(() => {
-    setIsPanning(false);
-    if (connecting) {
-      setConnecting(null);
-    }
+    // setIsPanning(false);
+    // if (connecting) {
+    //   setConnecting(null);
+    // }
   }, [connecting]);
 
   const handleNodeDragStart = useCallback((nodeId: string) => {
@@ -198,12 +210,14 @@ export const PlaygroundProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   const handleZoomOut = useCallback(() => {
-    setZoom((z) => Math.max(z - 25, 25));
+    setZoom((z) => {
+      return Math.max(z - 25, 25);
+    });
   }, []);
 
   const handleZoomIn = useCallback(() => {
     setZoom((z) => {
-      return Math.max(z + 25, 300);
+      return Math.min(z + 25, 300);
     });
   }, [zoom, setZoom]);
 
@@ -223,6 +237,10 @@ export const PlaygroundProvider = ({ children }: { children: ReactNode }) => {
     setExpandToolPanel(!expandToolPanel);
   }, [expandToolPanel, setExpandToolPanel]);
 
+  const handleSetIsPanning = useCallback(() => {
+    setIsPanning(!isPanning);
+  }, [isPanning]);
+
   const value = useMemo<PlaygroundProviderProps>(
     () => ({
       canvasRef,
@@ -238,6 +256,7 @@ export const PlaygroundProvider = ({ children }: { children: ReactNode }) => {
       handleWheel,
       handleMouseDown,
       handleMouseMove,
+      handleSetIsPanning,
       handleMouseUp,
       handleNodeDragStart,
       handleNodeDrag,
@@ -252,6 +271,7 @@ export const PlaygroundProvider = ({ children }: { children: ReactNode }) => {
       handleResetZoom,
       handleZoomInputChange,
       handleExpandToolPanel,
+      handleDrag,
     }),
     [
       canvasRef,
@@ -266,6 +286,8 @@ export const PlaygroundProvider = ({ children }: { children: ReactNode }) => {
       expandToolPanel,
       handleWheel,
       handleMouseDown,
+      handleDrag,
+      handleSetIsPanning,
       handleMouseMove,
       handleMouseUp,
       handleNodeDragStart,

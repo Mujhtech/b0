@@ -9,18 +9,20 @@ import (
 	"github.com/mujhtech/b0/api/dto"
 	"github.com/mujhtech/b0/database/models"
 	"github.com/mujhtech/b0/database/store"
+	"github.com/mujhtech/b0/internal/pkg/agent"
 	"github.com/mujhtech/b0/internal/util"
 )
 
 type CreateProjectService struct {
-	Body        *dto.CreateProjectRequestDto
-	ProjectRepo store.ProjectRepository
-	User        *models.User
+	ProjectTitleAndSlug *agent.ProjectTitleAndSlug
+	Body                *dto.CreateProjectRequestDto
+	ProjectRepo         store.ProjectRepository
+	User                *models.User
 }
 
 func (c *CreateProjectService) Run(ctx context.Context) (*models.Project, error) {
 
-	slug, err := util.GeneratePrefixedID(util.Slugify(c.Body.Prompt), "-", 6)
+	slug, err := util.GeneratePrefixedID(util.Slugify(c.ProjectTitleAndSlug.Slug), "-", 6)
 
 	if err != nil {
 		return nil, err
@@ -29,10 +31,10 @@ func (c *CreateProjectService) Run(ctx context.Context) (*models.Project, error)
 	project := &models.Project{
 		ID:      uuid.New().String(),
 		OwnerID: c.User.ID,
-		Name:    c.Body.Prompt,
+		Name:    c.ProjectTitleAndSlug.Title,
 		Slug:    util.ToLower(slug),
 		//Description: null.NewString(c.Body.Description, c.Body.Description != ""),
-		Metadata:  null.NewString("{}", true),
+		Metadata:  null.NewString(c.ProjectTitleAndSlug.Description, true),
 		CreatedAt: time.Now(),
 		UpdatedAt: time.Now(),
 	}

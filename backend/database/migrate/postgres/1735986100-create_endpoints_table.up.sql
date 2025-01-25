@@ -7,6 +7,7 @@ CREATE TABLE IF NOT EXISTS endpoints (
     path TEXT NOT NULL,
 	method endpoint_method NOT NULL DEFAULT 'GET',
 	description TEXT NULL DEFAULT NULL,
+	connectors jsonb NOT NULL DEFAULT '{}'::jsonb,
 	is_public BOOLEAN NOT NULL DEFAULT FALSE,
 	status endpoint_status NOT NULL DEFAULT 'draft',
 

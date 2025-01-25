@@ -32,6 +32,7 @@ type Endpoint struct {
 	IsPublic    bool           `json:"is_public" db:"is_public"`
 	Status      EndpointStatus `json:"status" db:"status"`
 	Metadata    interface{}    `json:"metadata" db:"metadata"`
+	Connectors  interface{}    `json:"connectors,omitempty" db:"connectors"`
 	CreatedAt   time.Time      `json:"created_at,omitempty" db:"created_at,omitempty"`
 	UpdatedAt   time.Time      `json:"updated_at,omitempty" db:"updated_at,omitempty"`
 	DeletedAt   null.Time      `json:"deleted_at,omitempty" db:"deleted_at"`
