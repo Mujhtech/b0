@@ -1,4 +1,4 @@
-import { ArrowsIn, Minus, Plus, Hand } from "@phosphor-icons/react";
+import { ArrowsIn, Minus, Plus, HandGrabbing } from "@phosphor-icons/react";
 import { Input } from "../ui/input";
 import { usePlayground } from "./playground/provider";
 import { cn } from "~/lib/utils";
@@ -54,7 +54,7 @@ export default function ZoomInAndOut() {
           isPanning ? "bg-white" : "bg-background"
         )}
       >
-        <Hand
+        <HandGrabbing
           size={28}
           className={cn("h-4 w-4", isPanning ? "text-background" : "")}
         />
