@@ -104,7 +104,7 @@ func (h *Handler) CreateProject(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	projectTitleAndSlug, err := h.agent.GenerateTitleAndSlug(ctx, dst.Prompt)
+	projectTitleAndSlug, err := h.agent.GenerateTitleAndSlug(ctx, dst.Prompt, agent.WithModel(agent.ToModel(dst.Model)))
 
 	if err != nil {
 		_ = response.InternalServerError(w, r, err)

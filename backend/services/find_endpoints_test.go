@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/guregu/null"
+	"github.com/mujhtech/b0/api/dto"
 	"github.com/mujhtech/b0/database/models"
 	"github.com/mujhtech/b0/mocks"
 	"github.com/stretchr/testify/require"
@@ -60,7 +61,9 @@ func TestFindEndpointsService_Run(t *testing.T) {
 			service := &FindEndpointsService{
 				EndpointRepo: mocks.NewMockEndpointRepository(ctrl),
 				User:         tt.args.user,
-				ProjectID:    tt.args.projectID,
+				Query: dto.GetEndpointQuery{
+					ProjectID: tt.args.projectID,
+				},
 			}
 
 			if tt.mockFn != nil {
