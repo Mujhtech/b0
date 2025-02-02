@@ -17,7 +17,8 @@ import { requireUser } from "~/services/user.server";
 import { CreateProjectFormSchema } from "~/models/project";
 import { createProject } from "~/services/project.server";
 import { useFetcher } from "@remix-run/react";
-import { useForm } from "@conform-to/react";
+import { useForm, useInputControl } from "@conform-to/react";
+import React from "react";
 
 export const action: ActionFunction = async ({ request, params }) => {
   const user = await requireUser(request);
@@ -55,6 +56,7 @@ export const meta: MetaFunction = () => {
 
 export default function Index() {
   const fetcher = useFetcher();
+  const [model, setModel] = React.useState<string>("gpt-3.5-turbo");
 
   const [form, fields] = useForm({
     id: "create-project-form",
@@ -91,9 +93,19 @@ export default function Index() {
               placeholder="What are you building today?"
               className=" resize-none border-none focus-visible:ring-0 min-h-[100px] shadow-none"
             ></Textarea>
+            <input
+              type="hidden"
+              name={fields.model.name}
+              key={fields.model.key}
+              value={model}
+            />
             <div className="flex items-center px-3 pb-2">
               <div className="flex gap-2">
-                <AIModelPicker2 />
+                <AIModelPicker2
+                  onSelect={(mode) => {
+                    setModel(mode);
+                  }}
+                />
                 <button
                   type="button"
                   className="border border-input h-6 w-6 p-1 inline-flex items-center justify-center"

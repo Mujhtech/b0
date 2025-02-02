@@ -39,3 +39,12 @@ export function useBackendUrl(matches?: UIMatch[]): string | undefined {
 
   return routeMatch?.backendUrl;
 }
+
+export function usePlatformUrl(matches?: UIMatch[]): string | undefined {
+  const routeMatch = useTypedMatchesData<typeof loader>({
+    id: "root",
+    matches,
+  });
+
+  return routeMatch?.platformUrl;
+}

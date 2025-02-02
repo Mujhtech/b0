@@ -1,26 +1,17 @@
 import { env } from "~/env.server";
 import { getAuthSession, getAuthTokenFromSession } from "./auth.server";
-import { z } from "zod";
-
-type ClientRequestOptions<T> = {
-  request: Request;
-  path: string;
-  body?: any;
-  query?: any;
-  schema?: z.ZodType<T>;
-  headers?: any;
-};
+import { ClientRequestOptions, handleClientUnauthorized } from "./api-helper";
 
 async function postRequest<T = any>(
   options: ClientRequestOptions<T>
 ): Promise<T> {
   return handleClientUnauthorized<T>(
     () => {
-      return clientRequest({
+      return serverRequest({
         method: "POST",
         path: options.path,
         body: options.body,
-        request: options.request,
+        request: options.request!,
         headers: options.headers,
       });
     },
@@ -39,8 +30,8 @@ async function getRequest<T = any>(
 
       const path = query ? `${options.path}?${query}` : options.path;
 
-      return clientRequest({
-        request: options.request,
+      return serverRequest({
+        request: options.request!,
         headers: options.headers,
         method: "GET",
         path: path,
@@ -58,8 +49,8 @@ async function putRequest<T = any>(
 ): Promise<T> {
   return handleClientUnauthorized<T>(
     () => {
-      return clientRequest({
-        request: options.request,
+      return serverRequest({
+        request: options.request!,
         headers: options.headers,
         method: "PUT",
         path: options.path,
@@ -77,12 +68,12 @@ async function deleteRequest<T = any>(
 ): Promise<T> {
   return handleClientUnauthorized<T>(
     () => {
-      return clientRequest({
+      return serverRequest({
         method: "DELETE",
         path: options.path,
         headers: options.headers,
         body: options.body,
-        request: options.request,
+        request: options.request!,
       });
     },
     {
@@ -91,42 +82,7 @@ async function deleteRequest<T = any>(
   );
 }
 
-async function handleClientUnauthorized<T = any>(
-  sendRequest: () => Promise<Response>,
-  options: {
-    schema?: z.ZodType<T>;
-  }
-): Promise<T> {
-  let response = await sendRequest();
-
-  if (response.status === 401) {
-    response = await sendRequest();
-  }
-
-  if ([200, 201].includes(response.status) == false) {
-    const body = await response.json();
-
-    console.log(body);
-
-    throw body;
-  }
-
-  const data = await response.json();
-
-  console.log(data);
-
-  if (options.schema) {
-    try {
-      return options.schema.parse(data.data);
-    } catch (error) {
-      return data as T;
-    }
-  }
-
-  return data as T;
-}
-
-const clientRequest = async (options: {
+const serverRequest = async (options: {
   request: Request;
   method: "POST" | "GET" | "PUT" | "DELETE" | "HEAD";
   path: string;
