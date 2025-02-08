@@ -15,6 +15,8 @@ import (
 	"github.com/mujhtech/b0/database/store"
 	"github.com/mujhtech/b0/http"
 	"github.com/mujhtech/b0/internal/pkg/agent"
+	"github.com/mujhtech/b0/internal/pkg/pubsub"
+	"github.com/mujhtech/b0/internal/pkg/sse"
 	"github.com/mujhtech/b0/internal/pkg/telemetry"
 	"github.com/mujhtech/b0/internal/redis"
 	"github.com/rs/zerolog"
@@ -100,9 +102,17 @@ func startServer(configFile string, logLevel string) error {
 		return fmt.Errorf("failed to create cache: %w", err)
 	}
 
+	pubsub, err := pubsub.NewPubsub(cfg, ctx, redis)
+
+	if err != nil {
+		return fmt.Errorf("failed to create pubsub: %w", err)
+	}
+
 	store := store.NewStore(db)
 
 	agent := agent.New(cfg)
+
+	sse := sse.NewStreamer(pubsub)
 
 	app, err := api.New(
 		cfg,
@@ -110,6 +120,7 @@ func startServer(configFile string, logLevel string) error {
 		store,
 		cache,
 		agent,
+		sse,
 	)
 
 	if err != nil {

@@ -13,6 +13,7 @@ import (
 	"github.com/mujhtech/b0/config"
 	"github.com/mujhtech/b0/database/store"
 	"github.com/mujhtech/b0/internal/pkg/agent"
+	"github.com/mujhtech/b0/internal/pkg/sse"
 	"github.com/rs/zerolog/hlog"
 
 	chiMiddleware "github.com/go-chi/chi/v5/middleware"
@@ -31,9 +32,10 @@ func New(
 	store *store.Store,
 	cache cache.Cache,
 	agent *agent.Agent,
+	sse sse.Streamer,
 ) (*Api, error) {
 
-	h, err := handler.New(cfg, ctx, store, cache, agent)
+	h, err := handler.New(cfg, ctx, store, cache, agent, sse)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create handler: %w", err)
 	}
@@ -93,6 +95,7 @@ func (a *Api) BuildRouter() *chi.Mux {
 				r.Post("/", a.handler.CreateProject)
 				r.Get(fmt.Sprintf("/{%s}", handler.ProjectParamId), a.handler.GetProject)
 				r.Put(fmt.Sprintf("/{%s}", handler.ProjectParamId), a.handler.UpdateProject)
+				r.Get(fmt.Sprintf("/{%s}/sse", handler.ProjectParamId), a.handler.Event)
 			})
 
 			// projects route
@@ -102,6 +105,10 @@ func (a *Api) BuildRouter() *chi.Mux {
 				r.Put(fmt.Sprintf("/{%s}", handler.EndpointParamId), a.handler.UpdateEndpoint)
 			})
 
+			// chat route
+			r.Route("/chat", func(r chi.Router) {
+				r.Post(fmt.Sprintf("/{%s}", handler.ProjectParamId), a.handler.Chat)
+			})
 		})
 	})
 

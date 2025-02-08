@@ -104,7 +104,18 @@ func (h *Handler) CreateProject(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	projectTitleAndSlug, err := h.agent.GenerateTitleAndSlug(ctx, dst.Prompt, agent.WithModel(agent.ToModel(dst.Model)))
+	var agentModel agent.AgentModel
+
+	if dst.Model != "" {
+		var agentModelErr error
+		agentModel, agentModelErr = agent.GetModel(dst.Model)
+		if agentModelErr != nil {
+			_ = response.BadRequest(w, r, agentModelErr)
+			return
+		}
+	}
+
+	projectTitleAndSlug, err := h.agent.GenerateTitleAndSlug(ctx, dst.Prompt, agent.WithModel(agentModel))
 
 	if err != nil {
 		_ = response.InternalServerError(w, r, err)
