@@ -19,6 +19,7 @@ import { createProject } from "~/services/project.server";
 import { useFetcher } from "@remix-run/react";
 import { useForm, useInputControl } from "@conform-to/react";
 import React from "react";
+import { useFeature } from "~/hooks/use-feature";
 
 export const action: ActionFunction = async ({ request, params }) => {
   const user = await requireUser(request);
@@ -56,7 +57,11 @@ export const meta: MetaFunction = () => {
 
 export default function Index() {
   const fetcher = useFetcher();
-  const [model, setModel] = React.useState<string>("gpt-3.5-turbo");
+  const { available_models } = useFeature();
+  const defaultModel = available_models.find((model) => model.is_default);
+  const [model, setModel] = React.useState<string | undefined>(
+    defaultModel?.model
+  );
 
   const [form, fields] = useForm({
     id: "create-project-form",
@@ -102,6 +107,7 @@ export default function Index() {
             <div className="flex items-center px-3 pb-2">
               <div className="flex gap-2">
                 <AIModelPicker2
+                  value={model}
                   onSelect={(mode) => {
                     setModel(mode);
                   }}
