@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"strings"
 
 	"github.com/mujhtech/b0/config"
 	"github.com/openai/openai-go"
@@ -30,8 +31,33 @@ const (
 	You are here to help user generate a workflow diagram node based on the user prompt. The workflow diagram node will be in json format and you are to generate the workflow diagram node based on the prompt.
 	
 	Example of workflow template are: if, for, while,
-	{
-	}
+	request = {"type": "request", "instruction":"...", "method": "...", "url": "...", "body": "..."}
+	if = {"type": "if", "instruction":"...", "condition": "...", "then": "...", "else": "..."}
+	for = {"type": "for", "instruction":"...", "condition": "...", "body": "..."}
+	while = {"type": "while", "instruction":"...", "condition": "...", "body": "..."}
+	variable = {"type": "variable", "name": "...", "value": "..."}
+	switch = {"type": "switch", "instruction":"...", "condition": "...", "cases": [{"value": "...", "body": "..."}]}
+	response = {"type": "response", "instruction":"...", "value": "..."}
+
+	Integration:
+	resend = {"type": "resend", "instruction":"...", "url": "...", "method": "...", "body": "..."}
+	slack = {"type": "slack", "instruction":"...", "channel": "...", "message": "..."}
+	discord = {"type": "discord", "instruction":"...", "channel": "...", "message": "..."}
+	telegram = {"type": "telegram", "instruction":"...", "channel": "...", "message": "..."}
+	stripe = {"type": "stripe", "instruction":"...", "method": "...", "url": "...", "body": "..."}
+	openai = {"type": "openai", "instruction":"...", "model": "...", "prompt": "...", "temperature": "...", "max_tokens": "...", "top_p": "...", "frequency_penalty": "...", "presence_penalty": "..."}
+	supabase = {"type": "supabase", "instruction":"...", "table": "...", "method": "...", "body": "..."}
+	github = {"type": "github", "instruction":"...", "method": "...", "url": "...", "body": "..."}
+
+	## Requirements:
+	- The workflow diagram will be in json format.
+	- Workflow can be nested and can have multiple nodes that represent the workflow.
+	- Make sure to follow the instructions above
+	- Ignore comments in the workflow diagram.
+
+	## Output:
+	- The output should be a json string in the format of {"workflows": ["..."]}
+	- For string interpolation, use {{...}} for the value.
 	`
 
 	b0WorkflowToCodeGenerationSystemMessage = b0DefaultSystemMessage + `You are here to help user generate code from a workflow diagram. The workflow diagram will be in json format and you are to generate the code based on the diagram.
@@ -45,11 +71,13 @@ const (
 
 	## Workflow Diagram:
 	- The workflow diagram will be in json format.
+	
 
 	%s
 
 	## Output:
 	- The output should be a json string in the format of {"code": "..."}
+	- Ignore comments in the workflow diagram.
 	`
 )
 
@@ -161,7 +189,7 @@ func (a *Agent) GenerateTitleAndSlug(ctx context.Context, prompt string, opts ..
 }
 
 // GenerateWorkflow generates a workflow diagram based on the given prompt.
-func (a *Agent) GenerateWorkflow(ctx context.Context, prompt string, opts ...OptionFunc) (string, error) {
+func (a *Agent) GenerateWorkflow(ctx context.Context, prompt string, opts ...OptionFunc) (*[]Workflow, string, error) {
 	opCfg := *a.cfg
 	for _, opt := range opts {
 		opt(&opCfg)
@@ -178,10 +206,40 @@ func (a *Agent) GenerateWorkflow(ctx context.Context, prompt string, opts ...Opt
 	})
 
 	if err != nil {
-		return "", err
+		return nil, "", err
 	}
 
-	return chat.Choices[0].Message.Content, nil
+	workflowString := chat.Choices[0].Message.Content
+
+	workflowString = strings.ReplaceAll(workflowString, "json", "")
+	workflowString = strings.ReplaceAll(workflowString, "```", "")
+	workflowString = strings.ReplaceAll(workflowString, "\n", "")
+	workflowString = strings.ReplaceAll(workflowString, `\`, "")
+
+	var rawDogData map[string]interface{}
+
+	err = json.Unmarshal([]byte(workflowString), &rawDogData)
+
+	if err != nil {
+		return nil, workflowString, err
+	}
+
+	var workflows []Workflow
+	workflowsRaw, ok := rawDogData["workflows"].([]interface{})
+	if !ok {
+		return nil, workflowString, fmt.Errorf("invalid workflows format")
+	}
+
+	workflowsJson, err := json.Marshal(workflowsRaw)
+	if err != nil {
+		return nil, workflowString, fmt.Errorf("failed to marshal workflows: %w", err)
+	}
+
+	if err := json.Unmarshal(workflowsJson, &workflows); err != nil {
+		return nil, workflowString, fmt.Errorf("failed to unmarshal workflows: %w", err)
+	}
+
+	return &workflows, workflowString, nil
 }
 
 // CodeGeneration generates code from a workflow diagram.
