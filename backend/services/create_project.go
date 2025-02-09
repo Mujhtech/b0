@@ -26,6 +26,7 @@ func (c *CreateProjectService) Run(ctx context.Context) (*models.Project, error)
 		ID:          uuid.New().String(),
 		OwnerID:     c.User.ID,
 		Name:        c.ProjectTitleAndSlug.Title,
+		Model:       null.NewString(c.Body.Model, c.Body.Model != ""),
 		Slug:        util.ToLower(util.Slugify(c.ProjectTitleAndSlug.Slug)),
 		Description: null.NewString(c.ProjectTitleAndSlug.Description, true),
 		CreatedAt:   time.Now(),

@@ -12,14 +12,14 @@ type Executor struct {
 	srv *asynq.Server
 }
 
-func NewExecutor(cfg *config.Config, opts asynq.RedisConnOpt) *Executor {
+func NewExecutor(cfg *config.Config, appCtx context.Context, opts asynq.RedisConnOpt) *Executor {
 
 	srv := asynq.NewServer(
 		opts,
 		asynq.Config{
 			Concurrency: cfg.Job.Concurrency,
-			BaseContext: func() (ctx context.Context) {
-				return ctx
+			BaseContext: func() context.Context {
+				return appCtx
 			},
 		},
 	)

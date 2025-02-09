@@ -1,12 +1,17 @@
 package job
 
 import (
-	"encoding/json"
+	"fmt"
 
 	"github.com/danvixent/asynqmon"
 	"github.com/google/uuid"
 	"github.com/hibiken/asynq"
 	"github.com/mujhtech/b0/internal/pkg/encrypt"
+)
+
+var (
+	ErrTaskNotFound  = fmt.Errorf("asynq: %w", asynq.ErrTaskNotFound)
+	ErrQueueNotFound = fmt.Errorf("asynq: %w", asynq.ErrQueueNotFound)
 )
 
 type Client struct {
@@ -43,11 +48,11 @@ func (c *Client) Enqueue(queue QueueName, job JobName, payload *ClientPayload) e
 	_, err = c.inspector.GetTaskInfo(q, id)
 	if err != nil {
 
-		// message := err.Error()
-		// if ErrQueueNotFound.Error() == message || ErrTaskNotFound.Error() == message {
-		// 	_, err := c.client.Enqueue(t, nil)
-		// 	return err
-		// }
+		message := err.Error()
+		if ErrQueueNotFound.Error() == message || ErrTaskNotFound.Error() == message {
+			_, err := c.client.Enqueue(t, nil)
+			return err
+		}
 
 		return err
 	}
@@ -96,8 +101,9 @@ func (f Formatter) FormatPayload(_ string, payload []byte) string {
 		return ""
 	}
 
-	bytes, _ := json.Marshal(data)
-	return string(bytes)
+	// bytes, _ := json.Marshal(data)
+	// return string(bytes)
+	return data
 }
 
 func (f Formatter) FormatResult(_ string, payload []byte) string {
@@ -107,6 +113,7 @@ func (f Formatter) FormatResult(_ string, payload []byte) string {
 		return ""
 	}
 
-	bytes, _ := json.Marshal(data)
-	return string(bytes)
+	// bytes, _ := json.Marshal(data)
+	// return string(bytes)
+	return data
 }
