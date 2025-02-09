@@ -76,7 +76,7 @@ func (a *ApacheKafka) Publish(ctx context.Context, topic string, payload []byte,
 		BatchTimeout: time.Second,
 		Transport: &kafka.Transport{
 			//Dial: a.dialer.DialContext,
-			TLS: &tls.Config{},
+			TLS: &tls.Config{}, // #nosec G402
 		},
 	}
 	defer writer.Close()

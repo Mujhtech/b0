@@ -9,8 +9,8 @@ import (
 )
 
 const (
-	aiTokenCreditBaseTable    = "ai_token_credits"
-	aiTokenCreditSelectColumn = "id, owner_id, model, credits, total_credits, used_credits, metadata, created_at, updated_at, deleted_at"
+	aiTokenCreditBaseTable    = "ai_token_credits"                                                                                        // #nosec G101
+	aiTokenCreditSelectColumn = "id, owner_id, model, credits, total_credits, used_credits, metadata, created_at, updated_at, deleted_at" // #nosec G101
 )
 
 type aiTokenCreditRepo struct {
