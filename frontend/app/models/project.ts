@@ -9,6 +9,7 @@ export const ProjectSchema = z.object({
   slug: z.string(),
   created_at: z.string(),
   updated_at: z.string(),
+  model: z.string().optional(),
 });
 
 export type Project = z.infer<typeof ProjectSchema>;

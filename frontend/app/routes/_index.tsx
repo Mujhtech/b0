@@ -149,7 +149,7 @@ export default function Index() {
             "Discord Bot",
             "Open AI",
           ].map((template, i) => (
-            <TemplateCard key={i} template={template} />
+            <TemplateCard key={i} template={template} model={model} />
           ))}
         </div>
       </div>
@@ -157,13 +157,22 @@ export default function Index() {
   );
 }
 
-const TemplateCard = ({ template }: { template: string }) => {
+const TemplateCard = ({
+  template,
+  model,
+}: {
+  template: string;
+  model?: string;
+}) => {
   const fetcher = useFetcher();
 
   const handleOnClick = () => {
     const formData = new FormData();
     formData.append("prompt", template);
     formData.append("isTemplate", "true");
+    if (model) {
+      formData.append("model", model);
+    }
     fetcher.submit(formData, { method: "POST" });
   };
 
