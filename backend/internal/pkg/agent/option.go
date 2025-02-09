@@ -54,6 +54,19 @@ type Workflow struct {
 	Condition   string         `json:"condition,omitempty"`
 	Cases       []WorkflowCase `json:"cases,omitempty"`
 	Value       interface{}    `json:"value,omitempty"`
+	Url         string         `json:"url,omitempty"`
+	Method      string         `json:"method,omitempty"`
+	Name        string         `json:"name,omitempty"`
+	Headers     []string       `json:"headers,omitempty"`
+	Body        interface{}    `json:"body,omitempty"`
+	Variables   []string       `json:"variables,omitempty"`
+	ActionID    string         `json:"action_id,omitempty"`
+	Status      string         `json:"status,omitempty"`
+}
+
+type AgentToken struct {
+	Input  string `json:"input"`
+	Output string `json:"output"`
 }
 
 var AvailableCatalogs = []ModeCatalog{

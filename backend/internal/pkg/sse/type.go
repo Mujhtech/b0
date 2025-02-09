@@ -2,8 +2,6 @@ package sse
 
 import (
 	"encoding/json"
-
-	"github.com/mujhtech/b0/internal/pkg/agent"
 )
 
 type EventType string
@@ -25,12 +23,6 @@ const (
 	UploadProgressStatusCompleted UploadProgressStatus = "completed"
 	UploadProgressStatusCancelled UploadProgressStatus = "cancelled"
 )
-
-type AgentData struct {
-	Message   string            `json:"message"`
-	Error     string            `json:"error,omitempty"`
-	Workflows *[]agent.Workflow `json:"workflows,omitempty"`
-}
 
 type Event struct {
 	Type EventType       `json:"type"`
