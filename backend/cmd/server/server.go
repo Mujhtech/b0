@@ -19,6 +19,7 @@ import (
 	"github.com/mujhtech/b0/internal/pkg/sse"
 	"github.com/mujhtech/b0/internal/pkg/telemetry"
 	"github.com/mujhtech/b0/internal/redis"
+	"github.com/mujhtech/b0/job"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
@@ -114,6 +115,12 @@ func startServer(configFile string, logLevel string) error {
 
 	sse := sse.NewStreamer(pubsub)
 
+	job, err := job.NewJob(cfg, redis)
+
+	if err != nil {
+		return fmt.Errorf("failed to initialize job: %w", err)
+	}
+
 	app, err := api.New(
 		cfg,
 		ctx,
@@ -121,6 +128,7 @@ func startServer(configFile string, logLevel string) error {
 		cache,
 		agent,
 		sse,
+		job,
 	)
 
 	if err != nil {
@@ -138,8 +146,7 @@ func startServer(configFile string, logLevel string) error {
 	g, gCtx := errgroup.WithContext(ctx)
 
 	g.Go(func() error {
-		//return job.RegisterAndStart(store, s3)
-		return nil
+		return job.RegisterAndStart(store)
 	})
 
 	gHTTP, shutdownHTTP := server.ListenAndServe()
@@ -163,7 +170,7 @@ func startServer(configFile string, logLevel string) error {
 		return fmt.Errorf("failed to shutdown telemetry: %w", err)
 	}
 
-	//job.Executor.Stop()
+	job.Executor.Stop()
 
 	logger.Info().Msg("waiting for all goroutines to finish")
 	err = g.Wait()

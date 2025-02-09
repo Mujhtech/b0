@@ -36,3 +36,13 @@ type ProjectRepository interface {
 	FindProjectByOwnerID(ctx context.Context, ownerID string) ([]*models.Project, error)
 	DeleteProject(ctx context.Context, id string) error
 }
+
+type AIUsageRepository interface {
+	CreateAIUsage(ctx context.Context, aiUsage *models.AIUsage) error
+	UpdateAIUsage(ctx context.Context, aiUsage *models.AIUsage) error
+	DeleteAIUsage(ctx context.Context, id string) error
+	FindAIUsageByID(ctx context.Context, id string) (*models.AIUsage, error)
+	FindAIUsageByProjectID(ctx context.Context, projectID string) ([]*models.AIUsage, error)
+	GetTotalUsageInCurrentMonth(ctx context.Context, projectID string) (*TotalAIUsageInCurrentMonth, error)
+	GetTotalUsageInCurrentDay(ctx context.Context, projectID string) (*TotalAIUsageInCurrentDay, error)
+}

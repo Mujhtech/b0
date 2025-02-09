@@ -8,6 +8,7 @@ import (
 	"github.com/mujhtech/b0/database/store"
 	"github.com/mujhtech/b0/internal/pkg/agent"
 	"github.com/mujhtech/b0/internal/pkg/sse"
+	"github.com/mujhtech/b0/job"
 )
 
 type Handler struct {
@@ -17,6 +18,7 @@ type Handler struct {
 	cache cache.Cache
 	agent *agent.Agent
 	sse   sse.Streamer
+	job   *job.Job
 }
 
 func New(
@@ -26,6 +28,7 @@ func New(
 	cache cache.Cache,
 	agent *agent.Agent,
 	sse sse.Streamer,
+	job *job.Job,
 ) (*Handler, error) {
 
 	return &Handler{
@@ -35,5 +38,6 @@ func New(
 		cache: cache,
 		agent: agent,
 		sse:   sse,
+		job:   job,
 	}, nil
 }

@@ -27,6 +27,7 @@ type Store struct {
 	TokenRepo    TokenRepository
 	ProjectRepo  ProjectRepository
 	EndpointRepo EndpointRepository
+	AIUsageRepo  AIUsageRepository
 }
 
 func NewStore(db *database.Database) *Store {
@@ -35,6 +36,7 @@ func NewStore(db *database.Database) *Store {
 		TokenRepo:    NewTokenRepository(db),
 		ProjectRepo:  NewProjectRepository(db),
 		EndpointRepo: NewEndpointRepository(db),
+		AIUsageRepo:  NewAIUsageRepository(db),
 	}
 }
 
