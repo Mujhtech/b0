@@ -10,7 +10,7 @@ import (
 )
 
 const (
-	aiUsageBaseTable    = "endpoints"
+	aiUsageBaseTable    = "ai_usages"
 	aiUsageSelectColumn = "id, owner_id, project_id, endpoint_id, input_tokens, output_tokens, model, usage_type, metadata, created_at, updated_at, deleted_at"
 )
 

@@ -46,3 +46,7 @@ type AIUsageRepository interface {
 	GetTotalUsageInCurrentMonth(ctx context.Context, projectID string) (*TotalAIUsageInCurrentMonth, error)
 	GetTotalUsageInCurrentDay(ctx context.Context, projectID string) (*TotalAIUsageInCurrentDay, error)
 }
+
+type ProjectLogRepository interface{}
+
+type AITokenCreditRepository interface{}
