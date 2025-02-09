@@ -28,14 +28,10 @@ import {
 } from "~/components/ui/popover";
 import { cn } from "~/lib/utils";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "~/components/ui/tabs";
-import { clientApi } from "~/services/api.client";
 import {
-  CreateOrUpdateEndpointForm,
-  CreateOrUpdateEndpointFormSchema,
-  GetEndpoint,
-  GetEndpointSchema,
+  EndpointResponseStatusSchema,
+  EndpointWorkflow,
 } from "~/models/endpoint";
-import { useNavigate } from "@remix-run/react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
@@ -46,58 +42,33 @@ import {
   FormLabel,
   FormMessage,
 } from "~/components/ui/form";
-import { useAuthToken, usePlatformUrl } from "~/hooks/use-user";
-import { useOptionalEndpoint, useProject } from "~/hooks/use-project";
-import { Switch } from "~/components/ui/switch";
-import { Badge } from "~/components/ui/badge";
+import { z } from "zod";
 
-const methods = ["GET", "POST", "PUT", "DELETE", "PATCH"];
+const statuses = ["200", "201", "400", "401", "403", "404", "500"];
 
-export default function Connector() {
-  const endpoint = useOptionalEndpoint();
+const formSchema = z.object({
+  status: EndpointResponseStatusSchema,
+  description: z.string().optional(),
+});
+
+export default function HttpResponseConnector({
+  workflow,
+}: {
+  workflow: EndpointWorkflow;
+}) {
   const [isOpen, setIsOpen] = useState(false);
-  const navigate = useNavigate();
 
   const handleClose = useCallback(() => {
     setIsOpen(false);
   }, [isOpen]);
 
-  const accessToken = useAuthToken();
-  const backendBaseUrl = usePlatformUrl();
-  const project = useProject();
-
-  const form = useForm<CreateOrUpdateEndpointForm>({
-    resolver: zodResolver(CreateOrUpdateEndpointFormSchema),
-    defaultValues: {
-      name: endpoint?.name ?? "",
-      description: endpoint?.description ?? "",
-      method: endpoint?.method,
-      path: endpoint?.path ?? "",
-      is_public: endpoint?.is_public ?? false,
-    },
+  const form = useForm<z.infer<typeof formSchema>>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {},
   });
 
-  async function onSubmit(values: CreateOrUpdateEndpointForm) {
+  async function onSubmit(values: z.infer<typeof formSchema>) {
     try {
-      if (!endpoint) {
-        const res = await clientApi.post<GetEndpoint>({
-          path: "/endpoints",
-          body: { ...values, project_id: project.id },
-          backendBaseUrl: backendBaseUrl!,
-          accessToken: accessToken!,
-          schema: GetEndpointSchema,
-        });
-        navigate("?endpoint" + res.data.id);
-      } else {
-        await clientApi.put<GetEndpoint>({
-          path: `/endpoints/${endpoint?.id}`,
-          body: { ...values, project_id: project.id },
-          backendBaseUrl: backendBaseUrl!,
-          accessToken: accessToken!,
-          schema: GetEndpointSchema,
-        });
-        navigate("?endpoint" + endpoint?.id);
-      }
     } catch (error) {
       console.error(error);
     }
@@ -109,26 +80,21 @@ export default function Connector() {
         <div className="flex flex-col group h-min">
           <div className="border border-input w-[250px] bg-background shadow-sm flex self-center flex-col hover:drop-shadow-xl cursor-pointer">
             <div className="border-b border-input flex items-center justify-center">
-              {endpoint && (
-                <Badge className="font-mono text-[10px] mr-1">
-                  {endpoint.method}
-                </Badge>
-              )}
               <h3 className="text-xs font-mono text-muted-foreground p-2">
-                HTTP Request
+                HTTP Response
               </h3>
             </div>
             <div className="p-2">
-              {endpoint && (
+              {workflow && (
                 <div>
                   <p className="text-xs font-mono text-muted-foreground">
-                    {endpoint.name}
+                    {workflow.instruction}
                   </p>
                 </div>
               )}
             </div>
           </div>
-          <div className="relative flex self-center min-h-[22px] border-solid border-x border-input cursor-pointer"></div>
+          {/* <div className="relative flex self-center min-h-[22px] border-solid border-x border-input cursor-pointer"></div> */}
         </div>
       </SheetTrigger>
       <SheetContent
@@ -138,7 +104,7 @@ export default function Connector() {
         <div className="relative bg-background w-full h-full border border-input">
           <SheetHeader className="flex flex-row items-center justify-between border-b border-input space-y-0 p-2">
             <SheetTitle className="text-xs font-mono text-muted-foreground">
-              HTTP Request
+              HTTP Response
             </SheetTitle>
             <Button
               variant={"outline"}
@@ -168,21 +134,6 @@ export default function Connector() {
                     <div className="flex flex-col gap-2">
                       <FormField
                         control={form.control}
-                        name="name"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Name</FormLabel>
-                            <FormControl>
-                              <Input placeholder="Name" {...field} />
-                            </FormControl>
-
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-
-                      <FormField
-                        control={form.control}
                         name="description"
                         render={({ field }) => (
                           <FormItem>
@@ -202,49 +153,16 @@ export default function Connector() {
 
                       <FormField
                         control={form.control}
-                        name="path"
+                        name="status"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Url Path</FormLabel>
-                            <FormControl>
-                              <Input placeholder="/index" {...field} />
-                            </FormControl>
-
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-
-                      <FormField
-                        control={form.control}
-                        name="method"
-                        render={({ field }) => (
-                          <FormItem>
-                            <Label>Url Method</Label>
-                            <SelectMethodDialog
+                            <Label>Status</Label>
+                            <SelectStatusDialog
                               value={field.value}
                               onChange={(val) => {
                                 field.onChange(val);
                               }}
                             />
-                          </FormItem>
-                        )}
-                      />
-
-                      <FormField
-                        control={form.control}
-                        name="is_public"
-                        render={({ field }) => (
-                          <FormItem className="flex flex-row items-center justify-between">
-                            <div className="">
-                              <FormLabel>Go public</FormLabel>
-                            </div>
-                            <FormControl>
-                              <Switch
-                                checked={field.value}
-                                onCheckedChange={field.onChange}
-                              />
-                            </FormControl>
                           </FormItem>
                         )}
                       />
@@ -277,7 +195,7 @@ export default function Connector() {
   );
 }
 
-export function SelectMethodDialog({
+export function SelectStatusDialog({
   value,
   onChange,
 }: {
@@ -295,7 +213,7 @@ export function SelectMethodDialog({
           aria-expanded={open}
           className="w-full justify-between"
         >
-          {value ? methods.find((item) => item === value) : "Select method..."}
+          {value ? statuses.find((item) => item === value) : "Select status..."}
           <CaretDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
         </Button>
       </PopoverTrigger>
@@ -303,9 +221,9 @@ export function SelectMethodDialog({
         <Command>
           <CommandInput placeholder="Search method..." />
           <CommandList>
-            <CommandEmpty>No method found.</CommandEmpty>
+            <CommandEmpty>No status found.</CommandEmpty>
             <CommandGroup>
-              {methods.map((method) => (
+              {statuses.map((method) => (
                 <CommandItem
                   key={method}
                   value={method}

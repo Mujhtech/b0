@@ -1,7 +1,13 @@
 import React from "react";
 import { usePlayground } from "./provider";
-import Connector from "./connector";
+import HttpRequestConnector from "./connector/http-request";
 import { cn } from "~/lib/utils";
+import { useOptionalEndpoint } from "~/hooks/use-project";
+import HttpResponseConnector from "./connector/http-response";
+import IfConnector from "./connector/if";
+import VariableConnector from "./connector/variable";
+import SwitchConnector from "./connector/switch";
+import CodeblockConnector from "./connector/codeblock";
 
 export default function Playground() {
   const {
@@ -14,6 +20,10 @@ export default function Playground() {
     zoom,
     handleDrag,
   } = usePlayground();
+
+  const endpoint = useOptionalEndpoint();
+
+  console.log("endpoint", endpoint?.workflows);
 
   return (
     <div
@@ -40,7 +50,30 @@ export default function Playground() {
             }}
           >
             <div className="mt-5 ml-20 flex flex-col justify-center ">
-              <Connector />
+              <HttpRequestConnector />
+              {endpoint?.workflows?.map((workflow, index) => {
+                switch (workflow.type) {
+                  case "response":
+                    return (
+                      <HttpResponseConnector key={index} workflow={workflow} />
+                    );
+                  case "if":
+                    return <IfConnector key={index} workflow={workflow} />;
+                  case "variable":
+                    return (
+                      <VariableConnector key={index} workflow={workflow} />
+                    );
+                  case "switch":
+                    return <SwitchConnector key={index} workflow={workflow} />;
+                  case "switch":
+                    return (
+                      <CodeblockConnector key={index} workflow={workflow} />
+                    );
+                  case "request":
+                  default:
+                    return null;
+                }
+              })}
             </div>
           </div>
         </div>

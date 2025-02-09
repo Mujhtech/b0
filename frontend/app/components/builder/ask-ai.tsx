@@ -20,7 +20,13 @@ const chatSchema = z.object({
 
 type Chat = z.infer<typeof chatSchema>;
 
-export default function AskB0({ isThinking }: { isThinking: boolean }) {
+export default function AskB0({
+  isThinking,
+  projectModel,
+}: {
+  isThinking: boolean;
+  projectModel?: string;
+}) {
   const { available_models } = useFeature();
   const defaultModel = available_models.find((model) => model.is_default);
   const [isLoading, setIsLoading] = React.useState(false);
@@ -32,7 +38,7 @@ export default function AskB0({ isThinking }: { isThinking: boolean }) {
   const form = useForm<Chat>({
     resolver: zodResolver(chatSchema),
     defaultValues: {
-      model: defaultModel?.model!,
+      model: projectModel ?? defaultModel?.model!,
       text: "",
     },
   });
