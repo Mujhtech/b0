@@ -36,7 +36,7 @@ export const loader = async ({ request, params }: LoaderFunctionArgs) => {
 
   let project: Project | null = null;
   let endpoints: Endpoints = [];
-  let endpoint: Endpoint | null = null;
+  let endpoint: Endpoint | undefined = undefined;
   let projects: Projects = [];
 
   const url = new URL(request.url);
@@ -58,7 +58,7 @@ export const loader = async ({ request, params }: LoaderFunctionArgs) => {
   }
 
   if (searchParams.endpoint) {
-    endpoint = endpoints.find((e) => e.id === searchParams.endpoint) || null;
+    endpoint = endpoints.find((e) => e.id === searchParams.endpoint);
   }
 
   if (endpoint == undefined && endpoints && endpoints.length > 0) {
