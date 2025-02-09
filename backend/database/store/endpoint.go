@@ -2,16 +2,16 @@ package store
 
 import (
 	"context"
-	"encoding/json"
 
 	"github.com/Masterminds/squirrel"
 	"github.com/mujhtech/b0/database"
 	"github.com/mujhtech/b0/database/models"
+	"github.com/mujhtech/b0/internal/util"
 )
 
 const (
 	endpointBaseTable    = "endpoints"
-	endpointSelectColumn = "id, owner_id, project_id, name, description, path, method, is_public, connectors, status, metadata, created_at, updated_at, deleted_at"
+	endpointSelectColumn = "id, owner_id, project_id, name, description, path, method, is_public, connectors, workflows, code_generation, status, metadata, created_at, updated_at, deleted_at"
 )
 
 type endpointRepo struct {
@@ -27,15 +27,40 @@ func NewEndpointRepository(db *database.Database) EndpointRepository {
 // CreateEndpoint implements EndpointRepository.
 func (e *endpointRepo) CreateEndpoint(ctx context.Context, endpoint *models.Endpoint) error {
 	metadata := "{}"
+	workflows := "{}"
+	connectors := "{}"
+	codeGeneration := "{}"
 
 	if endpoint.Metadata != nil {
-		metadataByte, err := json.Marshal(endpoint.Metadata)
-
+		metadataOutput, err := util.MarshalJSONToString(endpoint.Metadata)
 		if err != nil {
 			return err
 		}
+		metadata = metadataOutput
+	}
 
-		metadata = string(metadataByte)
+	if endpoint.Workflows != nil {
+		workflowsOutput, err := util.MarshalJSONToString(endpoint.Workflows)
+		if err != nil {
+			return err
+		}
+		workflows = workflowsOutput
+	}
+
+	if endpoint.Connectors != nil {
+		connectorsOutput, err := util.MarshalJSONToString(endpoint.Connectors)
+		if err != nil {
+			return err
+		}
+		connectors = connectorsOutput
+	}
+
+	if endpoint.CodeGeneration != nil {
+		codeGenerationOutput, err := util.MarshalJSONToString(endpoint.CodeGeneration)
+		if err != nil {
+			return err
+		}
+		codeGeneration = codeGenerationOutput
 	}
 
 	stmt := Builder.
@@ -50,6 +75,9 @@ func (e *endpointRepo) CreateEndpoint(ctx context.Context, endpoint *models.Endp
 			"method",
 			"is_public",
 			"status",
+			"connectors",
+			"workflows",
+			"code_generation",
 			"metadata",
 		).
 		Values(
@@ -62,6 +90,9 @@ func (e *endpointRepo) CreateEndpoint(ctx context.Context, endpoint *models.Endp
 			endpoint.Method,
 			endpoint.IsPublic,
 			endpoint.Status,
+			connectors,
+			workflows,
+			codeGeneration,
 			metadata,
 		)
 
@@ -116,12 +147,12 @@ func (e *endpointRepo) FindEndpointByOwnerID(ctx context.Context, ownerID string
 		return nil, err
 	}
 
-	dst := []*models.Endpoint{}
+	dst := []*models.EndpointFromDB{}
 	if err := e.db.GetDB().SelectContext(ctx, &dst, sql, args...); err != nil {
 		return nil, ProcessSQLErrorfWithCtx(ctx, sql, err, "failed to find endpoints by owner id")
 	}
 
-	return dst, nil
+	return models.ToEndpoints(dst), nil
 }
 
 // FindEndpointByOwnerID implements EndpointRepository.
@@ -138,12 +169,12 @@ func (e *endpointRepo) FindEndpointByProjectID(ctx context.Context, projectID st
 		return nil, err
 	}
 
-	dst := []*models.Endpoint{}
+	dst := []*models.EndpointFromDB{}
 	if err := e.db.GetDB().SelectContext(ctx, &dst, sql, args...); err != nil {
 		return nil, ProcessSQLErrorfWithCtx(ctx, sql, err, "failed to find endpoints by project id")
 	}
 
-	return dst, nil
+	return models.ToEndpoints(dst), nil
 }
 
 // UpdateEndpoint implements EndpointRepository.

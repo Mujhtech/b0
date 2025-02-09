@@ -11,7 +11,7 @@ import (
 
 const (
 	projectBaseTable    = "projects"
-	projectSelectColumn = "id, owner_id, name, slug, description, metadata, created_at, updated_at, deleted_at"
+	projectSelectColumn = "id, owner_id, name, slug, description, model, metadata, created_at, updated_at, deleted_at"
 )
 
 type projectRepo struct {
@@ -46,6 +46,7 @@ func (p *projectRepo) CreateProject(ctx context.Context, project *models.Project
 			"name",
 			"slug",
 			"description",
+			"model",
 			"metadata",
 		).
 		Values(
@@ -54,6 +55,7 @@ func (p *projectRepo) CreateProject(ctx context.Context, project *models.Project
 			project.Name,
 			project.Slug,
 			project.Description,
+			project.Model,
 			metadata,
 		)
 

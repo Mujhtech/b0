@@ -23,18 +23,24 @@ const (
 )
 
 type Store struct {
-	UserRepo     UserRepository
-	TokenRepo    TokenRepository
-	ProjectRepo  ProjectRepository
-	EndpointRepo EndpointRepository
+	UserRepo          UserRepository
+	TokenRepo         TokenRepository
+	ProjectRepo       ProjectRepository
+	EndpointRepo      EndpointRepository
+	AIUsageRepo       AIUsageRepository
+	ProjectLogRepo    ProjectLogRepository
+	AITokenCreditRepo AITokenCreditRepository
 }
 
 func NewStore(db *database.Database) *Store {
 	return &Store{
-		UserRepo:     NewUserRepository(db),
-		TokenRepo:    NewTokenRepository(db),
-		ProjectRepo:  NewProjectRepository(db),
-		EndpointRepo: NewEndpointRepository(db),
+		UserRepo:          NewUserRepository(db),
+		TokenRepo:         NewTokenRepository(db),
+		ProjectRepo:       NewProjectRepository(db),
+		EndpointRepo:      NewEndpointRepository(db),
+		AIUsageRepo:       NewAIUsageRepository(db),
+		ProjectLogRepo:    NewProjectLogRepository(db),
+		AITokenCreditRepo: NewAITokenCreditRepository(db),
 	}
 }
 

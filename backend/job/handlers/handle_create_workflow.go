@@ -1,0 +1,112 @@
+package handlers
+
+import (
+	"context"
+	"log"
+	"time"
+
+	"github.com/google/uuid"
+	"github.com/guregu/null"
+	"github.com/hibiken/asynq"
+	"github.com/mujhtech/b0/database/models"
+	"github.com/mujhtech/b0/database/store"
+	aa "github.com/mujhtech/b0/internal/pkg/agent"
+	"github.com/mujhtech/b0/internal/pkg/encrypt"
+	"github.com/mujhtech/b0/internal/pkg/sse"
+	"github.com/rs/zerolog"
+)
+
+type AgentData struct {
+	Message            string         `json:"message"`
+	Error              string         `json:"error,omitempty"`
+	Workflows          []*aa.Workflow `json:"workflows,omitempty"`
+	ShouldReloadWindow bool           `json:"should_reload_window,omitempty"`
+}
+
+func HandleCreateWorkflow(aesCfb encrypt.Encrypt, store *store.Store, agent *aa.Agent, event sse.Streamer) func(context.Context, *asynq.Task) error {
+	return func(ctx context.Context, t *asynq.Task) error {
+
+		projectId, err := aesCfb.Decrypt(string(t.Payload()))
+
+		if err != nil {
+			return err
+		}
+
+		project, err := store.ProjectRepo.FindProjectByID(ctx, projectId)
+
+		if err != nil {
+			return err
+		}
+
+		if err = event.Publish(ctx, project.ID, sse.EventTypeTaskStarted, AgentData{
+			Message: "b0 is working on your request...",
+		}); err != nil {
+			log.Printf("failed to publish task started event: %v", err)
+		}
+
+		workflows, agentToken, err := agent.GenerateWorkflow(ctx, project.Description.String, aa.WithModel(aa.ToModel(project.Model.String)))
+
+		if err != nil {
+			if err = event.Publish(ctx, project.ID, sse.EventTypeTaskFailed, AgentData{
+				Message: agentToken.Output,
+				Error:   err.Error(),
+			}); err != nil {
+				zerolog.Ctx(ctx).Error().Msgf("failed to publish task failed event: %v", err)
+			}
+
+			return err
+		}
+
+		if err = event.Publish(ctx, project.ID, sse.EventTypeTaskStarted, AgentData{
+			Message: "b0 is currently generating your workflow...",
+		}); err != nil {
+			zerolog.Ctx(ctx).Error().Msgf("failed to publish task started event: %v", err)
+		}
+
+		zerolog.Ctx(ctx).Info().Msgf("workflows: %v", workflows)
+
+		// pick first workflow
+		requestWorkflow := workflows[0]
+
+		endpoint := &models.Endpoint{
+			ID:          uuid.New().String(),
+			OwnerID:     project.OwnerID,
+			ProjectID:   project.ID,
+			Name:        requestWorkflow.Name,
+			Description: null.NewString(requestWorkflow.Instruction, requestWorkflow.Instruction != ""),
+			Path:        requestWorkflow.Url,
+			Method:      models.EndpointMethod(requestWorkflow.Method),
+			Workflows:   workflows,
+			Metadata:    null.NewString("{}", true),
+			IsPublic:    false,
+			Status:      models.EndpointStatusDraft,
+			CreatedAt:   time.Now(),
+			UpdatedAt:   time.Now(),
+		}
+
+		err = store.EndpointRepo.CreateEndpoint(ctx, endpoint)
+
+		if err != nil {
+			return err
+		}
+
+		if err = event.Publish(ctx, project.ID, sse.EventTypeTaskUpdate, AgentData{
+			Message:            "b0 has successfully generated your workflow, reloading...",
+			Workflows:          workflows,
+			ShouldReloadWindow: true,
+		}); err != nil {
+			zerolog.Ctx(ctx).Error().Msgf("failed to publish task updated event: %v", err)
+		}
+
+		// delay 1 seconds
+		time.Sleep(1 * time.Second)
+
+		if err = event.Publish(ctx, project.ID, sse.EventTypeTaskCompleted, AgentData{
+			Message: "b0 has successfully generated your workflow",
+		}); err != nil {
+			log.Printf("failed to publish task started event: %v", err)
+		}
+
+		return nil
+	}
+}

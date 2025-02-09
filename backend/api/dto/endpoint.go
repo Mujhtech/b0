@@ -11,3 +11,7 @@ type CreateEndpointRequestDto struct {
 	IsPublic    bool                  `json:"is_public"`
 	Status      models.EndpointStatus `json:"status"`
 }
+
+type GetEndpointQuery struct {
+	ProjectID string `json:"project_id,omitempty"`
+}

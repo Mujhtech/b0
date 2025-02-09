@@ -5,6 +5,7 @@ CREATE TABLE IF NOT EXISTS projects (
 	name TEXT NOT NULL,
     description TEXT NULL DEFAULT NULL,
     slug TEXT NOT NULL,
+	model TEXT NULL DEFAULT NULL,
 
 
 	metadata jsonb NOT NULL DEFAULT '{}'::jsonb,

@@ -19,6 +19,7 @@ export const links: LinksFunction = () => [];
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
   const backendUrl = env.BACKEND_URL;
+  const platformUrl = env.PLATFORM_URL;
   let user: User | null = null;
   let feature: Feature | null = null;
   let accessToken: string | null = null;
@@ -46,6 +47,7 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
     feature: feature,
     accessToken: accessToken,
     backendUrl,
+    platformUrl,
   });
 };
 

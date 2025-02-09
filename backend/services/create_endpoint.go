@@ -34,12 +34,12 @@ func (c *CreateEndpointService) Run(ctx context.Context) (*models.Endpoint, erro
 	endpoint := &models.Endpoint{
 		ID:          uuid.New().String(),
 		OwnerID:     c.User.ID,
+		ProjectID:   project.ID,
 		Name:        c.Body.Name,
 		Description: null.NewString(c.Body.Description, c.Body.Description != ""),
 		Path:        c.Body.Path,
 		Method:      c.Body.Method,
 		Metadata:    null.NewString("{}", true),
-		ProjectID:   project.OwnerID,
 		IsPublic:    false,
 		Status:      models.EndpointStatusDraft,
 		CreatedAt:   time.Now(),

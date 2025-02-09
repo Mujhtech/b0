@@ -11,6 +11,8 @@ CREATE TABLE IF NOT EXISTS endpoints (
 	is_public BOOLEAN NOT NULL DEFAULT FALSE,
 	status endpoint_status NOT NULL DEFAULT 'draft',
 
+	workflows jsonb NOT NULL DEFAULT '{}'::jsonb,
+	code_generation jsonb NOT NULL DEFAULT '{}'::jsonb,
 	metadata jsonb NOT NULL DEFAULT '{}'::jsonb,
 
 	created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,

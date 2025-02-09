@@ -22,26 +22,18 @@ type CreateProjectService struct {
 
 func (c *CreateProjectService) Run(ctx context.Context) (*models.Project, error) {
 
-	slug, err := util.GeneratePrefixedID(util.Slugify(c.ProjectTitleAndSlug.Slug), "-", 6)
-
-	if err != nil {
-		return nil, err
-	}
-
 	project := &models.Project{
-		ID:      uuid.New().String(),
-		OwnerID: c.User.ID,
-		Name:    c.ProjectTitleAndSlug.Title,
-		Slug:    util.ToLower(slug),
-		//Description: null.NewString(c.Body.Description, c.Body.Description != ""),
-		Metadata:  null.NewString(c.ProjectTitleAndSlug.Description, true),
-		CreatedAt: time.Now(),
-		UpdatedAt: time.Now(),
+		ID:          uuid.New().String(),
+		OwnerID:     c.User.ID,
+		Name:        c.ProjectTitleAndSlug.Title,
+		Model:       null.NewString(c.Body.Model, c.Body.Model != ""),
+		Slug:        util.ToLower(util.Slugify(c.ProjectTitleAndSlug.Slug)),
+		Description: null.NewString(c.ProjectTitleAndSlug.Description, true),
+		CreatedAt:   time.Now(),
+		UpdatedAt:   time.Now(),
 	}
 
-	err = c.ProjectRepo.CreateProject(ctx, project)
-
-	if err != nil {
+	if err := c.ProjectRepo.CreateProject(ctx, project); err != nil {
 		return nil, err
 	}
 

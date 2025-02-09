@@ -9,6 +9,7 @@ export const ProjectSchema = z.object({
   slug: z.string(),
   created_at: z.string(),
   updated_at: z.string(),
+  model: z.string().optional(),
 });
 
 export type Project = z.infer<typeof ProjectSchema>;
@@ -31,10 +32,7 @@ export type GetProjects = z.infer<typeof GetProjectsSchema>;
 
 export const CreateProjectFormSchema = z.object({
   prompt: z.string(),
-  model: z
-    .enum(["gpt-4o", "claude-sonnet-3.5"])
-    .default("claude-sonnet-3.5")
-    .optional(),
+  model: z.string().optional(),
 });
 
 export type CreateProjectForm = z.infer<typeof CreateProjectFormSchema>;

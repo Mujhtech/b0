@@ -34,9 +34,14 @@ func (h *Handler) GetEndpoints(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	projectId := queryParamOrDefault(r, "project_id", "")
+
 	findEndpointsService := services.FindEndpointsService{
 		EndpointRepo: h.store.EndpointRepo,
 		User:         session.User,
+		Query: dto.GetEndpointQuery{
+			ProjectID: projectId,
+		},
 	}
 
 	endpoints, err := findEndpointsService.Run(ctx)

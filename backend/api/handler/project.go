@@ -1,17 +1,15 @@
 package handler
 
 import (
-	"encoding/json"
-	"fmt"
 	"net/http"
 	"net/url"
-	"strings"
 
 	"github.com/mujhtech/b0/api/dto"
 	"github.com/mujhtech/b0/api/middleware"
 	"github.com/mujhtech/b0/internal/pkg/agent"
 	"github.com/mujhtech/b0/internal/pkg/request"
 	"github.com/mujhtech/b0/internal/pkg/response"
+	"github.com/mujhtech/b0/job"
 	"github.com/mujhtech/b0/services"
 	"github.com/rs/zerolog"
 )
@@ -104,38 +102,23 @@ func (h *Handler) CreateProject(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	projectTitleAndSlug, err := h.agent.GenerateTitleAndSlug(ctx, dst.Prompt)
+	var agentModel agent.AgentModel
+
+	if dst.Model != "" {
+		var agentModelErr error
+		agentModel, agentModelErr = agent.GetModel(dst.Model)
+		if agentModelErr != nil {
+			_ = response.BadRequest(w, r, agentModelErr)
+			return
+		}
+	}
+
+	agentProjectTitleAndSlug, _, err := h.agent.GenerateTitleAndSlug(ctx, dst.Prompt, agent.WithModel(agentModel))
 
 	if err != nil {
 		_ = response.InternalServerError(w, r, err)
 		return
 	}
-
-	zerolog.Ctx(ctx).Info().Msgf("Generated title and slug: %s", projectTitleAndSlug)
-
-	if strings.HasPrefix(projectTitleAndSlug, "I'm b0, an AI assistant") {
-		_ = response.BadRequest(w, r, fmt.Errorf("invalid prompt"))
-		return
-	}
-
-	// cleanup the message
-	projectTitleAndSlug = strings.ReplaceAll(projectTitleAndSlug, "Generated title and slug:", "")
-	projectTitleAndSlug = strings.ReplaceAll(projectTitleAndSlug, "json", "")
-	projectTitleAndSlug = strings.ReplaceAll(projectTitleAndSlug, "```", "")
-	projectTitleAndSlug = strings.ReplaceAll(projectTitleAndSlug, "\n", "")
-	projectTitleAndSlug = strings.ReplaceAll(projectTitleAndSlug, `\`, "")
-
-	zerolog.Ctx(ctx).Info().Msgf("cleanup response: %s", strings.TrimSpace(projectTitleAndSlug))
-
-	// unmarshal the projectTitleAndSlug
-	var agentProjectTitleAndSlug *agent.ProjectTitleAndSlug
-
-	if err := json.Unmarshal([]byte(projectTitleAndSlug), &agentProjectTitleAndSlug); err != nil {
-		_ = response.InternalServerError(w, r, err)
-		return
-	}
-
-	zerolog.Ctx(ctx).Info().Msgf("%s", agentProjectTitleAndSlug)
 
 	createProjectService := services.CreateProjectService{
 		Body:                dst,
@@ -149,6 +132,12 @@ func (h *Handler) CreateProject(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		_ = response.InternalServerError(w, r, err)
 		return
+	}
+
+	if err = h.job.Client.Enqueue(job.QueueNameDefault, job.JobNameWorkflowCreate, &job.ClientPayload{
+		Data: []byte(project.ID),
+	}); err != nil {
+		zerolog.Ctx(ctx).Error().Err(err).Msg("failed to enqueue job")
 	}
 
 	_ = response.Ok(w, r, "project created successfully", project)
