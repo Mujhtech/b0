@@ -3,6 +3,7 @@ package models
 import (
 	"encoding/json"
 	"fmt"
+	"log"
 	"time"
 
 	"github.com/guregu/null"
@@ -100,10 +101,21 @@ func ToEndpoint(e *EndpointFromDB) *Endpoint {
 	var connectors interface{}
 	var codeGeneration interface{}
 
-	e.UnmarshalWorkflows(&workflows)
-	e.UnmarshalMetadata(&metadata)
-	e.UnmarshalConnectors(&connectors)
-	e.UnmarshalCodeGeneration(&codeGeneration)
+	if err := e.UnmarshalWorkflows(&workflows); err != nil {
+		log.Printf("failed to unmarshal workflows: %v", err)
+	}
+
+	if err := e.UnmarshalMetadata(&metadata); err != nil {
+		log.Printf("failed to unmarshal metadata: %v", err)
+	}
+
+	if err := e.UnmarshalConnectors(&connectors); err != nil {
+		log.Printf("failed to unmarshal connectors: %v", err)
+	}
+
+	if err := e.UnmarshalCodeGeneration(&codeGeneration); err != nil {
+		log.Printf("failed to unmarshal code generation: %v", err)
+	}
 
 	return &Endpoint{
 		ID:             e.ID,
