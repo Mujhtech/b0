@@ -13,6 +13,8 @@ import (
 	"github.com/mujhtech/b0/internal/pkg/sse"
 	"github.com/mujhtech/b0/services"
 	"github.com/rs/zerolog/log"
+
+	jobHandler "github.com/mujhtech/b0/job/handlers"
 )
 
 func (h *Handler) Chat(w http.ResponseWriter, r *http.Request) {
@@ -87,7 +89,7 @@ func (h *Handler) Chat(w http.ResponseWriter, r *http.Request) {
 	// // Create background context for the goroutine
 	// bgCtx := context.Background()
 
-	if err = h.sse.Publish(ctx, project.ID, sse.EventTypeTaskStarted, sse.AgentData{
+	if err = h.sse.Publish(ctx, project.ID, sse.EventTypeTaskStarted, jobHandler.AgentData{
 		Message: "b0 is working on your request...",
 	}); err != nil {
 		log.Printf("failed to publish task started event: %v", err)
@@ -98,19 +100,19 @@ func (h *Handler) Chat(w http.ResponseWriter, r *http.Request) {
 
 	go func(ctx context.Context, project *models.Project, endpoint *models.Endpoint) {
 
-		workflows, value, err := h.agent.GenerateWorkflow(ctx, project.Description.String, agent.WithModel(agent.ToModel(dst.Model)))
+		workflows, agentToken, err := h.agent.GenerateWorkflow(ctx, project.Description.String, agent.WithModel(agent.ToModel(dst.Model)))
 
 		if err != nil {
-			if err = h.sse.Publish(ctx, project.ID, sse.EventTypeTaskFailed, sse.AgentData{
-				Message: value,
+			if err = h.sse.Publish(ctx, project.ID, sse.EventTypeTaskFailed, jobHandler.AgentData{
+				Message: agentToken.Output,
 				Error:   err.Error(),
 			}); err != nil {
 				log.Printf("failed to publish task failed event: %v", err)
 			}
 		}
 
-		if err = h.sse.Publish(ctx, project.ID, sse.EventTypeTaskUpdate, sse.AgentData{
-			Message:   value,
+		if err = h.sse.Publish(ctx, project.ID, sse.EventTypeTaskUpdate, jobHandler.AgentData{
+			Message:   agentToken.Output,
 			Workflows: workflows,
 		}); err != nil {
 			log.Printf("failed to publish task updated event: %v", err)
@@ -138,7 +140,7 @@ func (h *Handler) Chat(w http.ResponseWriter, r *http.Request) {
 		// 		}
 		// 	}
 		// }
-		if err = h.sse.Publish(ctx, project.ID, sse.EventTypeTaskCompleted, sse.AgentData{
+		if err = h.sse.Publish(ctx, project.ID, sse.EventTypeTaskCompleted, jobHandler.AgentData{
 			Message: "b0 has completed your request",
 		}); err != nil {
 			log.Printf("failed to publish task started event: %v", err)

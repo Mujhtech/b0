@@ -115,7 +115,7 @@ func startServer(configFile string, logLevel string) error {
 
 	sse := sse.NewStreamer(pubsub)
 
-	job, err := job.NewJob(cfg, redis)
+	job, err := job.NewJob(cfg, ctx, redis)
 
 	if err != nil {
 		return fmt.Errorf("failed to initialize job: %w", err)
@@ -146,7 +146,7 @@ func startServer(configFile string, logLevel string) error {
 	g, gCtx := errgroup.WithContext(ctx)
 
 	g.Go(func() error {
-		return job.RegisterAndStart(store)
+		return job.RegisterAndStart(store, agent, sse)
 	})
 
 	gHTTP, shutdownHTTP := server.ListenAndServe()
