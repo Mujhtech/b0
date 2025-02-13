@@ -7,6 +7,7 @@ import (
 	"github.com/mujhtech/b0/config"
 	"github.com/mujhtech/b0/database/store"
 	"github.com/mujhtech/b0/internal/pkg/agent"
+	"github.com/mujhtech/b0/internal/pkg/container"
 	"github.com/mujhtech/b0/internal/pkg/encrypt"
 	"github.com/mujhtech/b0/internal/pkg/sse"
 	"github.com/mujhtech/b0/internal/redis"
@@ -41,9 +42,10 @@ func NewJob(cfg *config.Config, appCtx context.Context, redis *redis.Redis) (*Jo
 	}, nil
 }
 
-func (j *Job) RegisterAndStart(store *store.Store, agent *agent.Agent, sse sse.Streamer) error {
+func (j *Job) RegisterAndStart(store *store.Store, agent *agent.Agent, sse sse.Streamer, container *container.Container) error {
 	j.Executor.RegisterJobHandler(JobNameWorkflowCreate, asynq.HandlerFunc(handlers.HandleCreateWorkflow(j.aesCfb, store, agent, sse)))
 	j.Executor.RegisterJobHandler(JobNameWebhook, asynq.HandlerFunc(handlers.HandleWebhook(j.aesCfb, store)))
+	j.Executor.RegisterJobHandler(JobNameProjectDeploy, asynq.HandlerFunc(handlers.HandleDeployProject(j.aesCfb, store, agent, sse, container)))
 
 	return j.Executor.Start()
 }
