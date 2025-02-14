@@ -23,8 +23,6 @@ export default function Playground() {
 
   const endpoint = useOptionalEndpoint();
 
-  console.log("endpoint", endpoint?.workflows);
-
   return (
     <div
       className={cn(

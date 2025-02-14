@@ -64,7 +64,10 @@ export default function HttpResponseConnector({
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
-    defaultValues: {},
+    defaultValues: {
+      description: workflow?.instruction,
+      status: workflow?.status,
+    },
   });
 
   async function onSubmit(values: z.infer<typeof formSchema>) {

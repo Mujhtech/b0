@@ -39,8 +39,12 @@ export default function Page() {
     events: useMemo(() => DEFAULT_EVENTS, []),
     onEvent: useCallback(
       (type: string, data: any) => {
-        const { message, workflows, error, should_reload_window } =
+        const { message, workflows, code, error, should_reload_window } =
           JSON.parse(data);
+
+        if (code != undefined) {
+          console.log("CODE GENERATION", code);
+        }
 
         if (type === "task_started") {
           setError(undefined);
