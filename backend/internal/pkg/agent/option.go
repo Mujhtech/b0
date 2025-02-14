@@ -64,10 +64,97 @@ type Workflow struct {
 	Status      string         `json:"status,omitempty"`
 }
 
+type CodeGenerationOption struct {
+	Language             string      `json:"language"`
+	Framework            string      `json:"framework"`
+	FrameworkInsructions string      `json:"-"`
+	Workflows            interface{} `json:"-"`
+	Image                string      `json:"-"`
+}
+
 type CodeGeneration struct {
-	FileContents    interface{} `json:"fileContents"`
-	InstallCommands interface{} `json:"installCommands"`
-	RunCommands     interface{} `json:"runCommands"`
+	FileContents    []FileContent `json:"fileContents"`
+	InstallCommands []string      `json:"installCommands"`
+	RunCommands     string        `json:"runCommands"`
+}
+
+type FileContent struct {
+	Filename string `json:"filename"`
+	Content  string `json:"content"`
+}
+
+var AvailableCodeGenerationOptions = []CodeGenerationOption{
+	{
+		Language:  "Go",
+		Framework: "Chi",
+		Image:     "golang:1.23-alpine3.20",
+		FrameworkInsructions: `
+		## Framework instructions
+		- For router, use go-chi/chi/v5
+		`,
+	},
+	{
+		Language:  "Go",
+		Framework: "Echo",
+		Image:     "golang:1.23-alpine3.20",
+		FrameworkInsructions: `
+		## Framework instructions
+		- Use Echo framework
+		`,
+	},
+	{
+		Language:  "Go",
+		Framework: "Gin",
+		Image:     "golang:1.23-alpine3.20",
+		FrameworkInsructions: `
+		## Framework instructions
+		- Use Gin framework
+		`,
+	},
+	{
+		Language:  "Node.js (TypeScript)",
+		Framework: "Express",
+		Image:     "node:20-alpine3.20",
+		FrameworkInsructions: `
+		## Framework instructions
+		- Use Express framework
+		- Make sure to add package.json and don't forget to include all neccessary dependencies
+		- Use port %s for the server
+		`,
+	},
+	{
+		Language:  "Node.js (TypeScript)",
+		Framework: "Fastify",
+		Image:     "node:20-alpine3.20",
+		FrameworkInsructions: `
+		## Framework instructions
+		- Use Fastify framework
+		- Make sure to add package.json and don't forget to include all neccessary dependencies
+		`,
+	},
+	{
+		Language:  "Node.js (TypeScript)",
+		Framework: "Hono",
+		Image:     "node:20-alpine3.20",
+		FrameworkInsructions: `
+		## Framework instructions
+		- Use Hono framework
+		- Make sure to add package.json and don't forget to include all neccessary dependencies
+		- Below are the basic dependencies you need to add to your package.json file
+		1. "hono": "^4.7.1"
+		- Make sure all code is written in TypeScript
+		- Make sure all files are in the src directory except the configuration files like package.json, tsconfig.json, and tsconfig.node.json, etc
+		`,
+	},
+}
+
+func GetLanguageCodeGeneration(language string, framework string) (CodeGenerationOption, error) {
+	for _, option := range AvailableCodeGenerationOptions {
+		if option.Language == language && option.Framework == framework {
+			return option, nil
+		}
+	}
+	return CodeGenerationOption{}, fmt.Errorf("language not found")
 }
 
 type AgentToken struct {

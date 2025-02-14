@@ -54,7 +54,23 @@ func HandleDeployProject(aesCfb encrypt.Encrypt, store *store.Store, agent *aa.A
 			Message: "b0 has started generating the code",
 		}, event)
 
-		code, agentToken, err := agent.CodeGeneration(ctx, project.Description.String, "Go", endpoint.Workflows, aa.WithModel(aa.ToModel(project.Model.String)))
+		codeGenOption, err := aa.GetLanguageCodeGeneration("Node.js (TypeScript)", "Express")
+
+		if err != nil {
+
+			sendEvent(ctx, project.ID, sse.EventTypeTaskFailed, AgentData{
+				Error: "failed to find supported language option",
+			}, event)
+
+			return nil
+		}
+
+		serverPort := "5670"
+
+		codeGenOption.Workflows = endpoint.Workflows
+		codeGenOption.FrameworkInsructions = fmt.Sprintf(codeGenOption.FrameworkInsructions, serverPort)
+
+		code, agentToken, err := agent.CodeGeneration(ctx, project.Description.String, codeGenOption, aa.WithModel(aa.ToModel(project.Model.String)))
 
 		if err != nil {
 			sendEvent(ctx, project.ID, sse.EventTypeTaskFailed, AgentData{
@@ -65,11 +81,49 @@ func HandleDeployProject(aesCfb encrypt.Encrypt, store *store.Store, agent *aa.A
 			return err
 		}
 
+		zerolog.Ctx(ctx).Info().Msgf("code generation: %v", code)
+
 		sendEvent(ctx, project.ID, sse.EventTypeTaskUpdate, AgentData{
 			Message: "b0 has successfully generated the code",
+			Code:    code,
 		}, event)
 
-		zerolog.Ctx(ctx).Info().Msgf("code generation: %v", code)
+		isFolderExist, err := checkIfProjectFolderExists(project.OwnerID, project.Slug)
+
+		if err != nil {
+			sendEvent(ctx, project.ID, sse.EventTypeTaskFailed, AgentData{
+				Message: "b0 failed to check if folder exists",
+				Error:   err.Error(),
+			}, event)
+			return nil
+		}
+
+		if !isFolderExist {
+			if err = createProjectFolder(project.OwnerID, project.Slug); err != nil {
+				sendEvent(ctx, project.ID, sse.EventTypeTaskFailed, AgentData{
+					Message: "b0 failed to create folder",
+					Error:   err.Error(),
+				}, event)
+				return nil
+			}
+		}
+
+		sendEvent(ctx, project.ID, sse.EventTypeTaskUpdate, AgentData{
+			Message: "b0 is currently setting up your project...",
+		}, event)
+
+		if err = setupProjectContents(project.OwnerID, project.Slug, code); err != nil {
+
+			if err := removeProjectFolder(project.OwnerID, project.Slug); err != nil {
+				zerolog.Ctx(ctx).Error().Err(err).Msg("failed to remove project folder")
+			}
+
+			sendEvent(ctx, project.ID, sse.EventTypeTaskFailed, AgentData{
+				Message: "b0 failed to setup project contents",
+				Error:   err.Error(),
+			}, event)
+			return nil
+		}
 
 		// delay 1 seconds
 		time.Sleep(1 * time.Second)
@@ -77,6 +131,19 @@ func HandleDeployProject(aesCfb encrypt.Encrypt, store *store.Store, agent *aa.A
 		sendEvent(ctx, project.ID, sse.EventTypeTaskUpdate, AgentData{
 			Message: "b0 is currently deploying your project...",
 		}, event)
+
+		volumeName := fmt.Sprintf("b0-temp-%s-%s", project.OwnerID, project.Slug)
+
+		// check if volume already exists
+		if _, err := docker.InspectVolume(ctx, volumeName); err != nil {
+			if _, err := docker.CreateVolume(ctx, volumeName); err != nil {
+				sendEvent(ctx, project.ID, sse.EventTypeTaskFailed, AgentData{
+					Message: "b0 failed to create volume",
+					Error:   err.Error(),
+				}, event)
+				return nil
+			}
+		}
 
 		serverUrl := fmt.Sprintf("https://%s.%s", project.Slug, strings.ToLower("b0.dev"))
 
@@ -88,7 +155,11 @@ func HandleDeployProject(aesCfb encrypt.Encrypt, store *store.Store, agent *aa.A
 			})
 
 			if err != nil {
-				return err
+				sendEvent(ctx, project.ID, sse.EventTypeTaskFailed, AgentData{
+					Message: "b0 failed to check if container exists",
+					Error:   err.Error(),
+				}, event)
+				return nil
 			}
 
 			// check if container with same port exists
@@ -106,17 +177,21 @@ func HandleDeployProject(aesCfb encrypt.Encrypt, store *store.Store, agent *aa.A
 					Message: "b0 is currently creating a container for your project...",
 				}, event)
 
-				image := "golang:1.23-alpine3.20"
-
 				// pull image
-				if err = docker.PullImage(ctx, image); err != nil {
+				if err = docker.PullImage(ctx, codeGenOption.Image); err != nil {
 					return err
 				}
 
+				commands := []string{}
+				commands = append(commands, code.InstallCommands...)
+				commands = append(commands, code.RunCommands)
+
 				newContainerID, err := docker.CreateContainer(ctx, con.CreateContainerOption{
-					Name:  project.Slug,
-					Port:  "8080",
-					Image: image,
+					Name:       project.Slug,
+					Port:       serverPort,
+					Image:      codeGenOption.Image,
+					VolumeName: volumeName,
+					Command:    commands,
 					Labels: map[string]string{
 						"traefik.enable": "true",
 						fmt.Sprintf("traefik.http.routers.%s.rule", project.Slug):        fmt.Sprintf("Host(`%s`)", strings.Replace(serverUrl, "https://", "", 1)),
@@ -128,7 +203,11 @@ func HandleDeployProject(aesCfb encrypt.Encrypt, store *store.Store, agent *aa.A
 				})
 
 				if err != nil {
-					return err
+					sendEvent(ctx, project.ID, sse.EventTypeTaskFailed, AgentData{
+						Message: "b0 failed to create container",
+						Error:   err.Error(),
+					}, event)
+					return nil
 				}
 
 				project.ContainerID = null.NewString(newContainerID, true)
@@ -149,7 +228,29 @@ func HandleDeployProject(aesCfb encrypt.Encrypt, store *store.Store, agent *aa.A
 			container, err := docker.GetContainer(ctx, project.ContainerID.String)
 
 			if err != nil {
-				return err
+				sendEvent(ctx, project.ID, sse.EventTypeTaskFailed, AgentData{
+					Message: "b0 failed to get container",
+					Error:   err.Error(),
+				}, event)
+				return nil
+			}
+
+			tar, err := cloneProjectToTar(project.OwnerID, project.Slug)
+
+			if err != nil {
+				sendEvent(ctx, project.ID, sse.EventTypeTaskFailed, AgentData{
+					Message: "b0 failed to clone project to tar",
+					Error:   err.Error(),
+				}, event)
+				return nil
+			}
+
+			if err = docker.CopyFileToContainer(ctx, project.ContainerID.String, tar, "/app"); err != nil {
+				sendEvent(ctx, project.ID, sse.EventTypeTaskFailed, AgentData{
+					Message: "b0 failed to copy file to container",
+					Error:   err.Error(),
+				}, event)
+				return nil
 			}
 
 			zerolog.Ctx(ctx).Info().Msgf("container: %v", container)
@@ -157,7 +258,11 @@ func HandleDeployProject(aesCfb encrypt.Encrypt, store *store.Store, agent *aa.A
 			if container.State.Running {
 				// restart container
 				if err = docker.RestartContainer(ctx, container.ID); err != nil {
-					return err
+					sendEvent(ctx, project.ID, sse.EventTypeTaskFailed, AgentData{
+						Message: "b0 failed to restart container",
+						Error:   err.Error(),
+					}, event)
+					return nil
 				}
 			}
 		}
@@ -167,7 +272,6 @@ func HandleDeployProject(aesCfb encrypt.Encrypt, store *store.Store, agent *aa.A
 
 		sendEvent(ctx, project.ID, sse.EventTypeTaskCompleted, AgentData{
 			Message: "b0 has successfully deployed your project",
-			Code:    code,
 		}, event)
 
 		return nil

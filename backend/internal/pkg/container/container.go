@@ -10,7 +10,9 @@ import (
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/filters"
 	"github.com/docker/docker/api/types/image"
+	"github.com/docker/docker/api/types/mount"
 	"github.com/docker/docker/api/types/network"
+	"github.com/docker/docker/api/types/volume"
 	"github.com/docker/docker/client"
 	"github.com/docker/go-connections/nat"
 )
@@ -148,6 +150,9 @@ func (c *Container) CreateContainer(ctx context.Context, opts CreateContainerOpt
 			CPUQuota:  100000,
 			CPUPeriod: 100000,
 		},
+		Mounts: []mount.Mount{
+			{Type: mount.TypeVolume, Source: opts.VolumeName, Target: "/app"},
+		},
 	}, &network.NetworkingConfig{}, nil, opts.Name)
 	if err != nil {
 		return "", err
@@ -169,6 +174,10 @@ func (c *Container) RestartContainer(ctx context.Context, id string) error {
 
 func (c *Container) RemoveContainer(ctx context.Context, id string) error {
 	return c.client.ContainerRemove(ctx, id, container.RemoveOptions{})
+}
+
+func (c *Container) CopyFileToContainer(ctx context.Context, id string, src io.Reader, dst string) error {
+	return c.client.CopyToContainer(ctx, id, dst, src, container.CopyToContainerOptions{})
 }
 
 func (c *Container) GetContainerLogs(ctx context.Context, id string) (string, error) {
@@ -204,4 +213,26 @@ func (c *Container) GetContainerLogsStream(ctx context.Context, id string) (io.R
 	}
 
 	return logs, nil
+}
+
+func (c *Container) GetVolume(ctx context.Context, id string) (*volume.Volume, error) {
+	volume, _, err := c.client.VolumeInspectWithRaw(ctx, id)
+	return &volume, err
+}
+
+func (c *Container) CreateVolume(ctx context.Context, name string) (*volume.Volume, error) {
+	volume, err := c.client.VolumeCreate(ctx, volume.CreateOptions{
+		Name:   name,
+		Driver: "local",
+	})
+	return &volume, err
+}
+
+func (c *Container) RemoveVolume(ctx context.Context, id string) error {
+	return c.client.VolumeRemove(ctx, id, true)
+}
+
+func (c *Container) InspectVolume(ctx context.Context, id string) (*volume.Volume, error) {
+	volume, _, err := c.client.VolumeInspectWithRaw(ctx, id)
+	return &volume, err
 }
