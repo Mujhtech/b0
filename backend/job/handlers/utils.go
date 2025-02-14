@@ -82,12 +82,16 @@ func setupProjectContents(userId, projectSlug string, code *agent.CodeGeneration
 
 		// Ensure the directory structure exists
 		dir := filepath.Dir(fullPath)
-		if err := os.MkdirAll(dir, os.ModePerm); err != nil { // #nosec G301
+		err := os.MkdirAll(dir, os.ModePerm) // #nosec G301
+
+		if err != nil {
 			return fmt.Errorf("failed to create directory structure: %v", err)
 		}
 
 		// Write the file
-		if err := os.WriteFile(fullPath, []byte(file.Content), os.ModePerm); err != nil { // #nosec G306
+		err = os.WriteFile(fullPath, []byte(file.Content), os.ModePerm) // #nosec G306
+
+		if err != nil {
 			return fmt.Errorf("failed to write file %s: %v", file.Filename, err)
 		}
 	}
