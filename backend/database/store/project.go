@@ -148,6 +148,10 @@ func (p *projectRepo) UpdateProject(ctx context.Context, project *models.Project
 		Where(squirrel.Eq{"id": project.ID}).
 		Where(excludeDeleted)
 
+	if project.ContainerID.Valid && project.ContainerID.String != "" {
+		stmt = stmt.Set("container_id", project.ContainerID)
+	}
+
 	sql, args, err := stmt.ToSql()
 
 	if err != nil {

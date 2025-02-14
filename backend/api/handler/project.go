@@ -184,3 +184,64 @@ func (h *Handler) UpdateProject(w http.ResponseWriter, r *http.Request) {
 
 	_ = response.Ok(w, r, "project updated successfully", project)
 }
+
+func (h *Handler) ProjectAction(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	session, ok := middleware.GetAuthSession(ctx)
+
+	if !ok {
+		_ = response.Unauthorized(w, r, nil)
+		return
+	}
+
+	projectId, err := getProjectIdFromPath(r)
+
+	if err != nil {
+		_ = response.BadRequest(w, r, err)
+		return
+	}
+
+	dst := new(dto.ProjectActionRequestDto)
+
+	if err := request.ReadBody(r, dst); err != nil {
+		_ = response.BadRequest(w, r, err)
+		return
+	}
+
+	findProjectService := services.FindProjectService{
+		ProjectID:   projectId,
+		ProjectRepo: h.store.ProjectRepo,
+		User:        session.User,
+	}
+
+	project, err := findProjectService.Run(ctx)
+
+	if err != nil {
+		_ = response.InternalServerError(w, r, err)
+		return
+	}
+
+	switch dst.Action {
+	case "deploy":
+
+		if err = h.job.Client.Enqueue(job.QueueNameDefault, job.JobNameProjectDeploy, &job.ClientPayload{
+			Data: []byte(project.ID),
+		}); err != nil {
+			zerolog.Ctx(ctx).Error().Err(err).Msg("failed to enqueue job")
+		}
+
+	case "export":
+
+		if err = h.job.Client.Enqueue(job.QueueNameDefault, job.JobNameProjectExport, &job.ClientPayload{
+			Data: []byte(project.ID),
+		}); err != nil {
+			zerolog.Ctx(ctx).Error().Err(err).Msg("failed to enqueue job")
+		}
+	default:
+		_ = response.BadRequest(w, r, nil)
+		return
+	}
+
+	_ = response.Ok(w, r, "ok", nil)
+}

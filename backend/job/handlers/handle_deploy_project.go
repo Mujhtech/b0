@@ -1,0 +1,279 @@
+package handlers
+
+import (
+	"context"
+	"fmt"
+	"strings"
+	"time"
+
+	"github.com/guregu/null"
+	"github.com/hibiken/asynq"
+	"github.com/mujhtech/b0/database/store"
+	aa "github.com/mujhtech/b0/internal/pkg/agent"
+	con "github.com/mujhtech/b0/internal/pkg/container"
+	"github.com/mujhtech/b0/internal/pkg/encrypt"
+	"github.com/mujhtech/b0/internal/pkg/sse"
+	"github.com/rs/zerolog"
+)
+
+func HandleDeployProject(aesCfb encrypt.Encrypt, store *store.Store, agent *aa.Agent, event sse.Streamer, docker *con.Container) func(context.Context, *asynq.Task) error {
+	return func(ctx context.Context, t *asynq.Task) error {
+
+		projectId, err := aesCfb.Decrypt(string(t.Payload()))
+
+		if err != nil {
+			return err
+		}
+
+		project, err := store.ProjectRepo.FindProjectByID(ctx, projectId)
+
+		if err != nil {
+			return err
+		}
+
+		sendEvent(ctx, project.ID, sse.EventTypeTaskStarted, AgentData{
+			Message: "b0 is working on your request...",
+		}, event)
+
+		endpoints, err := store.EndpointRepo.FindEndpointByProjectID(ctx, project.ID)
+
+		if err != nil {
+			return err
+		}
+
+		if len(endpoints) == 0 {
+			return fmt.Errorf("no endpoints found for project: %s", project.ID)
+		}
+
+		endpoint := endpoints[0]
+
+		// delay 1 seconds
+		time.Sleep(1 * time.Second)
+
+		sendEvent(ctx, project.ID, sse.EventTypeTaskUpdate, AgentData{
+			Message: "b0 has started generating the code",
+		}, event)
+
+		codeGenOption, err := aa.GetLanguageCodeGeneration("Node.js (TypeScript)", "Express")
+
+		if err != nil {
+
+			sendEvent(ctx, project.ID, sse.EventTypeTaskFailed, AgentData{
+				Error: "failed to find supported language option",
+			}, event)
+
+			return nil
+		}
+
+		serverPort := "5670"
+
+		codeGenOption.Workflows = endpoint.Workflows
+		codeGenOption.FrameworkInsructions = fmt.Sprintf(codeGenOption.FrameworkInsructions, serverPort)
+
+		code, agentToken, err := agent.CodeGeneration(ctx, project.Description.String, codeGenOption, aa.WithModel(aa.ToModel(project.Model.String)))
+
+		if err != nil {
+			sendEvent(ctx, project.ID, sse.EventTypeTaskFailed, AgentData{
+				Message: agentToken.Output,
+				Error:   err.Error(),
+			}, event)
+
+			return err
+		}
+
+		zerolog.Ctx(ctx).Info().Msgf("code generation: %v", code)
+
+		sendEvent(ctx, project.ID, sse.EventTypeTaskUpdate, AgentData{
+			Message: "b0 has successfully generated the code",
+			Code:    code,
+		}, event)
+
+		isFolderExist, err := checkIfProjectFolderExists(project.OwnerID, project.Slug)
+
+		if err != nil {
+			sendEvent(ctx, project.ID, sse.EventTypeTaskFailed, AgentData{
+				Message: "b0 failed to check if folder exists",
+				Error:   err.Error(),
+			}, event)
+			return nil
+		}
+
+		if !isFolderExist {
+			if err = createProjectFolder(project.OwnerID, project.Slug); err != nil {
+				sendEvent(ctx, project.ID, sse.EventTypeTaskFailed, AgentData{
+					Message: "b0 failed to create folder",
+					Error:   err.Error(),
+				}, event)
+				return nil
+			}
+		}
+
+		sendEvent(ctx, project.ID, sse.EventTypeTaskUpdate, AgentData{
+			Message: "b0 is currently setting up your project...",
+		}, event)
+
+		if err = setupProjectContents(project.OwnerID, project.Slug, code); err != nil {
+
+			if err := removeProjectFolder(project.OwnerID, project.Slug); err != nil {
+				zerolog.Ctx(ctx).Error().Err(err).Msg("failed to remove project folder")
+			}
+
+			sendEvent(ctx, project.ID, sse.EventTypeTaskFailed, AgentData{
+				Message: "b0 failed to setup project contents",
+				Error:   err.Error(),
+			}, event)
+			return nil
+		}
+
+		// delay 1 seconds
+		time.Sleep(1 * time.Second)
+
+		sendEvent(ctx, project.ID, sse.EventTypeTaskUpdate, AgentData{
+			Message: "b0 is currently deploying your project...",
+		}, event)
+
+		volumeName := fmt.Sprintf("b0-temp-%s-%s", project.OwnerID, project.Slug)
+
+		// check if volume already exists
+		if _, err := docker.InspectVolume(ctx, volumeName); err != nil {
+			if _, err := docker.CreateVolume(ctx, volumeName); err != nil {
+				sendEvent(ctx, project.ID, sse.EventTypeTaskFailed, AgentData{
+					Message: "b0 failed to create volume",
+					Error:   err.Error(),
+				}, event)
+				return nil
+			}
+		}
+
+		serverUrl := fmt.Sprintf("https://%s.%s", project.Slug, strings.ToLower("b0.dev"))
+
+		// TODO: deploy project to container
+		if !project.ContainerID.Valid || project.ContainerID.String == "" {
+			// Check if container already exists
+			existContainerWithName, err := docker.IsContainerExist(ctx, con.FilterContainerOption{
+				Name: project.Slug,
+			})
+
+			if err != nil {
+				sendEvent(ctx, project.ID, sse.EventTypeTaskFailed, AgentData{
+					Message: "b0 failed to check if container exists",
+					Error:   err.Error(),
+				}, event)
+				return nil
+			}
+
+			// check if container with same port exists
+			// existContainerWithPort, err := container.IsContainerExist(ctx, con.FilterContainerOption{
+			// 	Port: "8080",
+			// })
+
+			// if err != nil {
+			// 	return err
+			// }
+
+			if !existContainerWithName {
+
+				sendEvent(ctx, project.ID, sse.EventTypeTaskUpdate, AgentData{
+					Message: "b0 is currently creating a container for your project...",
+				}, event)
+
+				// pull image
+				if err = docker.PullImage(ctx, codeGenOption.Image); err != nil {
+					return err
+				}
+
+				commands := []string{}
+				commands = append(commands, code.InstallCommands...)
+				commands = append(commands, code.RunCommands)
+
+				newContainerID, err := docker.CreateContainer(ctx, con.CreateContainerOption{
+					Name:       project.Slug,
+					Port:       serverPort,
+					Image:      codeGenOption.Image,
+					VolumeName: volumeName,
+					Command:    commands,
+					Labels: map[string]string{
+						"traefik.enable": "true",
+						fmt.Sprintf("traefik.http.routers.%s.rule", project.Slug):        fmt.Sprintf("Host(`%s`)", strings.Replace(serverUrl, "https://", "", 1)),
+						fmt.Sprintf("traefik.http.routers.%s.entrypoints", project.Slug): "websecure",
+						fmt.Sprintf("traefik.http.routers.%s.tls", project.Slug):         "true",
+						"project_id":   project.ID,
+						"project_name": project.Name,
+					},
+				})
+
+				if err != nil {
+					sendEvent(ctx, project.ID, sse.EventTypeTaskFailed, AgentData{
+						Message: "b0 failed to create container",
+						Error:   err.Error(),
+					}, event)
+					return nil
+				}
+
+				project.ContainerID = null.NewString(newContainerID, true)
+
+				// update project
+				if err = store.ProjectRepo.UpdateProject(ctx, project); err != nil {
+					return err
+				}
+
+				sendEvent(ctx, project.ID, sse.EventTypeTaskUpdate, AgentData{
+					Message: "b0 has successfully created a container for your project",
+				}, event)
+			}
+
+		}
+
+		if project.ContainerID.Valid && project.ContainerID.String != "" {
+			container, err := docker.GetContainer(ctx, project.ContainerID.String)
+
+			if err != nil {
+				sendEvent(ctx, project.ID, sse.EventTypeTaskFailed, AgentData{
+					Message: "b0 failed to get container",
+					Error:   err.Error(),
+				}, event)
+				return nil
+			}
+
+			tar, err := cloneProjectToTar(project.OwnerID, project.Slug)
+
+			if err != nil {
+				sendEvent(ctx, project.ID, sse.EventTypeTaskFailed, AgentData{
+					Message: "b0 failed to clone project to tar",
+					Error:   err.Error(),
+				}, event)
+				return nil
+			}
+
+			if err = docker.CopyFileToContainer(ctx, project.ContainerID.String, tar, "/app"); err != nil {
+				sendEvent(ctx, project.ID, sse.EventTypeTaskFailed, AgentData{
+					Message: "b0 failed to copy file to container",
+					Error:   err.Error(),
+				}, event)
+				return nil
+			}
+
+			zerolog.Ctx(ctx).Info().Msgf("container: %v", container)
+
+			if container.State.Running {
+				// restart container
+				if err = docker.RestartContainer(ctx, container.ID); err != nil {
+					sendEvent(ctx, project.ID, sse.EventTypeTaskFailed, AgentData{
+						Message: "b0 failed to restart container",
+						Error:   err.Error(),
+					}, event)
+					return nil
+				}
+			}
+		}
+
+		// delay 1 seconds
+		time.Sleep(1 * time.Second)
+
+		sendEvent(ctx, project.ID, sse.EventTypeTaskCompleted, AgentData{
+			Message: "b0 has successfully deployed your project",
+		}, event)
+
+		return nil
+	}
+}

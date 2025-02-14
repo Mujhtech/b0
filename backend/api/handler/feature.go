@@ -8,13 +8,14 @@ import (
 )
 
 type Feature struct {
-	Name                string              `json:"name"`
-	Description         string              `json:"description"`
-	IsGithubAuthEnabled bool                `json:"is_github_auth_enabled"`
-	IsGoogleAuthEnabled bool                `json:"is_google_auth_enabled"`
-	IsAwsConfigured     bool                `json:"is_aws_configured"`
-	Version             string              `json:"version"`
-	AvailableModels     []agent.ModeCatalog `json:"available_models"`
+	Name                string                       `json:"name"`
+	Description         string                       `json:"description"`
+	IsGithubAuthEnabled bool                         `json:"is_github_auth_enabled"`
+	IsGoogleAuthEnabled bool                         `json:"is_google_auth_enabled"`
+	IsAwsConfigured     bool                         `json:"is_aws_configured"`
+	Version             string                       `json:"version"`
+	AvailableModels     []agent.ModeCatalog          `json:"available_models"`
+	AvailableLanguages  []agent.CodeGenerationOption `json:"available_languages"`
 }
 
 func (h *Handler) GetFeatures(w http.ResponseWriter, r *http.Request) {
@@ -31,5 +32,6 @@ func (h *Handler) GetFeatures(w http.ResponseWriter, r *http.Request) {
 		IsAwsConfigured:     isAwsConfigured,
 		Version:             "0.0.1",
 		AvailableModels:     agent.AvailableCatalogs,
+		AvailableLanguages:  agent.AvailableCodeGenerationOptions,
 	})
 }

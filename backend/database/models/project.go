@@ -13,6 +13,7 @@ type Project struct {
 	Slug        string      `json:"slug" db:"slug"`
 	Description null.String `json:"description" db:"description"`
 	Model       null.String `json:"model" db:"model"`
+	ContainerID null.String `json:"-" db:"container_id"`
 	Metadata    interface{} `json:"metadata" db:"metadata"`
 	CreatedAt   time.Time   `json:"created_at,omitempty" db:"created_at,omitempty"`
 	UpdatedAt   time.Time   `json:"updated_at,omitempty" db:"updated_at,omitempty"`

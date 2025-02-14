@@ -8,6 +8,8 @@ type QueueName string
 const (
 	JobNameWebhook        JobName = "webhook"
 	JobNameWorkflowCreate JobName = "workflow.create"
+	JobNameProjectDeploy  JobName = "project.project"
+	JobNameProjectExport  JobName = "project.export"
 
 	QueueNameDefault QueueName = "default"
 )

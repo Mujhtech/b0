@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"context"
-	"log"
 	"time"
 
 	"github.com/google/uuid"
@@ -20,6 +19,7 @@ type AgentData struct {
 	Message            string         `json:"message"`
 	Error              string         `json:"error,omitempty"`
 	Workflows          []*aa.Workflow `json:"workflows,omitempty"`
+	Code               interface{}    `json:"code,omitempty"`
 	ShouldReloadWindow bool           `json:"should_reload_window,omitempty"`
 }
 
@@ -38,30 +38,24 @@ func HandleCreateWorkflow(aesCfb encrypt.Encrypt, store *store.Store, agent *aa.
 			return err
 		}
 
-		if err = event.Publish(ctx, project.ID, sse.EventTypeTaskStarted, AgentData{
+		sendEvent(ctx, project.ID, sse.EventTypeTaskStarted, AgentData{
 			Message: "b0 is working on your request...",
-		}); err != nil {
-			log.Printf("failed to publish task started event: %v", err)
-		}
+		}, event)
 
 		workflows, agentToken, err := agent.GenerateWorkflow(ctx, project.Description.String, aa.WithModel(aa.ToModel(project.Model.String)))
 
 		if err != nil {
-			if err = event.Publish(ctx, project.ID, sse.EventTypeTaskFailed, AgentData{
+			sendEvent(ctx, project.ID, sse.EventTypeTaskFailed, AgentData{
 				Message: agentToken.Output,
 				Error:   err.Error(),
-			}); err != nil {
-				zerolog.Ctx(ctx).Error().Msgf("failed to publish task failed event: %v", err)
-			}
+			}, event)
 
 			return err
 		}
 
-		if err = event.Publish(ctx, project.ID, sse.EventTypeTaskStarted, AgentData{
+		sendEvent(ctx, project.ID, sse.EventTypeTaskStarted, AgentData{
 			Message: "b0 is currently generating your workflow...",
-		}); err != nil {
-			zerolog.Ctx(ctx).Error().Msgf("failed to publish task started event: %v", err)
-		}
+		}, event)
 
 		zerolog.Ctx(ctx).Info().Msgf("workflows: %v", workflows)
 
@@ -90,22 +84,18 @@ func HandleCreateWorkflow(aesCfb encrypt.Encrypt, store *store.Store, agent *aa.
 			return err
 		}
 
-		if err = event.Publish(ctx, project.ID, sse.EventTypeTaskUpdate, AgentData{
+		sendEvent(ctx, project.ID, sse.EventTypeTaskUpdate, AgentData{
 			Message:            "b0 has successfully generated your workflow, reloading...",
 			Workflows:          workflows,
 			ShouldReloadWindow: true,
-		}); err != nil {
-			zerolog.Ctx(ctx).Error().Msgf("failed to publish task updated event: %v", err)
-		}
+		}, event)
 
 		// delay 1 seconds
 		time.Sleep(1 * time.Second)
 
-		if err = event.Publish(ctx, project.ID, sse.EventTypeTaskCompleted, AgentData{
+		sendEvent(ctx, project.ID, sse.EventTypeTaskCompleted, AgentData{
 			Message: "b0 has successfully generated your workflow",
-		}); err != nil {
-			log.Printf("failed to publish task started event: %v", err)
-		}
+		}, event)
 
 		return nil
 	}

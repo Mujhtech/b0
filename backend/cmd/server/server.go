@@ -15,6 +15,7 @@ import (
 	"github.com/mujhtech/b0/database/store"
 	"github.com/mujhtech/b0/http"
 	"github.com/mujhtech/b0/internal/pkg/agent"
+	"github.com/mujhtech/b0/internal/pkg/container"
 	"github.com/mujhtech/b0/internal/pkg/pubsub"
 	"github.com/mujhtech/b0/internal/pkg/sse"
 	"github.com/mujhtech/b0/internal/pkg/telemetry"
@@ -121,6 +122,12 @@ func startServer(configFile string, logLevel string) error {
 		return fmt.Errorf("failed to initialize job: %w", err)
 	}
 
+	container, err := container.New()
+
+	if err != nil {
+		return fmt.Errorf("failed to create container client: %w", err)
+	}
+
 	app, err := api.New(
 		cfg,
 		ctx,
@@ -146,7 +153,7 @@ func startServer(configFile string, logLevel string) error {
 	g, gCtx := errgroup.WithContext(ctx)
 
 	g.Go(func() error {
-		return job.RegisterAndStart(store, agent, sse)
+		return job.RegisterAndStart(store, agent, sse, container)
 	})
 
 	gHTTP, shutdownHTTP := server.ListenAndServe()
