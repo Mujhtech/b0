@@ -54,12 +54,12 @@ func (c *Container) PullImage(ctx context.Context, imageRef string) error {
 	return nil
 }
 
-func (c *Container) GetProjectContainer(ctx context.Context, id string) (*types.ContainerJSON, error) {
+func (c *Container) GetContainer(ctx context.Context, id string) (*types.ContainerJSON, error) {
 	container, _, err := c.client.ContainerInspectWithRaw(ctx, id, true)
 	return &container, err
 }
 
-func (c *Container) IsContainerExist(ctx context.Context, opts FilterContainer) (bool, error) {
+func (c *Container) IsContainerExist(ctx context.Context, opts FilterContainerOption) (bool, error) {
 
 	filter := filters.NewArgs()
 
@@ -86,7 +86,7 @@ func (c *Container) IsContainerExist(ctx context.Context, opts FilterContainer) 
 	return len(containers) > 0, nil
 }
 
-func (c *Container) GetContainerList(ctx context.Context, opts FilterContainer) ([]types.Container, error) {
+func (c *Container) GetContainerList(ctx context.Context, opts FilterContainerOption) ([]types.Container, error) {
 	filter := filters.NewArgs()
 
 	if opts.Name != "" {
@@ -112,7 +112,7 @@ func (c *Container) GetContainerList(ctx context.Context, opts FilterContainer) 
 	return containers, nil
 }
 
-func (c *Container) CreateContainer(ctx context.Context, opts CreateContainer) (string, error) {
+func (c *Container) CreateContainer(ctx context.Context, opts CreateContainerOption) (string, error) {
 
 	commands := []string{"/bin/sh", "-c"}
 

@@ -56,9 +56,9 @@ const (
 	- Workflow can be nested and can have multiple nodes that represent the workflow.
 	- Make sure to follow the instructions above
 	- Ignore comments in the workflow diagram.
-	- action_id must be unique.
+	- action_id must be unique identifier for the action, you can use uuidv4 for the action_id..
 	- Use context to store and access data between nodes e.g {{context.request}}, {{context.request.body}}, {{context.response}}, {{context.response.body}},  {{context.variable_name}}
-	- Make sure that http response status code is string and not int.
+	- Make sure that http response status code is string and not int without any additional characters e.g "200" instead of "200 Ok" etc.
 	- The url in the request node must be a path to the endpoint not external url.
 
 	## Output:
@@ -78,12 +78,19 @@ const (
 	## Workflow Diagram:
 	- The workflow diagram will be in json format.
 	
-
+	## Below is the workflow diagram:
 	%s
 
 	## Output:
-	- The output should be a json string in the format of {"code": "..."}
+	- The output should be a valid json valid JSON which has the following fields:
+	1. fileContents: The list of generated code file based on the workflow diagram. Make sure it contains all the necessary files for the code to run. (array of {filename: string, content: string})
+	2. installCommand: The command to install the necessary dependencies. (array of strings)
+	3. runCommand: The command to run the code. (string)
 	- Ignore comments in the workflow diagram.
+	- Ensure all necessary imports are included
+	- Ensure that the generated code is valid and can be run without any errors.
+
+	Remember, your response should be in valid JSON format only. Do not include any additional text or explanations.
 	`
 )
 
@@ -293,7 +300,7 @@ func (a *Agent) GenerateWorkflow(ctx context.Context, prompt string, opts ...Opt
 }
 
 // CodeGeneration generates code from a workflow diagram.
-func (a *Agent) CodeGeneration(ctx context.Context, prompt string, language string, workflow string, opts ...OptionFunc) (string, *AgentToken, error) {
+func (a *Agent) CodeGeneration(ctx context.Context, prompt string, language string, workflow interface{}, opts ...OptionFunc) (*CodeGeneration, *AgentToken, error) {
 	opCfg := *a.cfg
 	for _, opt := range opts {
 		opt(&opCfg)
@@ -314,10 +321,16 @@ func (a *Agent) CodeGeneration(ctx context.Context, prompt string, language stri
 	})
 
 	if err != nil {
-		return "", agentToken, err
+		return nil, agentToken, err
 	}
 
 	agentToken.Output = chat.Choices[0].Message.Content
 
-	return chat.Choices[0].Message.Content, agentToken, nil
+	var codeGeneration *CodeGeneration
+
+	if err := json.Unmarshal([]byte(removeJSONMarkdown(chat.Choices[0].Message.Content)), &codeGeneration); err != nil {
+		return nil, agentToken, err
+	}
+
+	return codeGeneration, agentToken, nil
 }

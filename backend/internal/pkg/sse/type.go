@@ -6,6 +6,13 @@ import (
 
 type EventType string
 
+var (
+	FailedToPublishTaskUpdatedEvent   = "failed to publish task updated event"
+	FailedToPublishTaskCompletedEvent = "failed to publish task completed event"
+	FailedToPublishTaskFailedEvent    = "failed to publish task failed event"
+	FailedToPublishTaskStartedEvent   = "failed to publish task started event"
+)
+
 const (
 	EventTypeTaskStarted   EventType = "task_started"
 	EventTypeTaskUpdate    EventType = "task_updated"

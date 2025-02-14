@@ -64,6 +64,12 @@ type Workflow struct {
 	Status      string         `json:"status,omitempty"`
 }
 
+type CodeGeneration struct {
+	FileContents    interface{} `json:"fileContents"`
+	InstallCommands interface{} `json:"installCommands"`
+	RunCommands     interface{} `json:"runCommands"`
+}
+
 type AgentToken struct {
 	Input  string `json:"input"`
 	Output string `json:"output"`

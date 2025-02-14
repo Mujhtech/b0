@@ -1,12 +1,12 @@
 package container
 
-type FilterContainer struct {
+type FilterContainerOption struct {
 	Name string
 	ID   string
 	Port string
 }
 
-type CreateContainer struct {
+type CreateContainerOption struct {
 	Name    string
 	Port    string
 	Image   string
