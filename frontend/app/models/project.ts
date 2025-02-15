@@ -9,6 +9,10 @@ export const ProjectSchema = z.object({
   slug: z.string(),
   created_at: z.string(),
   updated_at: z.string(),
+  language: z.string().optional(),
+  framework: z.string().optional(),
+  port: z.string().optional(),
+  server_url: z.string().optional(),
   model: z.string().optional(),
 });
 

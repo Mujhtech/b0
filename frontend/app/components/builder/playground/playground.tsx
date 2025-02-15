@@ -3,11 +3,7 @@ import { usePlayground } from "./provider";
 import HttpRequestConnector from "./connector/http-request";
 import { cn } from "~/lib/utils";
 import { useOptionalEndpoint } from "~/hooks/use-project";
-import HttpResponseConnector from "./connector/http-response";
-import IfConnector from "./connector/if";
-import VariableConnector from "./connector/variable";
-import SwitchConnector from "./connector/switch";
-import CodeblockConnector from "./connector/codeblock";
+import Connector from "./connector";
 
 export default function Playground() {
   const {
@@ -50,27 +46,9 @@ export default function Playground() {
             <div className="mt-5 ml-20 flex flex-col justify-center ">
               <HttpRequestConnector />
               {endpoint?.workflows?.map((workflow, index) => {
-                switch (workflow.type) {
-                  case "response":
-                    return (
-                      <HttpResponseConnector key={index} workflow={workflow} />
-                    );
-                  case "if":
-                    return <IfConnector key={index} workflow={workflow} />;
-                  case "variable":
-                    return (
-                      <VariableConnector key={index} workflow={workflow} />
-                    );
-                  case "switch":
-                    return <SwitchConnector key={index} workflow={workflow} />;
-                  case "codeblock":
-                    return (
-                      <CodeblockConnector key={index} workflow={workflow} />
-                    );
-                  case "request":
-                  default:
-                    return null;
-                }
+                return (
+                  <Connector workflow={workflow} index={index} key={index} />
+                );
               })}
             </div>
           </div>
