@@ -6,8 +6,10 @@ import (
 	"strings"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/guregu/null"
 	"github.com/hibiken/asynq"
+	"github.com/mujhtech/b0/database/models"
 	"github.com/mujhtech/b0/database/store"
 	aa "github.com/mujhtech/b0/internal/pkg/agent"
 	con "github.com/mujhtech/b0/internal/pkg/container"
@@ -79,6 +81,19 @@ func HandleDeployProject(aesCfb encrypt.Encrypt, store *store.Store, agent *aa.A
 			}, event)
 
 			return err
+		}
+
+		if err = store.AIUsageRepo.CreateAIUsage(ctx, &models.AIUsage{
+			ID:          uuid.New().String(),
+			ProjectID:   project.ID,
+			EndpointID:  null.NewString(endpoint.ID, true),
+			OwnerID:     project.OwnerID,
+			Model:       project.Model.String,
+			UsageType:   "code_generation",
+			InputToken:  agentToken.Input,
+			OutputToken: agentToken.Output,
+		}); err != nil {
+			zerolog.Ctx(ctx).Error().Err(err).Msg("failed to create AI usage")
 		}
 
 		zerolog.Ctx(ctx).Info().Msgf("code generation: %v", code)

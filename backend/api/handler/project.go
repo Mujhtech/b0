@@ -4,8 +4,10 @@ import (
 	"net/http"
 	"net/url"
 
+	"github.com/google/uuid"
 	"github.com/mujhtech/b0/api/dto"
 	"github.com/mujhtech/b0/api/middleware"
+	"github.com/mujhtech/b0/database/models"
 	"github.com/mujhtech/b0/internal/pkg/agent"
 	"github.com/mujhtech/b0/internal/pkg/request"
 	"github.com/mujhtech/b0/internal/pkg/response"
@@ -124,7 +126,7 @@ func (h *Handler) CreateProject(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	agentProjectTitleAndSlug, _, err := h.agent.GenerateTitleAndSlug(ctx, dst.Prompt, agent.WithModel(agentModel))
+	agentProjectTitleAndSlug, agentToken, err := h.agent.GenerateTitleAndSlug(ctx, dst.Prompt, agent.WithModel(agentModel))
 
 	if err != nil {
 		_ = response.InternalServerError(w, r, err)
@@ -144,6 +146,18 @@ func (h *Handler) CreateProject(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		_ = response.InternalServerError(w, r, err)
 		return
+	}
+
+	if err = h.store.AIUsageRepo.CreateAIUsage(ctx, &models.AIUsage{
+		ID:          uuid.New().String(),
+		ProjectID:   project.ID,
+		OwnerID:     project.OwnerID,
+		Model:       project.Model.String,
+		UsageType:   "project_creation",
+		InputToken:  agentToken.Input,
+		OutputToken: agentToken.Output,
+	}); err != nil {
+		zerolog.Ctx(ctx).Error().Err(err).Msg("failed to create AI usage")
 	}
 
 	if err = h.job.Client.Enqueue(job.QueueNameDefault, job.JobNameWorkflowCreate, &job.ClientPayload{
