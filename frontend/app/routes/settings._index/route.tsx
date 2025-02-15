@@ -1,4 +1,5 @@
 import { zodResolver } from "@hookform/resolvers/zod";
+import { MetaFunction } from "@remix-run/node";
 import React from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -19,6 +20,14 @@ import { useUser } from "~/hooks/use-user";
 const formSchema = z.object({
   name: z.string().optional(),
 });
+
+export const meta: MetaFunction = () => {
+  return [
+    {
+      title: `Settings`,
+    },
+  ];
+};
 
 export default function Page() {
   const user = useUser();

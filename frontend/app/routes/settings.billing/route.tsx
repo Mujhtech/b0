@@ -1,3 +1,4 @@
+import { MetaFunction } from "@remix-run/node";
 import React from "react";
 import {
   BasicPlanCard,
@@ -5,6 +6,14 @@ import {
   ProPlanCard,
 } from "~/components/billing/plan";
 import { Card, CardContent, CardHeader } from "~/components/ui/card";
+
+export const meta: MetaFunction = () => {
+  return [
+    {
+      title: `Billing`,
+    },
+  ];
+};
 
 export default function Page() {
   return (
