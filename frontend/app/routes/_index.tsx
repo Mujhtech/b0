@@ -23,6 +23,7 @@ import { useFeature } from "~/hooks/use-feature";
 import { LanguagePicker } from "~/components/builder/language-picker";
 import { useOptionalUser } from "~/hooks/use-user";
 import UserMenu from "~/components/menus/user-menu";
+import { redirectBackWithErrorMessage } from "~/models/message.server";
 
 export const action: ActionFunction = async ({ request, params }) => {
   const user = await requireUser(request);
@@ -34,7 +35,7 @@ export const action: ActionFunction = async ({ request, params }) => {
   });
 
   if (submission.status !== "success") {
-    return redirect("/");
+    return redirectBackWithErrorMessage(request, "Invalid form submission");
   }
 
   try {
@@ -46,8 +47,8 @@ export const action: ActionFunction = async ({ request, params }) => {
     return redirect(`/${project.data.slug}`, {
       headers,
     });
-  } catch (e) {
-    return redirect("/");
+  } catch (e: any) {
+    return redirectBackWithErrorMessage(request, e.error ?? "Unknown error");
   }
 };
 
