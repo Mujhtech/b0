@@ -134,7 +134,8 @@ func (p *projectRepo) FindProjectByOwnerID(ctx context.Context, ownerID string) 
 		Select(projectSelectColumn).
 		From(projectBaseTable).
 		Where(squirrel.Eq{"owner_id": ownerID}).
-		Where(excludeDeleted)
+		Where(excludeDeleted).
+		OrderBy(orderByCreatedAtDesc)
 
 	sql, args, err := stmt.ToSql()
 

@@ -139,7 +139,8 @@ func (e *endpointRepo) FindEndpointByOwnerID(ctx context.Context, ownerID string
 		Select(endpointSelectColumn).
 		From(endpointBaseTable).
 		Where(squirrel.Eq{"owner_id": ownerID}).
-		Where(excludeDeleted)
+		Where(excludeDeleted).
+		OrderBy(orderByCreatedAtDesc)
 
 	sql, args, err := stmt.ToSql()
 
@@ -161,7 +162,8 @@ func (e *endpointRepo) FindEndpointByProjectID(ctx context.Context, projectID st
 		Select(endpointSelectColumn).
 		From(endpointBaseTable).
 		Where(squirrel.Eq{"project_id": projectID}).
-		Where(excludeDeleted)
+		Where(excludeDeleted).
+		OrderBy(orderByCreatedAtDesc)
 
 	sql, args, err := stmt.ToSql()
 
