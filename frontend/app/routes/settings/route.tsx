@@ -20,7 +20,7 @@ export default function Setting() {
       <div className="flex flex-col mb-3 px-4">
         <div className="flex items-center border-border border-b pt-4 pb-2 justify-between">
           <h1 className="text-2xl font-bold">Settings</h1>
-          <UserMenu user={user} className="ml-auto mr-4" />
+          <UserMenu user={user} showHomepage={true} className="ml-auto mr-4" />
         </div>
       </div>
       <SettingMenuNav />

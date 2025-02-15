@@ -125,7 +125,7 @@ export default function Page() {
             <div className="flex justify-between">
               <div className=" ml-4">
                 <div className="flex items-center gap-2">
-                  <UserMenu user={user} />
+                  <UserMenu user={user} showHomepage={true} />
                   <ZoomInAndOut />
                 </div>
               </div>

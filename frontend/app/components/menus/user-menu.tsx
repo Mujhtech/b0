@@ -18,9 +18,11 @@ import { ProjectsDialog } from "../projects/project-dialog";
 export default function UserMenu({
   user,
   className,
+  showHomepage,
 }: {
   user: User;
   className?: string;
+  showHomepage?: boolean;
 }) {
   const [openProjectDialog, setOpenProjectDialog] = useState(false);
   const handleOpenProjectDialog = () => {
@@ -37,16 +39,33 @@ export default function UserMenu({
         <DropdownMenuContent className={cn("ml-4", className)}>
           <DropdownMenuLabel>My Account</DropdownMenuLabel>
           <DropdownMenuSeparator />
-          <DropdownMenuItem onClick={handleOpenProjectDialog}>
+          {showHomepage == true && (
+            <DropdownMenuItem
+              onClick={() => navigate("/")}
+              className="cursor-pointer"
+            >
+              Homepage
+            </DropdownMenuItem>
+          )}
+          <DropdownMenuItem
+            onClick={handleOpenProjectDialog}
+            className="cursor-pointer"
+          >
             Projects
           </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => navigate("/settings")}>
+          <DropdownMenuItem
+            onClick={() => navigate("/settings")}
+            className="cursor-pointer"
+          >
             Setting
           </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => navigate("/settings/billing")}>
+          <DropdownMenuItem
+            onClick={() => navigate("/settings/billing")}
+            className="cursor-pointer"
+          >
             Billing
           </DropdownMenuItem>
-          <DropdownMenuItem>
+          <DropdownMenuItem className="cursor-pointer">
             <Link to={logoutPath()}>Logout</Link>
           </DropdownMenuItem>
         </DropdownMenuContent>
