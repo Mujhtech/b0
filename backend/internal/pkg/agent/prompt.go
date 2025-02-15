@@ -71,7 +71,8 @@ const (
 	- The output should be a valid json valid JSON which has the following fields:
 	1. fileContents: The list of generated code file based on the workflow diagram. Make sure it contains all the necessary files for the code to run. (array of {filename: string, content: string})
 	2. installCommands: The command to install the necessary dependencies. (array of strings)
-	3. runCommands: The command to run the code. (string)
+	3. buildCommands: The command to build the code. (string)
+	4. runCommands: The command to run the code. (string)
 	- Ignore comments in the workflow diagram.
 	- Ensure all necessary imports are included
 	- Ensure that the generated code is valid and can be run without any errors.

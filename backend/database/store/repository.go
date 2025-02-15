@@ -35,6 +35,7 @@ type ProjectRepository interface {
 	FindProjectByID(ctx context.Context, id string) (*models.Project, error)
 	FindProjectByOwnerID(ctx context.Context, ownerID string) ([]*models.Project, error)
 	DeleteProject(ctx context.Context, id string) error
+	CountByOwnerID(ctx context.Context, ownerID string) (int, error)
 }
 
 type AIUsageRepository interface {
@@ -43,8 +44,8 @@ type AIUsageRepository interface {
 	DeleteAIUsage(ctx context.Context, id string) error
 	FindAIUsageByID(ctx context.Context, id string) (*models.AIUsage, error)
 	FindAIUsageByProjectID(ctx context.Context, projectID string) ([]*models.AIUsage, error)
-	GetTotalUsageInCurrentMonth(ctx context.Context, projectID string) (*TotalAIUsageInCurrentMonth, error)
-	GetTotalUsageInCurrentDay(ctx context.Context, projectID string) (*TotalAIUsageInCurrentDay, error)
+	GetTotalUsageInCurrentMonth(ctx context.Context, projectID string) (*TotalAIUsage, error)
+	GetTotalUsageInCurrentDay(ctx context.Context, projectID string) (*TotalAIUsage, error)
 }
 
 type ProjectLogRepository interface{}

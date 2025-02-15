@@ -84,6 +84,20 @@ func HandleCreateWorkflow(aesCfb encrypt.Encrypt, store *store.Store, agent *aa.
 			return err
 		}
 
+		//
+		if err = store.AIUsageRepo.CreateAIUsage(ctx, &models.AIUsage{
+			ID:          uuid.New().String(),
+			ProjectID:   project.ID,
+			EndpointID:  null.NewString(endpoint.ID, true),
+			OwnerID:     project.OwnerID,
+			Model:       project.Model.String,
+			UsageType:   "workflow",
+			InputToken:  agentToken.Input,
+			OutputToken: agentToken.Output,
+		}); err != nil {
+			zerolog.Ctx(ctx).Error().Err(err).Msg("failed to create AI usage")
+		}
+
 		sendEvent(ctx, project.ID, sse.EventTypeTaskUpdate, AgentData{
 			Message:            "b0 has successfully generated your workflow, reloading...",
 			Workflows:          workflows,

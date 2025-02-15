@@ -14,6 +14,8 @@ import { getFeatures } from "./services/feature.server";
 import { getUser } from "./services/user.server";
 import { User } from "./models/user";
 import { Feature } from "./models/feature";
+import { Projects } from "./models/project";
+import { getProjects } from "./services/project.server";
 
 export const links: LinksFunction = () => [];
 
@@ -23,6 +25,7 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
   let user: User | null = null;
   let feature: Feature | null = null;
   let accessToken: string | null = null;
+  let projects: Projects = [];
 
   try {
     feature = await getFeatures(request);
@@ -38,6 +41,8 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
 
   try {
     user = await getUser(request);
+
+    projects = await getProjects(request);
   } catch (e) {
     //
   }
@@ -48,6 +53,7 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
     accessToken: accessToken,
     backendUrl,
     platformUrl,
+    projects,
   });
 };
 

@@ -2,6 +2,7 @@ import { UIMatch } from "@remix-run/react";
 import type { Project, Projects } from "~/models/project";
 import { useTypedMatchesData } from "./use-typed-match";
 import { loader } from "~/routes/$projectSlug/route";
+import { loader as rootLoader } from "~/root";
 import { useChanged } from "./use-changed";
 import { UseDataFunctionReturn } from "remix-typedjson";
 import { Endpoint, Endpoints } from "~/models/endpoint";
@@ -9,8 +10,8 @@ import { Endpoint, Endpoints } from "~/models/endpoint";
 export type MatchedProject = UseDataFunctionReturn<typeof loader>["project"];
 
 export function useOptionalProjects(matches?: UIMatch[]): Projects | undefined {
-  const routeMatch = useTypedMatchesData<typeof loader>({
-    id: "routes/$projectSlug",
+  const routeMatch = useTypedMatchesData<typeof rootLoader>({
+    id: "root",
     matches,
   });
 

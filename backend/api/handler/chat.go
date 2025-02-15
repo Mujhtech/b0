@@ -2,6 +2,7 @@ package handler
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 
 	"github.com/mujhtech/b0/api/dto"
@@ -44,8 +45,16 @@ func (h *Handler) Chat(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if dst.Model != "" {
-		if _, err = agent.GetModel(dst.Model); err != nil {
-			_ = response.BadRequest(w, r, err)
+
+		var agentModelErr error
+		catalog, agentModelErr := agent.GetModelCatalog(dst.Model)
+		if agentModelErr != nil {
+			_ = response.BadRequest(w, r, agentModelErr)
+			return
+		}
+
+		if session.User.SubscriptionPlan == "free" && catalog.IsPremium {
+			_ = response.BadRequest(w, r, fmt.Errorf("you are not allowed to use premium models with the free plan"))
 			return
 		}
 	}

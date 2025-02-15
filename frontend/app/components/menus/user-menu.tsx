@@ -8,35 +8,64 @@ import {
 } from "~/components/ui/dropdown-menu";
 
 import { Avatar, AvatarFallback, AvatarImage } from "~/components/ui/avatar";
-import { Link } from "@remix-run/react";
+import { Link, useNavigate } from "@remix-run/react";
 import { logoutPath } from "~/lib/path";
 import { cn } from "~/lib/utils";
-import { useUser } from "~/hooks/use-user";
 import { User } from "~/models/user";
 import { useState } from "react";
 import { ProjectsDialog } from "../projects/project-dialog";
 
-export default function UserMenu() {
-  const user = useUser();
+export default function UserMenu({
+  user,
+  className,
+  showHomepage,
+}: {
+  user: User;
+  className?: string;
+  showHomepage?: boolean;
+}) {
   const [openProjectDialog, setOpenProjectDialog] = useState(false);
   const handleOpenProjectDialog = () => {
     setOpenProjectDialog(!openProjectDialog);
   };
+
+  const navigate = useNavigate();
   return (
     <>
       <DropdownMenu>
         <DropdownMenuTrigger className="focus:outline-none focus-visible:ring-0">
           <UserAvatar user={user} />
         </DropdownMenuTrigger>
-        <DropdownMenuContent className={cn("ml-4")}>
+        <DropdownMenuContent className={cn("ml-4", className)}>
           <DropdownMenuLabel>My Account</DropdownMenuLabel>
           <DropdownMenuSeparator />
-          <DropdownMenuItem onClick={handleOpenProjectDialog}>
+          {showHomepage == true && (
+            <DropdownMenuItem
+              onClick={() => navigate("/")}
+              className="cursor-pointer"
+            >
+              Homepage
+            </DropdownMenuItem>
+          )}
+          <DropdownMenuItem
+            onClick={handleOpenProjectDialog}
+            className="cursor-pointer"
+          >
             Projects
           </DropdownMenuItem>
-          <DropdownMenuItem>Profile</DropdownMenuItem>
-          <DropdownMenuItem>Billing</DropdownMenuItem>
-          <DropdownMenuItem>
+          <DropdownMenuItem
+            onClick={() => navigate("/settings")}
+            className="cursor-pointer"
+          >
+            Settings
+          </DropdownMenuItem>
+          <DropdownMenuItem
+            onClick={() => navigate("/settings/billing")}
+            className="cursor-pointer"
+          >
+            Billing
+          </DropdownMenuItem>
+          <DropdownMenuItem className="cursor-pointer">
             <Link to={logoutPath()}>Logout</Link>
           </DropdownMenuItem>
         </DropdownMenuContent>
@@ -46,9 +75,20 @@ export default function UserMenu() {
   );
 }
 
-export const UserAvatar = ({ user }: { user: User }) => {
+export const UserAvatar = ({
+  user,
+  className,
+}: {
+  user: User;
+  className?: string;
+}) => {
   return (
-    <Avatar className="h-8 w-8 rounded-none p-1 flex items-center md:justify-center border border-border bg-background hover:bg-background hover:border-border hover:border">
+    <Avatar
+      className={cn(
+        "h-8 w-8 rounded-none p-1 flex items-center md:justify-center border border-border bg-background hover:bg-background hover:border-border hover:border",
+        className
+      )}
+    >
       {user.avatar_url && <AvatarImage src={user?.avatar_url} />}
       <AvatarFallback>{user.name[0]}</AvatarFallback>
     </Avatar>

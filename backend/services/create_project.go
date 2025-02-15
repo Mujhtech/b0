@@ -15,6 +15,7 @@ import (
 
 type CreateProjectService struct {
 	ProjectTitleAndSlug *agent.ProjectTitleAndSlug
+	Framework           agent.CodeGenerationOption
 	Body                *dto.CreateProjectRequestDto
 	ProjectRepo         store.ProjectRepository
 	User                *models.User
@@ -29,6 +30,8 @@ func (c *CreateProjectService) Run(ctx context.Context) (*models.Project, error)
 		Model:       null.NewString(c.Body.Model, c.Body.Model != ""),
 		Slug:        util.ToLower(util.Slugify(c.ProjectTitleAndSlug.Slug)),
 		Description: null.NewString(c.ProjectTitleAndSlug.Description, true),
+		Framework:   c.Framework.Framework,
+		Language:    c.Framework.Language,
 		CreatedAt:   time.Now(),
 		UpdatedAt:   time.Now(),
 	}

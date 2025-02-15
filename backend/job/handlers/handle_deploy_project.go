@@ -6,8 +6,10 @@ import (
 	"strings"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/guregu/null"
 	"github.com/hibiken/asynq"
+	"github.com/mujhtech/b0/database/models"
 	"github.com/mujhtech/b0/database/store"
 	aa "github.com/mujhtech/b0/internal/pkg/agent"
 	con "github.com/mujhtech/b0/internal/pkg/container"
@@ -54,7 +56,7 @@ func HandleDeployProject(aesCfb encrypt.Encrypt, store *store.Store, agent *aa.A
 			Message: "b0 has started generating the code",
 		}, event)
 
-		codeGenOption, err := aa.GetLanguageCodeGeneration("Node.js (TypeScript)", "Express")
+		codeGenOption, err := aa.GetLanguageCodeGeneration(project.Language, project.Framework)
 
 		if err != nil {
 
@@ -70,23 +72,55 @@ func HandleDeployProject(aesCfb encrypt.Encrypt, store *store.Store, agent *aa.A
 		codeGenOption.Workflows = endpoint.Workflows
 		codeGenOption.FrameworkInsructions = fmt.Sprintf(codeGenOption.FrameworkInsructions, serverPort)
 
-		code, agentToken, err := agent.CodeGeneration(ctx, project.Description.String, codeGenOption, aa.WithModel(aa.ToModel(project.Model.String)))
+		var code *aa.CodeGeneration
 
-		if err != nil {
-			sendEvent(ctx, project.ID, sse.EventTypeTaskFailed, AgentData{
-				Message: agentToken.Output,
-				Error:   err.Error(),
+		if endpoint.CodeGeneration != nil {
+			code = endpoint.CodeGeneration
+		} else {
+			newCode, agentToken, err := agent.CodeGeneration(ctx, project.Description.String, codeGenOption, aa.WithModel(aa.ToModel(project.Model.String)))
+
+			if err != nil {
+				sendEvent(ctx, project.ID, sse.EventTypeTaskFailed, AgentData{
+					Message: agentToken.Output,
+					Error:   err.Error(),
+				}, event)
+
+				return err
+			}
+
+			// update endpoint
+			endpoint.CodeGeneration = newCode
+
+			if err = store.EndpointRepo.UpdateEndpoint(ctx, endpoint); err != nil {
+				sendEvent(ctx, project.ID, sse.EventTypeTaskFailed, AgentData{
+					Message: "b0 failed to update endpoint",
+				}, event)
+
+				return nil
+			}
+
+			if err = store.AIUsageRepo.CreateAIUsage(ctx, &models.AIUsage{
+				ID:          uuid.New().String(),
+				ProjectID:   project.ID,
+				EndpointID:  null.NewString(endpoint.ID, true),
+				OwnerID:     project.OwnerID,
+				Model:       project.Model.String,
+				UsageType:   "code_generation",
+				InputToken:  agentToken.Input,
+				OutputToken: agentToken.Output,
+			}); err != nil {
+				zerolog.Ctx(ctx).Error().Err(err).Msg("failed to create AI usage")
+			}
+
+			zerolog.Ctx(ctx).Info().Msgf("code generation: %v", newCode)
+
+			sendEvent(ctx, project.ID, sse.EventTypeTaskUpdate, AgentData{
+				Message: "b0 has successfully generated the code",
+				Code:    newCode,
 			}, event)
 
-			return err
+			code = newCode
 		}
-
-		zerolog.Ctx(ctx).Info().Msgf("code generation: %v", code)
-
-		sendEvent(ctx, project.ID, sse.EventTypeTaskUpdate, AgentData{
-			Message: "b0 has successfully generated the code",
-			Code:    code,
-		}, event)
 
 		isFolderExist, err := checkIfProjectFolderExists(project.OwnerID, project.Slug)
 
@@ -145,7 +179,7 @@ func HandleDeployProject(aesCfb encrypt.Encrypt, store *store.Store, agent *aa.A
 			}
 		}
 
-		serverUrl := fmt.Sprintf("https://%s.%s", project.Slug, strings.ToLower("b0.dev"))
+		serverUrl := fmt.Sprintf("http://%s:%s", "localhost", serverPort)
 
 		// TODO: deploy project to container
 		if !project.ContainerID.Valid || project.ContainerID.String == "" {
@@ -182,16 +216,25 @@ func HandleDeployProject(aesCfb encrypt.Encrypt, store *store.Store, agent *aa.A
 					return err
 				}
 
-				commands := []string{}
-				commands = append(commands, code.InstallCommands...)
-				commands = append(commands, code.RunCommands)
+				commands := []string{"/bin/sh", "-c", fmt.Sprintf(`
+					cd /app && \
+					NODE_ENV=development %s && \
+					%s && \
+					NODE_ENV=production %s
+				`, strings.Join(code.InstallCommands, " && "), code.BuildCommands, code.RunCommands)}
 
 				newContainerID, err := docker.CreateContainer(ctx, con.CreateContainerOption{
-					Name:       project.Slug,
-					Port:       serverPort,
-					Image:      codeGenOption.Image,
-					VolumeName: volumeName,
-					Command:    commands,
+					Name:            project.Slug,
+					Port:            serverPort,
+					Image:           codeGenOption.Image,
+					VolumeName:      volumeName,
+					HostConfigBinds: []string{fmt.Sprintf("%s:/app", volumeName)},
+					Command:         commands,
+					WorkingDir:      "/app",
+					Env: []string{
+						"NODE_ENV=development",
+						fmt.Sprintf("PORT=%s", serverPort),
+					},
 					Labels: map[string]string{
 						"traefik.enable": "true",
 						fmt.Sprintf("traefik.http.routers.%s.rule", project.Slug):        fmt.Sprintf("Host(`%s`)", strings.Replace(serverUrl, "https://", "", 1)),
@@ -211,6 +254,7 @@ func HandleDeployProject(aesCfb encrypt.Encrypt, store *store.Store, agent *aa.A
 				}
 
 				project.ContainerID = null.NewString(newContainerID, true)
+				project.Port = null.NewString(serverPort, true)
 
 				// update project
 				if err = store.ProjectRepo.UpdateProject(ctx, project); err != nil {
@@ -225,6 +269,7 @@ func HandleDeployProject(aesCfb encrypt.Encrypt, store *store.Store, agent *aa.A
 		}
 
 		if project.ContainerID.Valid && project.ContainerID.String != "" {
+
 			container, err := docker.GetContainer(ctx, project.ContainerID.String)
 
 			if err != nil {
@@ -255,11 +300,24 @@ func HandleDeployProject(aesCfb encrypt.Encrypt, store *store.Store, agent *aa.A
 
 			zerolog.Ctx(ctx).Info().Msgf("container: %v", container)
 
+			sendEvent(ctx, project.ID, sse.EventTypeTaskUpdate, AgentData{
+				Message: "b0 is starting the container for your project...",
+			}, event)
+
 			if container.State.Running {
 				// restart container
 				if err = docker.RestartContainer(ctx, container.ID); err != nil {
 					sendEvent(ctx, project.ID, sse.EventTypeTaskFailed, AgentData{
 						Message: "b0 failed to restart container",
+						Error:   err.Error(),
+					}, event)
+					return nil
+				}
+			} else {
+				// start container
+				if err = docker.StartContainer(ctx, container.ID); err != nil {
+					sendEvent(ctx, project.ID, sse.EventTypeTaskFailed, AgentData{
+						Message: "b0 failed to start container",
 						Error:   err.Error(),
 					}, event)
 					return nil

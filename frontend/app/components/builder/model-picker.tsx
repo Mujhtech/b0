@@ -10,6 +10,7 @@ import {
   SelectValue,
 } from "~/components/ui/select";
 import { useFeature } from "~/hooks/use-feature";
+import { useUser } from "~/hooks/use-user";
 
 export function AIModelPicker({
   onSelect,
@@ -51,6 +52,7 @@ export function AIModelPicker2({
   value?: string;
 }) {
   const { available_models } = useFeature();
+  const user = useUser();
 
   return (
     <Select onValueChange={onSelect} value={value}>
@@ -64,7 +66,10 @@ export function AIModelPicker2({
             <SelectItem
               key={index}
               value={model.model}
-              disabled={model.is_enabled === false}
+              disabled={
+                model.is_enabled === false ||
+                (user.subscription_plan === "free" && model.is_premium === true)
+              }
             >
               {model.name}
             </SelectItem>

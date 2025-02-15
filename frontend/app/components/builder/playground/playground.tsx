@@ -63,7 +63,7 @@ export default function Playground() {
                     );
                   case "switch":
                     return <SwitchConnector key={index} workflow={workflow} />;
-                  case "switch":
+                  case "codeblock":
                     return (
                       <CodeblockConnector key={index} workflow={workflow} />
                     );

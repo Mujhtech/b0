@@ -17,6 +17,7 @@ func TestCreateProjectService_Run(t *testing.T) {
 	type args struct {
 		ctx                 context.Context
 		project             *models.Project
+		framework           agent.CodeGenerationOption
 		user                *models.User
 		dto                 *dto.CreateProjectRequestDto
 		projectTitleAndSlug *agent.ProjectTitleAndSlug
@@ -45,6 +46,10 @@ func TestCreateProjectService_Run(t *testing.T) {
 					Slug:        "test-project",
 					Description: "test description",
 				},
+				framework: agent.CodeGenerationOption{
+					Framework: "Chi",
+					Language:  "Go",
+				},
 			},
 			mockFn: func(s *CreateProjectService) {
 				pr, _ := s.ProjectRepo.(*mocks.MockProjectRepository)
@@ -67,6 +72,7 @@ func TestCreateProjectService_Run(t *testing.T) {
 				User:                tt.args.user,
 				Body:                tt.args.dto,
 				ProjectTitleAndSlug: tt.args.projectTitleAndSlug,
+				Framework:           tt.args.framework,
 			}
 
 			if tt.mockFn != nil {

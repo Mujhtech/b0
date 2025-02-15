@@ -7,6 +7,7 @@ export const UserSchema = z.object({
   avatar_url: z.string().optional(),
   name: z.string(),
   authentication_method: z.string().optional(),
+  subscription_plan: z.string(),
   created_at: z.string().optional(),
   updated_at: z.string().optional(),
 });

@@ -37,15 +37,12 @@ export const loader = async ({ request, params }: LoaderFunctionArgs) => {
   let project: Project | null = null;
   let endpoints: Endpoints = [];
   let endpoint: Endpoint | undefined = undefined;
-  let projects: Projects = [];
 
   const url = new URL(request.url);
   const s = Object.fromEntries(url.searchParams.entries());
   const searchParams = ProjectSearchSchema.parse(s);
 
   try {
-    projects = await getProjects(request);
-
     project = await getProject(request, projectSlug);
 
     endpoints = await getEndpoints(request, project.id);
@@ -69,7 +66,6 @@ export const loader = async ({ request, params }: LoaderFunctionArgs) => {
     user,
     projectSlug,
     project,
-    projects,
     endpoints,
     endpoint,
   });

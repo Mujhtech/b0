@@ -20,6 +20,9 @@ import { useFetcher } from "@remix-run/react";
 import { useForm, useInputControl } from "@conform-to/react";
 import React from "react";
 import { useFeature } from "~/hooks/use-feature";
+import { LanguagePicker } from "~/components/builder/language-picker";
+import { useOptionalUser } from "~/hooks/use-user";
+import UserMenu from "~/components/menus/user-menu";
 
 export const action: ActionFunction = async ({ request, params }) => {
   const user = await requireUser(request);
@@ -62,6 +65,8 @@ export default function Index() {
   const [model, setModel] = React.useState<string | undefined>(
     defaultModel?.model
   );
+  const [language, setLanguage] = React.useState<string | undefined>("1");
+  const user = useOptionalUser();
 
   const [form, fields] = useForm({
     id: "create-project-form",
@@ -104,6 +109,12 @@ export default function Index() {
               key={fields.model.key}
               value={model}
             />
+            <input
+              type="hidden"
+              name={fields.framework_id.name}
+              key={fields.framework_id.key}
+              value={language}
+            />
             <div className="flex items-center px-3 pb-2">
               <div className="flex gap-2">
                 <AIModelPicker2
@@ -112,12 +123,13 @@ export default function Index() {
                     setModel(mode);
                   }}
                 />
-                <button
+                <LanguagePicker value={language} onSelect={setLanguage} />
+                {/* <button
                   type="button"
                   className="border border-input h-6 w-6 p-1 inline-flex items-center justify-center"
                 >
                   <Folder className="h-5 w-5" />
-                </button>
+                </button> */}
                 <button
                   type="button"
                   className="border border-input h-6 w-6 p-1 inline-flex items-center justify-center"
@@ -149,9 +161,17 @@ export default function Index() {
             "Discord Bot",
             "Open AI",
           ].map((template, i) => (
-            <TemplateCard key={i} template={template} model={model} />
+            <TemplateCard
+              key={i}
+              template={template}
+              model={model}
+              language={language}
+            />
           ))}
         </div>
+      </div>
+      <div className="flex flex-col justify-end items-start w-full h-full px-4 pb-4">
+        {user && <UserMenu user={user} />}
       </div>
     </main>
   );
@@ -160,9 +180,11 @@ export default function Index() {
 const TemplateCard = ({
   template,
   model,
+  language,
 }: {
   template: string;
   model?: string;
+  language?: string;
 }) => {
   const fetcher = useFetcher();
 
@@ -172,6 +194,9 @@ const TemplateCard = ({
     formData.append("isTemplate", "true");
     if (model) {
       formData.append("model", model);
+    }
+    if (language) {
+      formData.append("framework_id", language);
     }
     fetcher.submit(formData, { method: "POST" });
   };

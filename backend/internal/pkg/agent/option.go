@@ -39,6 +39,7 @@ type ModeCatalog struct {
 	IsEnabled      bool       `json:"is_enabled"`
 	IsExperimental bool       `json:"is_experimental"`
 	IsDefault      bool       `json:"is_default"`
+	IsPremium      bool       `json:"is_premium"`
 }
 
 type WorkflowCase struct {
@@ -65,6 +66,7 @@ type Workflow struct {
 }
 
 type CodeGenerationOption struct {
+	ID                   string      `json:"id"`
 	Language             string      `json:"language"`
 	Framework            string      `json:"framework"`
 	FrameworkInsructions string      `json:"-"`
@@ -75,6 +77,7 @@ type CodeGenerationOption struct {
 type CodeGeneration struct {
 	FileContents    []FileContent `json:"fileContents"`
 	InstallCommands []string      `json:"installCommands"`
+	BuildCommands   string        `json:"buildCommands"`
 	RunCommands     string        `json:"runCommands"`
 }
 
@@ -85,6 +88,7 @@ type FileContent struct {
 
 var AvailableCodeGenerationOptions = []CodeGenerationOption{
 	{
+		ID:        "1",
 		Language:  "Go",
 		Framework: "Chi",
 		Image:     "golang:1.23-alpine3.20",
@@ -94,24 +98,29 @@ var AvailableCodeGenerationOptions = []CodeGenerationOption{
 		`,
 	},
 	{
+		ID:        "2",
 		Language:  "Go",
 		Framework: "Echo",
 		Image:     "golang:1.23-alpine3.20",
 		FrameworkInsructions: `
 		## Framework instructions
 		- Use Echo framework
+		- Use port %s for the server
 		`,
 	},
 	{
+		ID:        "3",
 		Language:  "Go",
 		Framework: "Gin",
 		Image:     "golang:1.23-alpine3.20",
 		FrameworkInsructions: `
 		## Framework instructions
 		- Use Gin framework
+		- Use port %s for the server
 		`,
 	},
 	{
+		ID:        "4",
 		Language:  "Node.js (TypeScript)",
 		Framework: "Express",
 		Image:     "node:20-alpine3.20",
@@ -120,25 +129,32 @@ var AvailableCodeGenerationOptions = []CodeGenerationOption{
 		- Use Express framework
 		- Make sure to add package.json and don't forget to include all neccessary dependencies
 		- Use port %s for the server
+		- Use npm run build for buildCommands
+		- Use npm run start for runCommands
+		- Make sure to add the necessary scripts in the package.json file e.g "build": "npx -y tsc", "start": "node dist/index.js"
 		`,
 	},
 	{
+		ID:        "5",
 		Language:  "Node.js (TypeScript)",
 		Framework: "Fastify",
 		Image:     "node:20-alpine3.20",
 		FrameworkInsructions: `
 		## Framework instructions
 		- Use Fastify framework
+		- Use port %s for the server
 		- Make sure to add package.json and don't forget to include all neccessary dependencies
 		`,
 	},
 	{
+		ID:        "6",
 		Language:  "Node.js (TypeScript)",
 		Framework: "Hono",
 		Image:     "node:20-alpine3.20",
 		FrameworkInsructions: `
 		## Framework instructions
 		- Use Hono framework
+		- Use port %s for the server
 		- Make sure to add package.json and don't forget to include all neccessary dependencies
 		- Below are the basic dependencies you need to add to your package.json file
 		1. "hono": "^4.7.1"
@@ -146,6 +162,15 @@ var AvailableCodeGenerationOptions = []CodeGenerationOption{
 		- Make sure all files are in the src directory except the configuration files like package.json, tsconfig.json, and tsconfig.node.json, etc
 		`,
 	},
+}
+
+func GetLanguageCodeGenerationByID(id string) (CodeGenerationOption, error) {
+	for _, option := range AvailableCodeGenerationOptions {
+		if option.ID == id {
+			return option, nil
+		}
+	}
+	return CodeGenerationOption{}, fmt.Errorf("language not found")
 }
 
 func GetLanguageCodeGeneration(language string, framework string) (CodeGenerationOption, error) {
@@ -166,30 +191,34 @@ var AvailableCatalogs = []ModeCatalog{
 	{
 		Name:           "GPT 3.5",
 		Model:          AgentModelGPT3Dot5,
-		IsEnabled:      false,
+		IsEnabled:      true,
 		IsExperimental: false,
 		IsDefault:      false,
+		IsPremium:      false,
 	},
 	{
 		Name:           "GPT 4",
 		Model:          AgentModelGPT4,
-		IsEnabled:      false,
+		IsEnabled:      true,
 		IsExperimental: false,
 		IsDefault:      false,
+		IsPremium:      true,
 	},
 	{
 		Name:           "Claude Sonnet 3.5",
 		Model:          AgentModelClaudeSonnet3Dot5,
-		IsEnabled:      false,
+		IsEnabled:      true,
 		IsExperimental: false,
 		IsDefault:      false,
+		IsPremium:      true,
 	},
 	{
 		Name:           "DeepSeek R1",
 		Model:          AgentModelDeepSeekR1,
-		IsEnabled:      false,
+		IsEnabled:      true,
 		IsExperimental: true,
 		IsDefault:      false,
+		IsPremium:      true,
 	},
 	{
 		Name:           "Gemini 1.5 Flash",
@@ -197,6 +226,7 @@ var AvailableCatalogs = []ModeCatalog{
 		IsEnabled:      true,
 		IsExperimental: true,
 		IsDefault:      true,
+		IsPremium:      false,
 	},
 	{
 		Name:           "Gemini 2.0 Flash",
@@ -204,6 +234,7 @@ var AvailableCatalogs = []ModeCatalog{
 		IsEnabled:      true,
 		IsExperimental: true,
 		IsDefault:      false,
+		IsPremium:      false,
 	},
 }
 
@@ -214,6 +245,15 @@ func GetModel(model string) (AgentModel, error) {
 		}
 	}
 	return AgentModelNone, fmt.Errorf("model not found")
+}
+
+func GetModelCatalog(model string) (ModeCatalog, error) {
+	for _, catalog := range AvailableCatalogs {
+		if catalog.Model == AgentModel(model) {
+			return catalog, nil
+		}
+	}
+	return ModeCatalog{}, fmt.Errorf("model not found")
 }
 
 type Config struct {
