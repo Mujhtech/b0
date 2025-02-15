@@ -8,7 +8,7 @@ import Playground from "~/components/builder/playground/playground";
 import BuilderMenu from "~/components/builder/builder-menu";
 import { PlaygroundBuilderProvider } from "~/components/builder/provider";
 import { useSSE } from "~/hooks/use-ses";
-import { useAuthToken, usePlatformUrl } from "~/hooks/use-user";
+import { useAuthToken, usePlatformUrl, useUser } from "~/hooks/use-user";
 import { useProject } from "~/hooks/use-project";
 import { useCallback, useMemo, useState } from "react";
 import { Spinner } from "@phosphor-icons/react";
@@ -30,6 +30,7 @@ export default function Page() {
     undefined
   );
   const navigate = useNavigate();
+  const user = useUser();
 
   useSSE({
     baseUrl: `${platformUrl}/projects/${project.id}/sse`,
@@ -124,7 +125,7 @@ export default function Page() {
             <div className="flex justify-between">
               <div className=" ml-4">
                 <div className="flex items-center gap-2">
-                  <UserMenu />
+                  <UserMenu user={user} />
                   <ZoomInAndOut />
                 </div>
               </div>

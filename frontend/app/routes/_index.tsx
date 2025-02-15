@@ -21,6 +21,8 @@ import { useForm, useInputControl } from "@conform-to/react";
 import React from "react";
 import { useFeature } from "~/hooks/use-feature";
 import { LanguagePicker } from "~/components/builder/language-picker";
+import { useOptionalUser } from "~/hooks/use-user";
+import UserMenu from "~/components/menus/user-menu";
 
 export const action: ActionFunction = async ({ request, params }) => {
   const user = await requireUser(request);
@@ -64,6 +66,7 @@ export default function Index() {
     defaultModel?.model
   );
   const [language, setLanguage] = React.useState<string | undefined>("1");
+  const user = useOptionalUser();
 
   const [form, fields] = useForm({
     id: "create-project-form",
@@ -166,6 +169,9 @@ export default function Index() {
             />
           ))}
         </div>
+      </div>
+      <div className="flex flex-col justify-end items-start w-full h-full px-4 pb-4">
+        {user && <UserMenu user={user} />}
       </div>
     </main>
   );
