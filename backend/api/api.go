@@ -114,6 +114,11 @@ func (a *Api) BuildRouter() *chi.Mux {
 			r.Route("/chat", func(r chi.Router) {
 				r.Post(fmt.Sprintf("/{%s}", handler.ProjectParamId), a.handler.Chat)
 			})
+
+			// billing route
+			r.Route("/billing", func(r chi.Router) {
+				r.Get("/usage", a.handler.GetUsage)
+			})
 		})
 	})
 

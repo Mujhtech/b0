@@ -14,14 +14,10 @@ const (
 	aiUsageSelectColumn = "id, owner_id, project_id, endpoint_id, input_tokens, output_tokens, model, usage_type, metadata, created_at, updated_at, deleted_at"
 )
 
-type TotalAIUsageInCurrentDay struct {
-	TotalInputTokensDay  int `db:"total_input_tokens_day" json:"total_input_tokens_day"`
-	TotalOutputTokensDay int `db:"total_output_tokens_day" json:"total_output_tokens_day"`
-}
-
-type TotalAIUsageInCurrentMonth struct {
-	TotalInputTokensMonth  int `db:"total_input_tokens_month" json:"total_input_tokens_month"`
-	TotalOutputTokensMonth int `db:"total_output_tokens_month" json:"total_output_tokens_month"`
+type TotalAIUsage struct {
+	TotalUsage             int `db:"total_usage" json:"total_usage"`
+	TotalInputTokensMonth  int `db:"total_input_tokens,omitempty" json:"total_input_tokens,omitempty"`
+	TotalOutputTokensMonth int `db:"total_output_tokens,omitempty" json:"total_output_tokens,omitempty"`
 }
 
 type aiUsageRepo struct {
@@ -194,10 +190,10 @@ func (a *aiUsageRepo) FindAIUsageByProjectID(ctx context.Context, projectId stri
 	return dst, nil
 }
 
-// GetTotalUsageInCurrentDayByOwnerID implements AIUsageRepository.
-func (a *aiUsageRepo) GetTotalUsageInCurrentDay(ctx context.Context, ownerId string) (*TotalAIUsageInCurrentDay, error) {
+// GetTotalUsageInCurrentDay implements AIUsageRepository.
+func (a *aiUsageRepo) GetTotalUsageInCurrentDay(ctx context.Context, ownerId string) (*TotalAIUsage, error) {
 	stmt := Builder.
-		Select("SUM(input_tokens) AS total_input_tokens_day, SUM(output_tokens) AS total_output_tokens_day").
+		Select("COUNT(*) AS total_usage").
 		From(aiUsageBaseTable).
 		Where(squirrel.Eq{"owner_id": ownerId}).
 		Where("DATE(created_at) = CURRENT_DATE").
@@ -209,8 +205,8 @@ func (a *aiUsageRepo) GetTotalUsageInCurrentDay(ctx context.Context, ownerId str
 		return nil, err
 	}
 
-	dst := new(TotalAIUsageInCurrentDay)
-	if err := a.db.GetDB().SelectContext(ctx, &dst, sql, args...); err != nil {
+	dst := new(TotalAIUsage)
+	if err := a.db.GetDB().GetContext(ctx, dst, sql, args...); err != nil {
 		return nil, ProcessSQLErrorfWithCtx(ctx, sql, err, "failed to get total usage in current day by owner id")
 	}
 
@@ -218,9 +214,9 @@ func (a *aiUsageRepo) GetTotalUsageInCurrentDay(ctx context.Context, ownerId str
 }
 
 // GetTotalUsageInCurrentMonth implements AIUsageRepository.
-func (a *aiUsageRepo) GetTotalUsageInCurrentMonth(ctx context.Context, ownerId string) (*TotalAIUsageInCurrentMonth, error) {
+func (a *aiUsageRepo) GetTotalUsageInCurrentMonth(ctx context.Context, ownerId string) (*TotalAIUsage, error) {
 	stmt := Builder.
-		Select("SUM(input_tokens) AS total_input_tokens_month, SUM(output_tokens) AS total_output_tokens_month").
+		Select("COUNT(*) AS total_usage").
 		From(aiUsageBaseTable).
 		Where(squirrel.Eq{"owner_id": ownerId}).
 		Where("DATE(created_at) >= DATE_TRUNC('month', CURRENT_DATE)").
@@ -232,8 +228,8 @@ func (a *aiUsageRepo) GetTotalUsageInCurrentMonth(ctx context.Context, ownerId s
 		return nil, err
 	}
 
-	dst := new(TotalAIUsageInCurrentMonth)
-	if err := a.db.GetDB().SelectContext(ctx, &dst, sql, args...); err != nil {
+	dst := new(TotalAIUsage)
+	if err := a.db.GetDB().GetContext(ctx, dst, sql, args...); err != nil {
 		return nil, ProcessSQLErrorfWithCtx(ctx, sql, err, "failed to get total usage in current month by owner id")
 	}
 

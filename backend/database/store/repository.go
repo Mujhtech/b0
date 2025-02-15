@@ -43,8 +43,8 @@ type AIUsageRepository interface {
 	DeleteAIUsage(ctx context.Context, id string) error
 	FindAIUsageByID(ctx context.Context, id string) (*models.AIUsage, error)
 	FindAIUsageByProjectID(ctx context.Context, projectID string) ([]*models.AIUsage, error)
-	GetTotalUsageInCurrentMonth(ctx context.Context, projectID string) (*TotalAIUsageInCurrentMonth, error)
-	GetTotalUsageInCurrentDay(ctx context.Context, projectID string) (*TotalAIUsageInCurrentDay, error)
+	GetTotalUsageInCurrentMonth(ctx context.Context, projectID string) (*TotalAIUsage, error)
+	GetTotalUsageInCurrentDay(ctx context.Context, projectID string) (*TotalAIUsage, error)
 }
 
 type ProjectLogRepository interface{}
