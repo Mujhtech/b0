@@ -16,6 +16,7 @@ export function BasicPlanCard() {
       storage={1}
       feature={
         <ul className="flex flex-col gap-3">
+          <Item checked>Access to b0</Item>
           <Item checked>Up 3 public projects</Item>
           <Item checked>Deploy on the go</Item>
           <Item checked>Export project</Item>
@@ -42,6 +43,7 @@ export function ProPlanCard() {
       storage={5}
       feature={
         <ul className="flex flex-col gap-3">
+          <Item checked>Access to b0</Item>
           <Item checked>2.5x monthly limits</Item>
           <Item checked>Unlimited public and private project</Item>
           <Item checked>Deploy on the go</Item>
@@ -65,6 +67,7 @@ export function ScalePlanCard() {
       price={100}
       feature={
         <ul className="flex flex-col gap-3">
+          <Item checked>Access to b0</Item>
           <Item checked>Higher monthly limits</Item>
           <Item checked>Unlimited public and private project</Item>
           <Item checked>Deploy on the go</Item>
