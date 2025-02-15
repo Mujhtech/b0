@@ -65,6 +65,7 @@ type Workflow struct {
 }
 
 type CodeGenerationOption struct {
+	ID                   string      `json:"id"`
 	Language             string      `json:"language"`
 	Framework            string      `json:"framework"`
 	FrameworkInsructions string      `json:"-"`
@@ -75,6 +76,7 @@ type CodeGenerationOption struct {
 type CodeGeneration struct {
 	FileContents    []FileContent `json:"fileContents"`
 	InstallCommands []string      `json:"installCommands"`
+	BuildCommands   string        `json:"buildCommands"`
 	RunCommands     string        `json:"runCommands"`
 }
 
@@ -85,6 +87,7 @@ type FileContent struct {
 
 var AvailableCodeGenerationOptions = []CodeGenerationOption{
 	{
+		ID:        "1",
 		Language:  "Go",
 		Framework: "Chi",
 		Image:     "golang:1.23-alpine3.20",
@@ -94,6 +97,7 @@ var AvailableCodeGenerationOptions = []CodeGenerationOption{
 		`,
 	},
 	{
+		ID:        "2",
 		Language:  "Go",
 		Framework: "Echo",
 		Image:     "golang:1.23-alpine3.20",
@@ -103,6 +107,7 @@ var AvailableCodeGenerationOptions = []CodeGenerationOption{
 		`,
 	},
 	{
+		ID:        "3",
 		Language:  "Go",
 		Framework: "Gin",
 		Image:     "golang:1.23-alpine3.20",
@@ -112,6 +117,7 @@ var AvailableCodeGenerationOptions = []CodeGenerationOption{
 		`,
 	},
 	{
+		ID:        "4",
 		Language:  "Node.js (TypeScript)",
 		Framework: "Express",
 		Image:     "node:20-alpine3.20",
@@ -120,9 +126,13 @@ var AvailableCodeGenerationOptions = []CodeGenerationOption{
 		- Use Express framework
 		- Make sure to add package.json and don't forget to include all neccessary dependencies
 		- Use port %s for the server
+		- Use npm run build for buildCommands
+		- Use npm run start for runCommands
+		- Make sure to add the necessary scripts in the package.json file e.g "build": "npx -y tsc", "start": "node dist/index.js"
 		`,
 	},
 	{
+		ID:        "5",
 		Language:  "Node.js (TypeScript)",
 		Framework: "Fastify",
 		Image:     "node:20-alpine3.20",
@@ -133,6 +143,7 @@ var AvailableCodeGenerationOptions = []CodeGenerationOption{
 		`,
 	},
 	{
+		ID:        "6",
 		Language:  "Node.js (TypeScript)",
 		Framework: "Hono",
 		Image:     "node:20-alpine3.20",
@@ -146,6 +157,15 @@ var AvailableCodeGenerationOptions = []CodeGenerationOption{
 		- Make sure all files are in the src directory except the configuration files like package.json, tsconfig.json, and tsconfig.node.json, etc
 		`,
 	},
+}
+
+func GetLanguageCodeGenerationByID(id string) (CodeGenerationOption, error) {
+	for _, option := range AvailableCodeGenerationOptions {
+		if option.ID == id {
+			return option, nil
+		}
+	}
+	return CodeGenerationOption{}, fmt.Errorf("language not found")
 }
 
 func GetLanguageCodeGeneration(language string, framework string) (CodeGenerationOption, error) {

@@ -102,6 +102,8 @@ func (h *Handler) CreateProject(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	var framework agent.CodeGenerationOption
+
 	var agentModel agent.AgentModel
 
 	if dst.Model != "" {
@@ -109,6 +111,15 @@ func (h *Handler) CreateProject(w http.ResponseWriter, r *http.Request) {
 		agentModel, agentModelErr = agent.GetModel(dst.Model)
 		if agentModelErr != nil {
 			_ = response.BadRequest(w, r, agentModelErr)
+			return
+		}
+	}
+
+	if dst.FramekworkID != "" {
+		var err error
+		framework, err = agent.GetLanguageCodeGenerationByID(dst.FramekworkID)
+		if err != nil {
+			_ = response.BadRequest(w, r, err)
 			return
 		}
 	}
@@ -125,6 +136,7 @@ func (h *Handler) CreateProject(w http.ResponseWriter, r *http.Request) {
 		ProjectTitleAndSlug: agentProjectTitleAndSlug,
 		ProjectRepo:         h.store.ProjectRepo,
 		User:                session.User,
+		Framework:           framework,
 	}
 
 	project, err := createProjectService.Run(ctx)

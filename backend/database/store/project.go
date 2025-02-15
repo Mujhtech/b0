@@ -11,7 +11,7 @@ import (
 
 const (
 	projectBaseTable    = "projects"
-	projectSelectColumn = "id, owner_id, name, slug, description, model, metadata, created_at, updated_at, deleted_at"
+	projectSelectColumn = "id, owner_id, name, slug, description, model, server_url, port, framework, language, metadata, created_at, updated_at, deleted_at"
 )
 
 type projectRepo struct {
@@ -47,6 +47,11 @@ func (p *projectRepo) CreateProject(ctx context.Context, project *models.Project
 			"slug",
 			"description",
 			"model",
+			"container_id",
+			"framework",
+			"language",
+			"port",
+			"server_url",
 			"metadata",
 		).
 		Values(
@@ -56,6 +61,11 @@ func (p *projectRepo) CreateProject(ctx context.Context, project *models.Project
 			project.Slug,
 			project.Description,
 			project.Model,
+			project.ContainerID,
+			project.Framework,
+			project.Language,
+			project.Port,
+			project.ServerUrl,
 			metadata,
 		)
 
@@ -150,6 +160,14 @@ func (p *projectRepo) UpdateProject(ctx context.Context, project *models.Project
 
 	if project.ContainerID.Valid && project.ContainerID.String != "" {
 		stmt = stmt.Set("container_id", project.ContainerID)
+	}
+
+	if project.Port.Valid && project.Port.String != "" {
+		stmt = stmt.Set("port", project.Port)
+	}
+
+	if project.ServerUrl.Valid && project.ServerUrl.String != "" {
+		stmt = stmt.Set("server_url", project.ServerUrl)
 	}
 
 	sql, args, err := stmt.ToSql()

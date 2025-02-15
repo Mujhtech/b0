@@ -7,10 +7,14 @@ type FilterContainerOption struct {
 }
 
 type CreateContainerOption struct {
-	Name       string
-	Port       string
-	Image      string
-	Command    []string
-	VolumeName string
-	Labels     map[string]string
+	Name            string
+	Port            string
+	Image           string
+	Command         []string
+	VolumeName      string
+	Labels          map[string]string
+	Entrypoint      []string
+	Env             []string
+	HostConfigBinds []string
+	WorkingDir      string
 }

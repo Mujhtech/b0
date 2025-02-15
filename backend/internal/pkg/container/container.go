@@ -10,7 +10,6 @@ import (
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/filters"
 	"github.com/docker/docker/api/types/image"
-	"github.com/docker/docker/api/types/mount"
 	"github.com/docker/docker/api/types/network"
 	"github.com/docker/docker/api/types/volume"
 	"github.com/docker/docker/client"
@@ -115,45 +114,45 @@ func (c *Container) GetContainerList(ctx context.Context, opts FilterContainerOp
 }
 
 func (c *Container) CreateContainer(ctx context.Context, opts CreateContainerOption) (string, error) {
-
-	commands := []string{"/bin/sh", "-c"}
-
-	if len(opts.Command) > 0 {
-		commands = append(commands, opts.Command...)
-	}
-
 	resp, err := c.client.ContainerCreate(ctx, &container.Config{
 		OpenStdin:    true,
 		AttachStdout: true,
 		AttachStderr: true,
 		Tty:          true,
-		WorkingDir:   "/app",
+		WorkingDir:   opts.WorkingDir,
 		Image:        opts.Image,
-		Cmd:          commands,
+		Cmd:          opts.Command,
+		Entrypoint:   opts.Entrypoint,
+		Env:          opts.Env,
 		ExposedPorts: nat.PortSet{
 			nat.Port(fmt.Sprintf("%s/tcp", opts.Port)): struct{}{},
 		},
 		Labels: opts.Labels,
 	}, &container.HostConfig{
-		Binds: []string{
-			"/var/run/docker.sock:/var/run/docker.sock",
-		},
+		Binds: opts.HostConfigBinds,
 		PortBindings: map[nat.Port][]nat.PortBinding{
 			nat.Port(fmt.Sprintf("%s/tcp", opts.Port)): {
 				{
-					// HostIP:   "0.0.0.0",
+					HostIP:   "0.0.0.0", // Add this to bind to all interfaces
 					HostPort: opts.Port,
 				},
 			},
 		},
 		Resources: container.Resources{
-			CPUQuota:  100000,
-			CPUPeriod: 100000,
+			CPUQuota:   100000,
+			CPUPeriod:  100000,
+			Memory:     512 * 1024 * 1024,  // Add memory limit (512MB)
+			MemorySwap: 1024 * 1024 * 1024, // Add swap limit (1GB)
 		},
-		Mounts: []mount.Mount{
-			{Type: mount.TypeVolume, Source: opts.VolumeName, Target: "/app"},
+		RestartPolicy: container.RestartPolicy{
+			Name: "unless-stopped", // Add restart policy
 		},
-	}, &network.NetworkingConfig{}, nil, opts.Name)
+		NetworkMode: "bridge", // Specify network mode
+	}, &network.NetworkingConfig{
+		EndpointsConfig: map[string]*network.EndpointSettings{
+			"bridge": {}, // Configure bridge network
+		},
+	}, nil, opts.Name)
 	if err != nil {
 		return "", err
 	}
@@ -174,6 +173,22 @@ func (c *Container) RestartContainer(ctx context.Context, id string) error {
 
 func (c *Container) RemoveContainer(ctx context.Context, id string) error {
 	return c.client.ContainerRemove(ctx, id, container.RemoveOptions{})
+}
+
+func (c *Container) ContainerExec(ctx context.Context, id string, src string) error {
+
+	exec, err := c.client.ContainerExecCreate(ctx, id, container.ExecOptions{
+		AttachStdin:  true,
+		AttachStdout: true,
+		AttachStderr: true,
+		Tty:          true,
+		Cmd:          []string{"sh", "-c"},
+	})
+	if err != nil {
+		return err
+	}
+
+	return c.client.ContainerExecStart(ctx, exec.ID, container.ExecStartOptions{})
 }
 
 func (c *Container) CopyFileToContainer(ctx context.Context, id string, src io.Reader, dst string) error {
