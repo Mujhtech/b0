@@ -1,8 +1,25 @@
-import { MetaFunction } from "@remix-run/node";
+import { LoaderFunctionArgs, MetaFunction } from "@remix-run/node";
+import { useLoaderData } from "@remix-run/react";
 import { useMemo } from "react";
+import { typedjson, useTypedLoaderData } from "remix-typedjson";
 import { Card, CardContent, CardHeader } from "~/components/ui/card";
 import Paragraph from "~/components/ui/paragraph";
 import { Progress } from "~/components/ui/progress";
+import { useUser } from "~/hooks/use-user";
+import { Usage } from "~/models/billing";
+import { getUsage } from "~/services/billing.server";
+
+export const loader = async ({ request, params }: LoaderFunctionArgs) => {
+  let usage: Usage | null = null;
+
+  try {
+    usage = await getUsage(request);
+  } catch (err) {}
+
+  return typedjson({
+    usage,
+  });
+};
 
 export const meta: MetaFunction = () => {
   return [
@@ -13,8 +30,35 @@ export const meta: MetaFunction = () => {
 };
 
 export default function Page() {
+  const { usage } = useTypedLoaderData<typeof loader>();
+
+  console.log(usage, "usage");
+
+  const user = useUser();
+
+  const usageLimit = useMemo(() => {
+    switch (user.subscription_plan) {
+      case "basic":
+        return 20;
+      case "pro":
+        return 100;
+      case "scale":
+        return 500;
+      default:
+        return 0;
+    }
+  }, [user]);
+
   const percentage = useMemo(() => {
-    return (150 / 200) * 100;
+    return (usage!.total_usage / usageLimit) * 100;
+  }, [usageLimit, usage]);
+
+  const usageLeft = useMemo(() => {
+    if (usageLimit === 0) {
+      return "Unlimited";
+    }
+
+    return usageLimit - usage!.total_usage;
   }, []);
 
   return (
@@ -26,11 +70,15 @@ export default function Page() {
         <CardContent className="px-4 pb-4">
           <div className="flex flex-col gap-2">
             <div className="flex justify-between">
-              <Paragraph>Free</Paragraph>
-              <Paragraph>1/200</Paragraph>
+              <Paragraph className="capitalize">
+                {user.subscription_plan}
+              </Paragraph>
+              <Paragraph>
+                {usage!.total_usage}/{usageLimit > 0 ? usageLimit : "Unlimited"}
+              </Paragraph>
             </div>
             <Progress value={percentage} />
-            <Paragraph>199 remaining limit</Paragraph>
+            <Paragraph>{usageLeft} remaining limit</Paragraph>
           </div>
         </CardContent>
       </Card>
