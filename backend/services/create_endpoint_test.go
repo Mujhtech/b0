@@ -65,7 +65,6 @@ func TestCreateEndpointService_Run(t *testing.T) {
 			defer ctrl.Finish()
 
 			service := &CreateEndpointService{
-
 				ProjectRepo:  mocks.NewMockProjectRepository(ctrl),
 				EndpointRepo: mocks.NewMockEndpointRepository(ctrl),
 				User:         tt.args.user,

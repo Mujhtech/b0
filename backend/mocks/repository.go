@@ -120,6 +120,21 @@ func (mr *MockProjectRepositoryMockRecorder) DeleteProject(arg0, arg1 any) *gomo
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteProject", reflect.TypeOf((*MockProjectRepository)(nil).DeleteProject), arg0, arg1)
 }
 
+// CountByOwnerID mocks base method
+func (m *MockProjectRepository) CountByOwnerID(arg0 context.Context, arg1 string) (int, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CountByOwnerID", arg0, arg1)
+	ret0, _ := ret[0].(int)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// CountByOwnerID indicates an expected call of CountByOwnerID.
+func (mr *MockProjectRepositoryMockRecorder) CountByOwnerID(arg0, arg1 any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CountByOwnerID", reflect.TypeOf((*MockProjectRepository)(nil).CountByOwnerID), arg0, arg1)
+}
+
 // MockEndpointRepository is a mock of AppRepository interface
 type MockEndpointRepository struct {
 	ctrl     *gomock.Controller
