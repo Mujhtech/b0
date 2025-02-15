@@ -39,6 +39,7 @@ type ModeCatalog struct {
 	IsEnabled      bool       `json:"is_enabled"`
 	IsExperimental bool       `json:"is_experimental"`
 	IsDefault      bool       `json:"is_default"`
+	IsPremium      bool       `json:"is_premium"`
 }
 
 type WorkflowCase struct {
@@ -190,30 +191,34 @@ var AvailableCatalogs = []ModeCatalog{
 	{
 		Name:           "GPT 3.5",
 		Model:          AgentModelGPT3Dot5,
-		IsEnabled:      false,
+		IsEnabled:      true,
 		IsExperimental: false,
 		IsDefault:      false,
+		IsPremium:      false,
 	},
 	{
 		Name:           "GPT 4",
 		Model:          AgentModelGPT4,
-		IsEnabled:      false,
+		IsEnabled:      true,
 		IsExperimental: false,
 		IsDefault:      false,
+		IsPremium:      true,
 	},
 	{
 		Name:           "Claude Sonnet 3.5",
 		Model:          AgentModelClaudeSonnet3Dot5,
-		IsEnabled:      false,
+		IsEnabled:      true,
 		IsExperimental: false,
 		IsDefault:      false,
+		IsPremium:      true,
 	},
 	{
 		Name:           "DeepSeek R1",
 		Model:          AgentModelDeepSeekR1,
-		IsEnabled:      false,
+		IsEnabled:      true,
 		IsExperimental: true,
 		IsDefault:      false,
+		IsPremium:      true,
 	},
 	{
 		Name:           "Gemini 1.5 Flash",
@@ -221,6 +226,7 @@ var AvailableCatalogs = []ModeCatalog{
 		IsEnabled:      true,
 		IsExperimental: true,
 		IsDefault:      true,
+		IsPremium:      false,
 	},
 	{
 		Name:           "Gemini 2.0 Flash",
@@ -228,6 +234,7 @@ var AvailableCatalogs = []ModeCatalog{
 		IsEnabled:      true,
 		IsExperimental: true,
 		IsDefault:      false,
+		IsPremium:      false,
 	},
 }
 
@@ -238,6 +245,15 @@ func GetModel(model string) (AgentModel, error) {
 		}
 	}
 	return AgentModelNone, fmt.Errorf("model not found")
+}
+
+func GetModelCatalog(model string) (ModeCatalog, error) {
+	for _, catalog := range AvailableCatalogs {
+		if catalog.Model == AgentModel(model) {
+			return catalog, nil
+		}
+	}
+	return ModeCatalog{}, fmt.Errorf("model not found")
 }
 
 type Config struct {

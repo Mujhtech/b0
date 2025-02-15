@@ -125,11 +125,18 @@ func (h *Handler) CreateProject(w http.ResponseWriter, r *http.Request) {
 
 	if dst.Model != "" {
 		var agentModelErr error
-		agentModel, agentModelErr = agent.GetModel(dst.Model)
+		catalog, agentModelErr := agent.GetModelCatalog(dst.Model)
 		if agentModelErr != nil {
 			_ = response.BadRequest(w, r, agentModelErr)
 			return
 		}
+
+		if session.User.SubscriptionPlan == "free" && catalog.IsPremium {
+			_ = response.BadRequest(w, r, fmt.Errorf("you are not allowed to use premium models with the free plan"))
+			return
+		}
+
+		agentModel = catalog.Model
 	}
 
 	if dst.FramekworkID != "" {

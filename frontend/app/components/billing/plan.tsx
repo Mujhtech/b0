@@ -6,11 +6,12 @@ import { CheckIcon, X } from "lucide-react";
 import { cn } from "~/lib/utils";
 import { Separator } from "../ui/separator";
 import Paragraph from "../ui/paragraph";
+import { useUser } from "~/hooks/use-user";
 
 export function BasicPlanCard() {
   return (
     <PlanCard
-      title="Free"
+      title="free"
       price={0}
       storage={1}
       feature={
@@ -36,7 +37,7 @@ export function ProPlanCard() {
   return (
     <PlanCard
       recommended
-      title="Pro"
+      title="pro"
       price={20}
       storage={5}
       feature={
@@ -60,7 +61,7 @@ export function ProPlanCard() {
 export function ScalePlanCard() {
   return (
     <PlanCard
-      title="Scale"
+      title="scale"
       price={100}
       feature={
         <ul className="flex flex-col gap-3">
@@ -93,11 +94,14 @@ export default function PlanCard({
   price?: number;
   storage?: number;
 }) {
+  const user = useUser();
   return (
     <Card className={cn("w-full p-2", recommended && "border-white border-2")}>
       <Form method="post">
         <CardHeader className="!gap-3">
-          <h3 className="font-medium text-muted-foreground">{title}</h3>
+          <h3 className="font-medium text-muted-foreground capitalize">
+            {title}
+          </h3>
           <h1 className="text-4xl font-semibold">
             {price != undefined ? `$${price}` : "Custom"}
             <span className="text-sm font-medium text-muted-foreground">
@@ -110,7 +114,10 @@ export default function PlanCard({
             {storage ? `Up to ${storage}GB storage` : "Custom storage"}
           </Paragraph>
           <Separator />
-          <Button className="my-5 !h-8 w-full" disabled={true}>
+          <Button
+            className="my-5 !h-8 w-full"
+            disabled={user.subscription_plan === title}
+          >
             Upgrade
           </Button>
           {feature}

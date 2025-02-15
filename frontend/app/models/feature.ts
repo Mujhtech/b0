@@ -7,6 +7,7 @@ export const ModelSchema = z.object({
   is_enabled: z.boolean().default(true).optional(),
   is_experimental: z.boolean().default(false).optional(),
   is_default: z.boolean().default(false).optional(),
+  is_premium: z.boolean().default(false).optional(),
 });
 
 export const LanguageSchema = z.object({
@@ -23,6 +24,7 @@ export const FeatureSchema = z.object({
   is_aws_configured: z.boolean(),
   version: z.string(),
   available_models: z.array(ModelSchema),
+
   available_languages: z.array(LanguageSchema),
 });
 
