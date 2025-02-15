@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"fmt"
 	"net/http"
 	"net/url"
 
@@ -102,6 +103,20 @@ func (h *Handler) CreateProject(w http.ResponseWriter, r *http.Request) {
 	if err := request.ReadBody(r, dst); err != nil {
 		_ = response.BadRequest(w, r, err)
 		return
+	}
+
+	if session.User.SubscriptionPlan == "free" {
+		count, err := h.store.ProjectRepo.CountByOwnerID(ctx, session.User.ID)
+
+		if err != nil {
+			_ = response.InternalServerError(w, r, err)
+			return
+		}
+
+		if count >= 3 {
+			_ = response.BadRequest(w, r, fmt.Errorf("you have reached the maximum number of projects allowed for the free plan"))
+			return
+		}
 	}
 
 	var framework agent.CodeGenerationOption

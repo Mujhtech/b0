@@ -57,7 +57,7 @@ export default function UserMenu({
             onClick={() => navigate("/settings")}
             className="cursor-pointer"
           >
-            Setting
+            Settings
           </DropdownMenuItem>
           <DropdownMenuItem
             onClick={() => navigate("/settings/billing")}

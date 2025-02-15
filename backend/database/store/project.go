@@ -207,3 +207,26 @@ func (p *projectRepo) DeleteProject(ctx context.Context, id string) error {
 
 	return nil
 }
+
+// CountByOwnerID implements ProjectRepository.
+func (p *projectRepo) CountByOwnerID(ctx context.Context, ownerID string) (int, error) {
+	stmt := Builder.
+		Select("COUNT(*)").
+		From(projectBaseTable).
+		Where(squirrel.Eq{"owner_id": ownerID}).
+		Where(excludeDeleted)
+
+	sql, args, err := stmt.ToSql()
+
+	if err != nil {
+		return 0, err
+	}
+
+	var count int
+
+	if err := p.db.GetDB().GetContext(ctx, &count, sql, args...); err != nil {
+		return 0, ProcessSQLErrorfWithCtx(ctx, sql, err, "failed to count projects by owner id")
+	}
+
+	return count, nil
+}

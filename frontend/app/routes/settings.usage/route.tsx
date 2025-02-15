@@ -32,13 +32,11 @@ export const meta: MetaFunction = () => {
 export default function Page() {
   const { usage } = useTypedLoaderData<typeof loader>();
 
-  console.log(usage, "usage");
-
   const user = useUser();
 
   const usageLimit = useMemo(() => {
     switch (user.subscription_plan) {
-      case "basic":
+      case "free":
         return 20;
       case "pro":
         return 100;

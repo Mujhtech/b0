@@ -72,36 +72,55 @@ func HandleDeployProject(aesCfb encrypt.Encrypt, store *store.Store, agent *aa.A
 		codeGenOption.Workflows = endpoint.Workflows
 		codeGenOption.FrameworkInsructions = fmt.Sprintf(codeGenOption.FrameworkInsructions, serverPort)
 
-		code, agentToken, err := agent.CodeGeneration(ctx, project.Description.String, codeGenOption, aa.WithModel(aa.ToModel(project.Model.String)))
+		var code *aa.CodeGeneration
 
-		if err != nil {
-			sendEvent(ctx, project.ID, sse.EventTypeTaskFailed, AgentData{
-				Message: agentToken.Output,
-				Error:   err.Error(),
+		if endpoint.CodeGeneration != nil {
+			code = endpoint.CodeGeneration
+		} else {
+			newCode, agentToken, err := agent.CodeGeneration(ctx, project.Description.String, codeGenOption, aa.WithModel(aa.ToModel(project.Model.String)))
+
+			if err != nil {
+				sendEvent(ctx, project.ID, sse.EventTypeTaskFailed, AgentData{
+					Message: agentToken.Output,
+					Error:   err.Error(),
+				}, event)
+
+				return err
+			}
+
+			// update endpoint
+			endpoint.CodeGeneration = newCode
+
+			if err = store.EndpointRepo.UpdateEndpoint(ctx, endpoint); err != nil {
+				sendEvent(ctx, project.ID, sse.EventTypeTaskFailed, AgentData{
+					Message: "b0 failed to update endpoint",
+				}, event)
+
+				return nil
+			}
+
+			if err = store.AIUsageRepo.CreateAIUsage(ctx, &models.AIUsage{
+				ID:          uuid.New().String(),
+				ProjectID:   project.ID,
+				EndpointID:  null.NewString(endpoint.ID, true),
+				OwnerID:     project.OwnerID,
+				Model:       project.Model.String,
+				UsageType:   "code_generation",
+				InputToken:  agentToken.Input,
+				OutputToken: agentToken.Output,
+			}); err != nil {
+				zerolog.Ctx(ctx).Error().Err(err).Msg("failed to create AI usage")
+			}
+
+			zerolog.Ctx(ctx).Info().Msgf("code generation: %v", newCode)
+
+			sendEvent(ctx, project.ID, sse.EventTypeTaskUpdate, AgentData{
+				Message: "b0 has successfully generated the code",
+				Code:    newCode,
 			}, event)
 
-			return err
+			code = newCode
 		}
-
-		if err = store.AIUsageRepo.CreateAIUsage(ctx, &models.AIUsage{
-			ID:          uuid.New().String(),
-			ProjectID:   project.ID,
-			EndpointID:  null.NewString(endpoint.ID, true),
-			OwnerID:     project.OwnerID,
-			Model:       project.Model.String,
-			UsageType:   "code_generation",
-			InputToken:  agentToken.Input,
-			OutputToken: agentToken.Output,
-		}); err != nil {
-			zerolog.Ctx(ctx).Error().Err(err).Msg("failed to create AI usage")
-		}
-
-		zerolog.Ctx(ctx).Info().Msgf("code generation: %v", code)
-
-		sendEvent(ctx, project.ID, sse.EventTypeTaskUpdate, AgentData{
-			Message: "b0 has successfully generated the code",
-			Code:    code,
-		}, event)
 
 		isFolderExist, err := checkIfProjectFolderExists(project.OwnerID, project.Slug)
 

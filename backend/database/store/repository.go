@@ -35,6 +35,7 @@ type ProjectRepository interface {
 	FindProjectByID(ctx context.Context, id string) (*models.Project, error)
 	FindProjectByOwnerID(ctx context.Context, ownerID string) ([]*models.Project, error)
 	DeleteProject(ctx context.Context, id string) error
+	CountByOwnerID(ctx context.Context, ownerID string) (int, error)
 }
 
 type AIUsageRepository interface {

@@ -28,22 +28,22 @@ const (
 type WorkflowsData []*agent.Workflow
 
 type Endpoint struct {
-	ID             string            `json:"id"`
-	OwnerID        string            `json:"owner_id"`
-	ProjectID      string            `json:"project_id"`
-	Name           string            `json:"name"`
-	Path           string            `json:"path"`
-	Method         EndpointMethod    `json:"method"`
-	Description    null.String       `json:"description"`
-	IsPublic       bool              `json:"is_public"`
-	Status         EndpointStatus    `json:"status"`
-	Metadata       interface{}       `json:"metadata"`
-	Connectors     interface{}       `json:"connectors,omitempty"`
-	Workflows      []*agent.Workflow `json:"workflows,omitempty"`
-	CodeGeneration interface{}       `json:"code_generation,omitempty"`
-	CreatedAt      time.Time         `json:"created_at,omitempty"`
-	UpdatedAt      time.Time         `json:"updated_at,omitempty"`
-	DeletedAt      null.Time         `json:"deleted_at,omitempty"`
+	ID             string                `json:"id"`
+	OwnerID        string                `json:"owner_id"`
+	ProjectID      string                `json:"project_id"`
+	Name           string                `json:"name"`
+	Path           string                `json:"path"`
+	Method         EndpointMethod        `json:"method"`
+	Description    null.String           `json:"description"`
+	IsPublic       bool                  `json:"is_public"`
+	Status         EndpointStatus        `json:"status"`
+	Metadata       interface{}           `json:"metadata"`
+	Connectors     interface{}           `json:"connectors,omitempty"`
+	Workflows      []*agent.Workflow     `json:"workflows,omitempty"`
+	CodeGeneration *agent.CodeGeneration `json:"-"`
+	CreatedAt      time.Time             `json:"created_at,omitempty"`
+	UpdatedAt      time.Time             `json:"updated_at,omitempty"`
+	DeletedAt      null.Time             `json:"deleted_at,omitempty"`
 }
 
 type EndpointFromDB struct {
@@ -99,7 +99,7 @@ func ToEndpoint(e *EndpointFromDB) *Endpoint {
 	var workflows WorkflowsData
 	var metadata interface{}
 	var connectors interface{}
-	var codeGeneration interface{}
+	var codeGeneration *agent.CodeGeneration
 
 	if err := e.UnmarshalWorkflows(&workflows); err != nil {
 		log.Printf("failed to unmarshal workflows: %v", err)

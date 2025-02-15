@@ -104,6 +104,7 @@ var AvailableCodeGenerationOptions = []CodeGenerationOption{
 		FrameworkInsructions: `
 		## Framework instructions
 		- Use Echo framework
+		- Use port %s for the server
 		`,
 	},
 	{
@@ -114,6 +115,7 @@ var AvailableCodeGenerationOptions = []CodeGenerationOption{
 		FrameworkInsructions: `
 		## Framework instructions
 		- Use Gin framework
+		- Use port %s for the server
 		`,
 	},
 	{
@@ -139,6 +141,7 @@ var AvailableCodeGenerationOptions = []CodeGenerationOption{
 		FrameworkInsructions: `
 		## Framework instructions
 		- Use Fastify framework
+		- Use port %s for the server
 		- Make sure to add package.json and don't forget to include all neccessary dependencies
 		`,
 	},
@@ -150,6 +153,7 @@ var AvailableCodeGenerationOptions = []CodeGenerationOption{
 		FrameworkInsructions: `
 		## Framework instructions
 		- Use Hono framework
+		- Use port %s for the server
 		- Make sure to add package.json and don't forget to include all neccessary dependencies
 		- Below are the basic dependencies you need to add to your package.json file
 		1. "hono": "^4.7.1"
