@@ -33,6 +33,7 @@ export type GetProjects = z.infer<typeof GetProjectsSchema>;
 export const CreateProjectFormSchema = z.object({
   prompt: z.string(),
   model: z.string().optional(),
+  framework_id: z.string().optional(),
 });
 
 export type CreateProjectForm = z.infer<typeof CreateProjectFormSchema>;

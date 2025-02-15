@@ -9,6 +9,12 @@ export const ModelSchema = z.object({
   is_default: z.boolean().default(false).optional(),
 });
 
+export const LanguageSchema = z.object({
+  id: z.string(),
+  language: z.string(),
+  framework: z.string(),
+});
+
 export const FeatureSchema = z.object({
   name: z.string(),
   description: z.string(),
@@ -17,6 +23,7 @@ export const FeatureSchema = z.object({
   is_aws_configured: z.boolean(),
   version: z.string(),
   available_models: z.array(ModelSchema),
+  available_languages: z.array(LanguageSchema),
 });
 
 export type Feature = z.infer<typeof FeatureSchema>;
