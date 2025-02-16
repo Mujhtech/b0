@@ -16,9 +16,11 @@ export default function VariableConnector({
         </div>
         <div className="p-2">
           {workflow && (
-            <div>
+            <div className="flex flex-col justify-center items-center">
               <p className="text-xs font-mono text-muted-foreground">
-                {workflow.instruction}
+                {workflow.value
+                  ? (workflow.value as string)
+                  : workflow.instruction}
               </p>
             </div>
           )}

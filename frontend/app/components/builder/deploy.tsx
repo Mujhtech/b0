@@ -14,7 +14,11 @@ import {
 } from "~/components/ui/dropdown-menu";
 import { usePlaygroundBuilder } from "./provider";
 
-export default function DeployAndTestBtn() {
+export default function DeployAndTestBtn({
+  isThinking,
+}: {
+  isThinking?: boolean;
+}) {
   const [isOpen, setIsOpen] = React.useState(false);
   const [isLoading, setIsLoading] = React.useState(false);
 
@@ -41,7 +45,7 @@ export default function DeployAndTestBtn() {
         <Button
           className="h-full shadow-none capitalize"
           onClick={handleActionClick}
-          disabled={isLoading}
+          disabled={isLoading || isThinking == true}
         >
           {defaultAction == "deploy" ? (
             <RocketLaunch size={20} className="h-4 w-4" />
