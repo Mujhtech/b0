@@ -139,12 +139,12 @@ export default function HttpResponseConnector({
               <TabsTrigger value="general" className="font-mono text-xs">
                 General
               </TabsTrigger>
-              <TabsTrigger value="body" className="font-mono text-xs">
+              {/* <TabsTrigger value="body" className="font-mono text-xs">
                 Body
               </TabsTrigger>
               <TabsTrigger value="other" className="font-mono text-xs">
                 Other
-              </TabsTrigger>
+              </TabsTrigger> */}
             </TabsList>
             <TabsContent value="general">
               <Form {...form}>

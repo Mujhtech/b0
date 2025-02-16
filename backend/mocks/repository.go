@@ -175,7 +175,7 @@ func (mr *MockEndpointRepositoryMockRecorder) CreateEndpoint(arg0, arg1 any) *go
 // UpdateEndpoint mocks base method
 func (m *MockEndpointRepository) UpdateEndpoint(arg0 context.Context, id string, arg1 *models.Endpoint) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "UpdateEndpoint", arg0, arg1)
+	ret := m.ctrl.Call(m, "UpdateEndpoint", arg0, id, arg1)
 	ret0, _ := ret[0].(error)
 	return ret0
 }

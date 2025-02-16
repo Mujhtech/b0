@@ -27,8 +27,17 @@ export default function BuilderMenu() {
             <h1 className="font-black text-md">b0</h1>
           </div>
           <div className="mx-2">
-            <div className="h-full flex items-center justify-center gap-2">
-              <Paragraph className="cursor-pointer" onClick={handleOpenLog}>
+            <div className="h-full flex items-center justify-center gap-2.5">
+              <Paragraph
+                className="cursor-pointer font-bold"
+                onClick={handleOpenLog}
+              >
+                Debug
+              </Paragraph>
+              <Paragraph
+                className="cursor-pointer font-bold"
+                onClick={handleOpenLog}
+              >
                 Logs
               </Paragraph>
             </div>
