@@ -11,7 +11,7 @@ import (
 
 const (
 	projectBaseTable    = "projects"
-	projectSelectColumn = "id, owner_id, name, slug, description, model, server_url, port, framework, language, metadata, created_at, updated_at, deleted_at"
+	projectSelectColumn = "id, owner_id, name, slug, description, model, server_url, port, framework, language, container_id, metadata, created_at, updated_at, deleted_at"
 )
 
 type projectRepo struct {

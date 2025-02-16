@@ -52,9 +52,7 @@ func HandleDeployProject(aesCfb encrypt.Encrypt, store *store.Store, agent *aa.A
 		// delay 1 seconds
 		time.Sleep(1 * time.Second)
 
-		sendEvent(ctx, project.ID, sse.EventTypeTaskUpdate, AgentData{
-			Message: "b0 has started generating the code",
-		}, event)
+		serverPort := "5670"
 
 		codeGenOption, err := aa.GetLanguageCodeGeneration(project.Language, project.Framework)
 
@@ -67,16 +65,18 @@ func HandleDeployProject(aesCfb encrypt.Encrypt, store *store.Store, agent *aa.A
 			return nil
 		}
 
-		serverPort := "5670"
-
 		codeGenOption.Workflows = endpoint.Workflows
 		codeGenOption.FrameworkInsructions = fmt.Sprintf(codeGenOption.FrameworkInsructions, serverPort)
 
 		var code *aa.CodeGeneration
 
-		if endpoint.CodeGeneration != nil {
+		if endpoint.CodeGeneration != nil && len(endpoint.CodeGeneration.FileContents) > 0 {
 			code = endpoint.CodeGeneration
 		} else {
+			sendEvent(ctx, project.ID, sse.EventTypeTaskUpdate, AgentData{
+				Message: "b0 has started generating the code",
+			}, event)
+
 			newCode, agentToken, err := agent.CodeGeneration(ctx, project.Description.String, codeGenOption, aa.WithModel(aa.ToModel(project.Model.String)))
 
 			if err != nil {
@@ -120,6 +120,13 @@ func HandleDeployProject(aesCfb encrypt.Encrypt, store *store.Store, agent *aa.A
 			}, event)
 
 			code = newCode
+		}
+
+		if code == nil {
+			sendEvent(ctx, project.ID, sse.EventTypeTaskFailed, AgentData{
+				Message: "b0 failed to find code generation",
+			}, event)
+			return nil
 		}
 
 		isFolderExist, err := checkIfProjectFolderExists(project.OwnerID, project.Slug)

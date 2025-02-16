@@ -16,7 +16,8 @@ import (
 )
 
 type AgentData struct {
-	Message            string         `json:"message"`
+	Log                string         `json:"log,omitempty"`
+	Message            string         `json:"message,omitempty"`
 	Error              string         `json:"error,omitempty"`
 	Workflows          []*aa.Workflow `json:"workflows,omitempty"`
 	Code               interface{}    `json:"code,omitempty"`

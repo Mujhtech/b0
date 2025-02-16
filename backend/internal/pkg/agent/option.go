@@ -31,6 +31,364 @@ const (
 	WorkflowTypeGithub   WorkflowType = "github"
 	WorkflowTypeSupabase WorkflowType = "supabase"
 	WorkflowTypeStripe   WorkflowType = "stripe"
+
+	nodeJSInstructions = `
+	## Integration Instructions
+	- Github
+	Use the following package to interact with the Github API:
+
+	dependencies:
+	octokit
+	@octokit/request-error
+
+	devDependencies:
+	@octokit/types
+
+	e.g To create a new issue:
+
+	import { Octokit, App } from "octokit";
+	import { RequestError } from "@octokit/request-error";
+	import { RequestRequestOptions } from "@octokit/types";
+
+	const client = new Octokit({
+		auth: process.env.B0_GITHUB_TOKEN,
+		retry: {
+        	enabled: false,
+        },
+	});
+
+
+	const createIssue = async () => {
+		try {
+			const res = await client.request("POST /repos/{owner}/{repo}/issues", {
+				owner: process.env.B0_GITHUB_OWNER,
+				repo: process.env.B0_GITHUB_REPO,
+				title: "Found a bug",
+				body: "I'm having a problem with this.",
+			});
+			console.log(res);
+		} catch (error) {
+			if (error instanceof RequestError) {
+				console.error(error.message);
+			}
+		}
+	};
+
+	- Slack
+	Use the following package to interact with the Slack API:
+
+	dependencies:
+	@slack/web-api
+
+	e.g To send a message to a channel:
+
+	import { WebClient } from "@slack/web-api";
+
+	const web = new WebClient(process.env.B0_SLACK_KEY);
+
+	(async () => {
+		const res = await web.chat.postMessage({
+			channel: process.env.B0_SLACK_CHANNEL_ID,
+			text: "Hello, world!",
+		});
+		console.log(res);
+	})();
+
+	- Discord
+	Use the following package to interact with the Discord API:
+	dependencies:
+	@discordjs/core
+	@discordjs/rest
+
+	e.g To send a message to a channel:
+
+	import { API, ChannelsAPI, GuildsAPI, InteractionsAPI } from "@discordjs/core";
+	import { REST } from "@discordjs/rest";
+
+	const rest = new REST({ version: "10" }).setToken(process.env.B0_DISCORD_KEY);
+	const channel = new ChannelsAPI(rest);
+
+	await channel.createMessage(process.env.B0_DISCORD_CHANNEL_ID, {
+		content: "Hello, world!",
+	});
+
+	- Telegram
+	Use fetch to interact with the Telegram BOT API, e.g to send message
+
+	fetch("https://api.telegram.org/bot<process.env.B0_TELEGRAM_BOT_TOKEN>/sendMessage", {
+		method: "POST",
+		headers: {
+			"Content-Type": "application/json",
+		},
+		body: JSON.stringify({
+			chat_id: "<chat_id>",
+			text: "Hello, world!",
+		}),
+	});
+
+	- Resend
+	Use the following package to interact with the Resend API:
+	dependencies:
+	resend: "^4.1.2"
+
+	e.g To send an email:
+	import { Resend } from "resend";
+
+	const resend = new Resend(process.env.B0_RESEND_KEY);
+
+	await resend.emails.send({
+      from: process.env.B0_RESEND_FROM,
+      to: process.env.B0_RESEND_TO,
+      subject: 'Hello World',
+      html: '<strong>It works!</strong>'
+    });
+
+	- Stripe
+	Use the following package to interact with the Stripe API:
+	dependencies:
+	stripe: "^17.6.0"
+
+	e.g To create a new customer:
+	import Stripe from "stripe";
+
+	const stripe = new Stripe(process.env.B0_STRIPE_KEY, {
+		apiVersion: "2023-08-16",
+	});
+
+	const customer = await stripe.customers.create({
+		email: "jenny.rosen@example.com",
+	});
+
+	- Supabase
+	Use the following package to interact with the Supabase API:
+	dependencies:
+	@supabase/supabase-js: "^2.48.1"
+
+	e.g To interact with the Supabase API:
+	import { createClient } from '@supabase/supabase-js';
+
+	const supabase = createClient(process.env.B0_SUPABASE_URL, process.env.B0_SUPABASE_KEY);
+
+	const { data, error } = await supabase.from('users').select('*');
+
+	- OpenAI, Gemini, Anthropic, DeepSeek
+	Use the following package to interact with the OpenAI API:
+	dependencies:
+	ai: "^4.1.41"
+
+	// For openai
+	@ai-sdk/openai: "^1.1.12"
+
+	// For anthropic
+	@ai-sdk/anthropic: "^1.1.8"
+
+	// For Gemini
+	@ai-sdk/google: "^1.1.14"
+
+	// DeepSeek
+	@ai-sdk/deepseek: "^0.1.10"
+
+	E.g To interact with the OpenAI API:
+	import { generateText } from 'ai';
+	import { createOpenAI } from '@ai-sdk/openai';
+
+	const openai = createOpenAI({
+		apiKey: process.env.B0_OPENAI_KEY,
+		compatibility: 'strict',
+	});
+
+	const { text } = await generateText({
+		model: openai('gpt-4o'),
+		system: 'You are a friendly assistant!',
+		prompt: 'Why is the sky blue?',
+	});
+
+	E.g To interact with the Anthropic API:
+	import { createAnthropic } from '@ai-sdk/anthropic';
+	import { generateText } from 'ai';
+
+	const anthropic = createAnthropic({
+		apiKey: process.env.B0_ANTHROPIC_KEY,
+	});
+
+	const { text } = await generateText({
+		model: anthropic('claude-3-haiku-20240307'),
+		prompt: 'Write a vegetarian lasagna recipe for 4 people.',
+	});
+
+	E.g To interact with the Gemini API:
+	import { createGoogleGenerativeAI } from '@ai-sdk/google';
+	import { generateText } from 'ai';
+
+	const google = createGoogleGenerativeAI({
+		apiKey: process.env.B0_GEMINI_KEY,
+	});
+
+	const { text } = await generateText({
+		model: google('gemini-1.5-flash'),
+		prompt: 'Write a vegetarian lasagna recipe for 4 people.',
+	})
+
+	E.g To interact with the DeepSeek API:
+	import { createDeepSeek } from '@ai-sdk/deepseek';
+	import { generateText } from 'ai';
+
+	const deepseek = createDeepSeek({
+		apiKey: process.env.B0_DEEPSEEK_KEY,
+	});
+
+	const { text } = await generateText({
+		model: deepseek('deepseek-chat'),
+		prompt: 'Write a vegetarian lasagna recipe for 4 people.',
+	});
+
+	Using any of the provider above, beyond prompt, you can also use the following parameters e.g
+
+	const { text } = await generateText({
+		model: openai('gpt-4o'),
+		messages: [
+			{
+				role: 'system',
+				text: 'You are a friendly assistant!',
+			},
+			{
+				role: 'user',
+				text: 'Why is the sky blue?',
+			},
+		]
+	});
+	`
+
+	goInstructions = `
+	## Integration Instructions
+	- Resend
+	Use github.com/resend/resend-go/v2 to interact with the Resend API:
+
+	E.g To send an email:
+	import (
+		"context"
+		"fmt"
+		"os"
+		"github.com/resend/resend-go/v2"
+	)
+
+	ctx := context.TODO()
+	apiKey := os.Getenv("B0_RESEND_KEY")
+	client := resend.NewClient(apiKey)
+
+	params := &resend.SendEmailRequest{
+		To:      []string{"delivered@resend.dev"},
+		From:    "onboarding@resend.dev",
+		Text:    "hello world",
+		Subject: "Hello from Golang",
+		Cc:      []string{"cc@example.com"},
+		Bcc:     []string{"ccc@example.com"},
+		ReplyTo: "to@example.com",
+	}
+
+	sent, err := client.Emails.SendWithContext(ctx, params)
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println(sent.Id)
+
+	- Slack
+	Use github.com/slack-go/slack to interact with the Slack API:
+
+	E.g To send a message to a channel:
+
+	import (
+		"context"
+		"fmt"
+		"os"
+		"github.com/slack-go/slack"
+	)
+
+	ctx := context.TODO()
+	token  := os.Getenv("B0_SLACK_KEY")
+	client := slack.New(token)
+
+	_, _, err := client.PostMessageContext(ctx, "CHANNEL_ID", slack.MsgOptionText("Hello, world!", false))
+
+
+	- Stripe
+	Use github.com/stripe/stripe-go/v81 to interact with the Stripe API:
+	E.g To create a new customer:
+	import (
+		"context"
+		"fmt"
+		"os"
+		"github.com/stripe/stripe-go/v81"
+		"github.com/stripe/stripe-go/v81/client"
+	)
+
+	apiKey = os.Getenv("B0_STRIPE_KEY")
+	
+	stripe := &client.API{}
+	stripe.Init(apiKey, nil)
+
+	params := &stripe.CustomerParams{
+		Email: stripe.String("jenny.rosen@example.com"),
+	}
+
+	customer, err := stripe.Customers.New(params)
+
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println(customer.ID)
+
+	- Supabase
+	- Telegram
+	- Discord
+	- Github
+	
+	- OpenAI, Gemini, Anthropic, DeepSeek
+	Use github.com/openai/openai-go to interact with the OpenAI API:
+
+	E.g To interact with the OpenAI API:
+	import (
+		"context"
+		"fmt"
+		"os"
+		"github.com/openai/openai-go"
+		"github.com/openai/openai-go/option"
+	)
+
+	provider := "openai"
+
+	deepSeekBaseUrl = "https://api.deepseek.com/v1"
+	openaiBaseUrl   = "https://api.openai.com/v1"
+	geminiBaseUrl   = "https://generativelanguage.googleapis.com/v1beta/openai/"
+
+	baseUrl := ""
+
+	if provider == "openai" {
+		baseUrl = openaiBaseUrl
+	} else if provider == "deepseek" {
+		baseUrl = deepSeekBaseUrl
+	} else if provider == "gemini" {
+		baseUrl = geminiBaseUrl
+	}
+
+	apiKey := os.Getenv("B0_OPENAI_KEY")
+
+	client := openai.NewClient(option.WithBaseURL(baseUrl), option.WithAPIKey(apiKey))
+
+	chat, err := client.Chat.Completions.New(ctx, openai.ChatCompletionNewParams{
+		Messages: openai.F([]openai.ChatCompletionMessageParamUnion{
+			openai.SystemMessage("You are a friendly assistant!"),
+			openai.UserMessage("Why is the sky blue?"),
+		}),
+		Model: openai.F("gpt-4"),
+	})
+
+	if err != nil {
+		panic(err)
+	}
+
+	fmt.Println(chat.Choices[0].Message.Content)
+	`
 )
 
 type ModeCatalog struct {
@@ -95,7 +453,10 @@ var AvailableCodeGenerationOptions = []CodeGenerationOption{
 		FrameworkInsructions: `
 		## Framework instructions
 		- For router, use go-chi/chi/v5
-		`,
+		- Use port %s for the server
+
+
+		` + goInstructions,
 	},
 	{
 		ID:        "2",
@@ -106,7 +467,8 @@ var AvailableCodeGenerationOptions = []CodeGenerationOption{
 		## Framework instructions
 		- Use Echo framework
 		- Use port %s for the server
-		`,
+
+		` + goInstructions,
 	},
 	{
 		ID:        "3",
@@ -117,7 +479,8 @@ var AvailableCodeGenerationOptions = []CodeGenerationOption{
 		## Framework instructions
 		- Use Gin framework
 		- Use port %s for the server
-		`,
+
+		` + goInstructions,
 	},
 	{
 		ID:        "4",
@@ -132,7 +495,10 @@ var AvailableCodeGenerationOptions = []CodeGenerationOption{
 		- Use npm run build for buildCommands
 		- Use npm run start for runCommands
 		- Make sure to add the necessary scripts in the package.json file e.g "build": "npx -y tsc", "start": "node dist/index.js"
-		`,
+		- For all api key, use this format: process.env.B0_API_KEY e.g process.env.B0_OPENAI_KEY, process.env.B0_SLACK_KEY, etc
+
+
+		` + nodeJSInstructions,
 	},
 	{
 		ID:        "5",
@@ -144,7 +510,10 @@ var AvailableCodeGenerationOptions = []CodeGenerationOption{
 		- Use Fastify framework
 		- Use port %s for the server
 		- Make sure to add package.json and don't forget to include all neccessary dependencies
-		`,
+		- For all api key, use this format: process.env.B0_API_KEY e.g process.env.B0_OPENAI_KEY, process.env.B0_SLACK_KEY, etc
+
+
+		` + nodeJSInstructions,
 	},
 	{
 		ID:        "6",
@@ -160,7 +529,10 @@ var AvailableCodeGenerationOptions = []CodeGenerationOption{
 		1. "hono": "^4.7.1"
 		- Make sure all code is written in TypeScript
 		- Make sure all files are in the src directory except the configuration files like package.json, tsconfig.json, and tsconfig.node.json, etc
-		`,
+		- For all api key, use this format: process.env.B0_API_KEY e.g process.env.B0_OPENAI_KEY, process.env.B0_SLACK_KEY, etc
+
+
+		` + nodeJSInstructions,
 	},
 }
 

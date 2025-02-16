@@ -184,15 +184,25 @@ func (e *endpointRepo) UpdateEndpoint(ctx context.Context, endpoint *models.Endp
 
 	stmt := Builder.
 		Update(endpointBaseTable).
-		Set("name", endpoint.Name).
-		Set("description", endpoint.Description).
-		Set("path", endpoint.Path).
-		Set("method", endpoint.Method).
-		Set("status", endpoint.Status).
-		Set("metadata", endpoint.Metadata).
+		// Set("name", endpoint.Name).
+		// Set("description", endpoint.Description).
+		// Set("path", endpoint.Path).
+		// Set("method", endpoint.Method).
+		// Set("status", endpoint.Status).
+		// Set("metadata", endpoint.Metadata).
 		Set("updated_at", squirrel.Expr("NOW()")).
 		Where(squirrel.Eq{"id": endpoint.ID}).
 		Where(excludeDeleted)
+
+	if endpoint.CodeGeneration != nil {
+
+		codeGenerationOutput, err := util.MarshalJSONToString(endpoint.CodeGeneration)
+		if err != nil {
+			return err
+		}
+
+		stmt = stmt.Set("code_generation", codeGenerationOutput)
+	}
 
 	sql, args, err := stmt.ToSql()
 

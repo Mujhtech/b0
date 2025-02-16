@@ -13,6 +13,7 @@ import (
 	"github.com/mujhtech/b0/config"
 	"github.com/mujhtech/b0/database/store"
 	"github.com/mujhtech/b0/internal/pkg/agent"
+	"github.com/mujhtech/b0/internal/pkg/container"
 	"github.com/mujhtech/b0/internal/pkg/sse"
 	"github.com/mujhtech/b0/job"
 	"github.com/rs/zerolog/hlog"
@@ -36,9 +37,10 @@ func New(
 	agent *agent.Agent,
 	sse sse.Streamer,
 	job *job.Job,
+	docker *container.Container,
 ) (*Api, error) {
 
-	h, err := handler.New(cfg, ctx, store, cache, agent, sse, job)
+	h, err := handler.New(cfg, ctx, store, cache, agent, sse, job, docker)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create handler: %w", err)
 	}
@@ -98,8 +100,9 @@ func (a *Api) BuildRouter() *chi.Mux {
 				r.Get("/", a.handler.GetProjects)
 				r.Post("/", a.handler.CreateProject)
 				r.Get(fmt.Sprintf("/{%s}", handler.ProjectParamId), a.handler.GetProject)
+				r.Get(fmt.Sprintf("/{%s}/log", handler.ProjectParamId), a.handler.ProjectLog)
+				r.Get(fmt.Sprintf("/{%s}/sse", handler.ProjectParamId), a.handler.ProjectEvent)
 				r.Put(fmt.Sprintf("/{%s}", handler.ProjectParamId), a.handler.UpdateProject)
-				r.Get(fmt.Sprintf("/{%s}/sse", handler.ProjectParamId), a.handler.Event)
 				r.Post(fmt.Sprintf("/{%s}/action", handler.ProjectParamId), a.handler.ProjectAction)
 			})
 

@@ -18,6 +18,11 @@ const (
 	EventTypeTaskUpdate    EventType = "task_updated"
 	EventTypeTaskCompleted EventType = "task_completed"
 	EventTypeTaskFailed    EventType = "task_failed"
+
+	EventTypeLogStarted   EventType = "log_started"
+	EventTypeLogUpdated   EventType = "log_updated"
+	EventTypeLogFailed    EventType = "log_failed"
+	EventTypeLogCompleted EventType = "log_completed"
 )
 
 type UploadProgressStatus string
