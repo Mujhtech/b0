@@ -2,13 +2,13 @@ import React from "react";
 import { EndpointWorkflow } from "~/models/endpoint";
 import { ConnectorProps } from ".";
 
-export default function CodeblockConnector({ workflow }: ConnectorProps) {
+export default function ResendConnector({ workflow }: ConnectorProps) {
   return (
     <div className="flex flex-col group h-min">
       <div className="border border-input w-[250px] bg-background shadow-sm flex self-center flex-col hover:drop-shadow-xl cursor-pointer">
         <div className="border-b border-input flex items-center justify-center">
           <h3 className="text-xs font-mono text-muted-foreground p-2">
-            Codeblock
+            Resend
           </h3>
         </div>
         <div className="p-2">

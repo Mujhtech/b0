@@ -139,7 +139,8 @@ func (e *endpointRepo) FindEndpointByOwnerID(ctx context.Context, ownerID string
 		Select(endpointSelectColumn).
 		From(endpointBaseTable).
 		Where(squirrel.Eq{"owner_id": ownerID}).
-		Where(excludeDeleted)
+		Where(excludeDeleted).
+		OrderBy(orderByCreatedAtDesc)
 
 	sql, args, err := stmt.ToSql()
 
@@ -161,7 +162,8 @@ func (e *endpointRepo) FindEndpointByProjectID(ctx context.Context, projectID st
 		Select(endpointSelectColumn).
 		From(endpointBaseTable).
 		Where(squirrel.Eq{"project_id": projectID}).
-		Where(excludeDeleted)
+		Where(excludeDeleted).
+		OrderBy(orderByCreatedAtDesc)
 
 	sql, args, err := stmt.ToSql()
 
@@ -178,19 +180,39 @@ func (e *endpointRepo) FindEndpointByProjectID(ctx context.Context, projectID st
 }
 
 // UpdateEndpoint implements EndpointRepository.
-func (e *endpointRepo) UpdateEndpoint(ctx context.Context, endpoint *models.Endpoint) error {
+func (e *endpointRepo) UpdateEndpoint(ctx context.Context, id string, endpoint *models.Endpoint) error {
 
 	stmt := Builder.
 		Update(endpointBaseTable).
-		Set("name", endpoint.Name).
-		Set("description", endpoint.Description).
-		Set("path", endpoint.Path).
-		Set("method", endpoint.Method).
-		Set("status", endpoint.Status).
-		Set("metadata", endpoint.Metadata).
+		// Set("name", endpoint.Name).
+		// Set("description", endpoint.Description).
+		// Set("path", endpoint.Path).
+		// Set("method", endpoint.Method).
+		// Set("status", endpoint.Status).
+		// Set("metadata", endpoint.Metadata).
 		Set("updated_at", squirrel.Expr("NOW()")).
-		Where(squirrel.Eq{"id": endpoint.ID}).
+		Where(squirrel.Eq{"id": id}).
 		Where(excludeDeleted)
+
+	if endpoint.Workflows != nil {
+
+		workflowsOutput, err := util.MarshalJSONToString(endpoint.Workflows)
+		if err != nil {
+			return err
+		}
+
+		stmt = stmt.Set("workflows", workflowsOutput)
+	}
+
+	if endpoint.CodeGeneration != nil {
+
+		codeGenerationOutput, err := util.MarshalJSONToString(endpoint.CodeGeneration)
+		if err != nil {
+			return err
+		}
+
+		stmt = stmt.Set("code_generation", codeGenerationOutput)
+	}
 
 	sql, args, err := stmt.ToSql()
 

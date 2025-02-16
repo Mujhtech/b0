@@ -11,7 +11,7 @@ import (
 
 const (
 	projectBaseTable    = "projects"
-	projectSelectColumn = "id, owner_id, name, slug, description, model, server_url, port, framework, language, metadata, created_at, updated_at, deleted_at"
+	projectSelectColumn = "id, owner_id, name, slug, description, model, server_url, port, framework, language, container_id, metadata, created_at, updated_at, deleted_at"
 )
 
 type projectRepo struct {
@@ -134,7 +134,8 @@ func (p *projectRepo) FindProjectByOwnerID(ctx context.Context, ownerID string) 
 		Select(projectSelectColumn).
 		From(projectBaseTable).
 		Where(squirrel.Eq{"owner_id": ownerID}).
-		Where(excludeDeleted)
+		Where(excludeDeleted).
+		OrderBy(orderByCreatedAtDesc)
 
 	sql, args, err := stmt.ToSql()
 

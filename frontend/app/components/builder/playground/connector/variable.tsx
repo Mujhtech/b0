@@ -1,11 +1,8 @@
 import React from "react";
 import { EndpointWorkflow } from "~/models/endpoint";
+import { ConnectorProps } from ".";
 
-export default function VariableConnector({
-  workflow,
-}: {
-  workflow: EndpointWorkflow;
-}) {
+export default function VariableConnector({ workflow }: ConnectorProps) {
   return (
     <div className="flex flex-col group h-min">
       <div className="border border-input w-[250px] bg-background shadow-sm flex self-center flex-col hover:drop-shadow-xl cursor-pointer">
@@ -16,9 +13,11 @@ export default function VariableConnector({
         </div>
         <div className="p-2">
           {workflow && (
-            <div>
+            <div className="flex flex-col justify-center items-center">
               <p className="text-xs font-mono text-muted-foreground">
-                {workflow.instruction}
+                {workflow.value
+                  ? (workflow.value as string)
+                  : workflow.instruction}
               </p>
             </div>
           )}

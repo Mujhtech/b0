@@ -29,7 +29,8 @@ func (a *aiTokenCreditRepo) FindAITokenCreditByOwnerID(ctx context.Context, owne
 		Select(aiTokenCreditSelectColumn).
 		From(aiTokenCreditBaseTable).
 		Where(squirrel.Eq{"owner_id": ownerId}).
-		Where(excludeDeleted)
+		Where(excludeDeleted).
+		OrderBy(orderByCreatedAtDesc)
 
 	sql, args, err := stmt.ToSql()
 

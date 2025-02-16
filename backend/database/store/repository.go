@@ -21,7 +21,7 @@ type TokenRepository interface {
 
 type EndpointRepository interface {
 	CreateEndpoint(ctx context.Context, endpoint *models.Endpoint) error
-	UpdateEndpoint(ctx context.Context, endpoint *models.Endpoint) error
+	UpdateEndpoint(ctx context.Context, id string, endpoint *models.Endpoint) error
 	FindEndpointByID(ctx context.Context, id string) (*models.Endpoint, error)
 	FindEndpointByProjectID(ctx context.Context, projectID string) ([]*models.Endpoint, error)
 	FindEndpointByOwnerID(ctx context.Context, ownerID string) ([]*models.Endpoint, error)

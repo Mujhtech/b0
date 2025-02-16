@@ -57,6 +57,7 @@ const (
 	- The workflow diagram will be in json format.
 	- Use %s for code generation.
 	- For the code generation, you are to generate the code based on the workflow diagram.
+	- Make sure each workflow are implemented without any comment to implement the code myself
 	- Make sure to follow the workflow diagram below
 
 	%s

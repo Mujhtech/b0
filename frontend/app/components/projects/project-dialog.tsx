@@ -10,6 +10,7 @@ import {
   DialogTrigger,
 } from "~/components/ui/dialog";
 import { useOptionalProjects } from "~/hooks/use-project";
+import Paragraph from "../ui/paragraph";
 
 export function ProjectsDialog({
   open,
@@ -37,11 +38,22 @@ export function ProjectsDialog({
               {projects.map((project) => {
                 return (
                   <Link to={`/${project.slug}`} key={project.id}>
-                    <div className="border border-input p-2 items-center h-full flex gap-1">
-                      <p className="font-mono text-sm line-clamp-2 mr-auto">
-                        {project.name}
-                      </p>
-                      <ArrowUpRight className="h-5 w-5 flex-shrink-0" />
+                    <div className="border border-input flex-col p-2 h-full flex">
+                      <div className="pt-1 pb-2 flex flex-col">
+                        <div className="flex items-center gap-2 ">
+                          <p className="font-mono text-sm line-clamp-2 mr-auto">
+                            {project.name}
+                          </p>
+                          <ArrowUpRight className="h-5 w-5 flex-shrink-0" />
+                        </div>
+                        <Paragraph className="text-xs">
+                          {project.language} - {project.framework}
+                        </Paragraph>
+                      </div>
+                      <div className="border-input border-t"></div>
+                      <div className="mt-1">
+                        <Paragraph>Created At: {project.created_at}</Paragraph>
+                      </div>
                     </div>
                   </Link>
                 );

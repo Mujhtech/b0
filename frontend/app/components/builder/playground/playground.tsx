@@ -1,13 +1,11 @@
-import React from "react";
+import React, { useMemo, useState } from "react";
 import { usePlayground } from "./provider";
 import HttpRequestConnector from "./connector/http-request";
 import { cn } from "~/lib/utils";
 import { useOptionalEndpoint } from "~/hooks/use-project";
-import HttpResponseConnector from "./connector/http-response";
-import IfConnector from "./connector/if";
-import VariableConnector from "./connector/variable";
-import SwitchConnector from "./connector/switch";
-import CodeblockConnector from "./connector/codeblock";
+import Connector from "./connector";
+import { EndpointWorkflow } from "~/models/endpoint";
+import { usePlaygroundBuilder } from "../provider";
 
 export default function Playground() {
   const {
@@ -20,8 +18,60 @@ export default function Playground() {
     zoom,
     handleDrag,
   } = usePlayground();
+  const { handleUpdateEndpointWorkflow } = usePlaygroundBuilder();
 
   const endpoint = useOptionalEndpoint();
+
+  const [newWorkflows, setNewWorkflows] = useState<
+    Array<EndpointWorkflow> | undefined
+  >(undefined);
+
+  const workflows = useMemo(() => {
+    if (newWorkflows) {
+      return newWorkflows;
+    }
+
+    return endpoint?.workflows || [];
+  }, [newWorkflows, endpoint]);
+
+  const handleUpdateWorkflows = (index: number, workflow: EndpointWorkflow) => {
+    setNewWorkflows((old) => {
+      const prev = newWorkflows || old;
+
+      if (!prev) {
+        return undefined;
+      }
+
+      const workflows = [...prev];
+
+      workflows[index] = workflow;
+
+      return workflows;
+    });
+
+    if (!endpoint) {
+      return;
+    }
+    // TODO: update endpoint
+    setTimeout(() => {
+      handleUpdateEndpointWorkflow(endpoint.id, workflows);
+    }, 1000);
+  };
+
+  const handleRemoveWorkflow = (index: number) => {
+    setNewWorkflows((old) => {
+      const prev = newWorkflows || old;
+
+      if (!prev) {
+        return undefined;
+      }
+      const workflows = [...prev];
+
+      workflows.splice(index, 1);
+
+      return workflows;
+    });
+  };
 
   return (
     <div
@@ -49,28 +99,18 @@ export default function Playground() {
           >
             <div className="mt-5 ml-20 flex flex-col justify-center ">
               <HttpRequestConnector />
-              {endpoint?.workflows?.map((workflow, index) => {
-                switch (workflow.type) {
-                  case "response":
-                    return (
-                      <HttpResponseConnector key={index} workflow={workflow} />
-                    );
-                  case "if":
-                    return <IfConnector key={index} workflow={workflow} />;
-                  case "variable":
-                    return (
-                      <VariableConnector key={index} workflow={workflow} />
-                    );
-                  case "switch":
-                    return <SwitchConnector key={index} workflow={workflow} />;
-                  case "codeblock":
-                    return (
-                      <CodeblockConnector key={index} workflow={workflow} />
-                    );
-                  case "request":
-                  default:
-                    return null;
-                }
+              {workflows.map((workflow, index) => {
+                return (
+                  <Connector
+                    workflow={workflow}
+                    index={index}
+                    key={index}
+                    onUpdate={(workflow) =>
+                      handleUpdateWorkflows(index, workflow)
+                    }
+                    onRemove={() => handleRemoveWorkflow(index)}
+                  />
+                );
               })}
             </div>
           </div>

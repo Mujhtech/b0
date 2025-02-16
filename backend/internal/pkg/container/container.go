@@ -222,6 +222,10 @@ func (c *Container) GetContainerLogsStream(ctx context.Context, id string) (io.R
 	logs, err := c.client.ContainerLogs(ctx, id, container.LogsOptions{
 		ShowStdout: true,
 		ShowStderr: true,
+		Follow:     true,
+		Details:    false,
+		Timestamps: true,
+		Tail:       "all",
 	})
 	if err != nil {
 		return nil, err

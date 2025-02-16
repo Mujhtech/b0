@@ -174,7 +174,8 @@ func (a *aiUsageRepo) FindAIUsageByProjectID(ctx context.Context, projectId stri
 		Select(aiUsageSelectColumn).
 		From(aiUsageBaseTable).
 		Where(squirrel.Eq{"project_id": projectId}).
-		Where(excludeDeleted)
+		Where(excludeDeleted).
+		OrderBy(orderByCreatedAtDesc)
 
 	sql, args, err := stmt.ToSql()
 

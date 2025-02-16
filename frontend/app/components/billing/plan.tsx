@@ -77,7 +77,7 @@ export function ScalePlanCard() {
           <Item checked>Pay-as-you-go for additional usage</Item>
           <Item checked>Custom Domain</Item>
           <Item checked>Log retention</Item>
-          <Item checked>Support</Item>
+          <Item checked>Dedicated Support</Item>
         </ul>
       }
     />

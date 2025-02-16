@@ -16,6 +16,12 @@ import { User } from "./models/user";
 import { Feature } from "./models/feature";
 import { Projects } from "./models/project";
 import { getProjects } from "./services/project.server";
+import {
+  commitSession,
+  getSession,
+  ToastMessage,
+} from "./models/message.server";
+import { Toast } from "./components/custom-toast";
 
 export const links: LinksFunction = () => [];
 
@@ -26,6 +32,9 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
   let feature: Feature | null = null;
   let accessToken: string | null = null;
   let projects: Projects = [];
+
+  const session = await getSession(request.headers.get("cookie"));
+  const toastMessage = session.get("toastMessage") as ToastMessage;
 
   try {
     feature = await getFeatures(request);
@@ -47,14 +56,18 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
     //
   }
 
-  return typedjson({
-    user: user,
-    feature: feature,
-    accessToken: accessToken,
-    backendUrl,
-    platformUrl,
-    projects,
-  });
+  return typedjson(
+    {
+      user: user,
+      feature: feature,
+      accessToken: accessToken,
+      backendUrl,
+      platformUrl,
+      toastMessage,
+      projects,
+    },
+    { headers: { "Set-Cookie": await commitSession(session) } }
+  );
 };
 
 export type RootLoaderType = typeof loader;
@@ -73,6 +86,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
         suppressHydrationWarning
       >
         {children}
+        <Toast />
         <ScrollRestoration />
         <Scripts />
       </body>

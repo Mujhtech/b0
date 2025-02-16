@@ -136,6 +136,7 @@ func startServer(configFile string, logLevel string) error {
 		agent,
 		sse,
 		job,
+		container,
 	)
 
 	if err != nil {

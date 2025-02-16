@@ -19,7 +19,8 @@ var (
 )
 
 const (
-	excludeDeleted = "deleted_at IS NULL"
+	excludeDeleted       = "deleted_at IS NULL"
+	orderByCreatedAtDesc = "created_at DESC"
 )
 
 type Store struct {

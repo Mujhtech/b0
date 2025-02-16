@@ -68,7 +68,7 @@ func (u *UpdateEndpointService) Run(ctx context.Context) (*models.Endpoint, erro
 		endpoint.IsPublic = u.Body.IsPublic
 	}
 
-	err = u.EndpointRepo.UpdateEndpoint(ctx, endpoint)
+	err = u.EndpointRepo.UpdateEndpoint(ctx, endpoint.ID, endpoint)
 
 	if err != nil {
 		return nil, err
