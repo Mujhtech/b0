@@ -43,12 +43,14 @@ import {
   FormMessage,
 } from "~/components/ui/form";
 import { z } from "zod";
+import { CodeEditor } from "~/components/code-editor/view";
 
 const statuses = ["200", "201", "400", "401", "403", "404", "500"];
 
 const formSchema = z.object({
   status: EndpointResponseStatusSchema,
   description: z.string().optional(),
+  body: z.string().optional(),
 });
 
 export default function HttpResponseConnector({
@@ -67,6 +69,7 @@ export default function HttpResponseConnector({
     defaultValues: {
       description: workflow?.instruction,
       status: workflow?.status,
+      body: JSON.stringify(workflow?.body, null, 2),
     },
   });
 
@@ -165,6 +168,32 @@ export default function HttpResponseConnector({
                               onChange={(val) => {
                                 field.onChange(val);
                               }}
+                            />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={form.control}
+                        name="body"
+                        render={({ field }) => (
+                          <FormItem>
+                            <Label>Body</Label>
+                            <CodeEditor
+                              defaultValue={field.value}
+                              readOnly={false}
+                              basicSetup
+                              showClearButton={false}
+                              showCopyButton={false}
+                              onChange={(v) => {
+                                field.onChange(v);
+                              }}
+                              height="100%"
+                              autoFocus={false}
+                              placeholder=""
+                              className={cn(
+                                "h-full overflow-auto border border-input"
+                              )}
                             />
                           </FormItem>
                         )}

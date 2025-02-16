@@ -48,6 +48,7 @@ export const EndpointWorkflowSchema = z.object({
   cases: z.array(EndpointWorkflowCaseSchema),
   then: z.unknown().optional(),
   else: z.unknown().optional(),
+  body: z.unknown().optional(),
   status: EndpointResponseStatusSchema.optional(),
 });
 
