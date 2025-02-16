@@ -91,7 +91,7 @@ func HandleDeployProject(aesCfb encrypt.Encrypt, store *store.Store, agent *aa.A
 			// update endpoint
 			endpoint.CodeGeneration = newCode
 
-			if err = store.EndpointRepo.UpdateEndpoint(ctx, endpoint); err != nil {
+			if err = store.EndpointRepo.UpdateEndpoint(ctx, endpoint.ID, endpoint); err != nil {
 				sendEvent(ctx, project.ID, sse.EventTypeTaskFailed, AgentData{
 					Message: "b0 failed to update endpoint",
 				}, event)

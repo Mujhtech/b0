@@ -111,6 +111,7 @@ func (a *Api) BuildRouter() *chi.Mux {
 				r.Get("/", a.handler.GetEndpoints)
 				r.Post("/", a.handler.CreateEndpoint)
 				r.Put(fmt.Sprintf("/{%s}", handler.EndpointParamId), a.handler.UpdateEndpoint)
+				r.Put(fmt.Sprintf("/{%s}/workflows", handler.EndpointParamId), a.handler.UpdateEndpointWorkflow)
 			})
 
 			// chat route

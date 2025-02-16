@@ -11,12 +11,17 @@ import { useOptionalProject, useProject } from "~/hooks/use-project";
 import { useSSE } from "~/hooks/use-ses";
 import { useAuthToken, usePlatformUrl } from "~/hooks/use-user";
 import { ServerResponse, ServerResponseSchema } from "~/models/default";
+import { EndpointWorkflow } from "~/models/endpoint";
 import { Project } from "~/models/project";
 import { clientApi } from "~/services/api.client";
 
 interface PlaygroundBuilderProviderProps {
   project?: Project;
   handleProjectAction: (action: string) => Promise<ServerResponse>;
+  handleUpdateEndpointWorkflow: (
+    id: string,
+    workflows: EndpointWorkflow[]
+  ) => Promise<ServerResponse>;
   defaultAction: string;
   setDefaultAction: React.Dispatch<React.SetStateAction<string>>;
   isThinking: boolean;
@@ -57,6 +62,21 @@ export const PlaygroundBuilderProvider = ({
       path: `/projects/${project.id}/action`,
       body: {
         action,
+      },
+      backendBaseUrl: backendBaseUrl!,
+      accessToken: accessToken!,
+      schema: ServerResponseSchema,
+    });
+  }
+
+  async function handleUpdateEndpointWorkflow(
+    id: string,
+    workflows: EndpointWorkflow[]
+  ) {
+    return await clientApi.put<ServerResponse>({
+      path: `/endpoints/${id}/workflows`,
+      body: {
+        workflows,
       },
       backendBaseUrl: backendBaseUrl!,
       accessToken: accessToken!,
@@ -141,6 +161,7 @@ export const PlaygroundBuilderProvider = ({
     () => ({
       project,
       handleProjectAction,
+      handleUpdateEndpointWorkflow,
       defaultAction,
       setDefaultAction,
       isThinking,

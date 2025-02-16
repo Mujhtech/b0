@@ -5,6 +5,7 @@ import { cn } from "~/lib/utils";
 import { useOptionalEndpoint } from "~/hooks/use-project";
 import Connector from "./connector";
 import { EndpointWorkflow } from "~/models/endpoint";
+import { usePlaygroundBuilder } from "../provider";
 
 export default function Playground() {
   const {
@@ -17,6 +18,7 @@ export default function Playground() {
     zoom,
     handleDrag,
   } = usePlayground();
+  const { handleUpdateEndpointWorkflow } = usePlaygroundBuilder();
 
   const endpoint = useOptionalEndpoint();
 
@@ -32,10 +34,29 @@ export default function Playground() {
     return endpoint?.workflows || [];
   }, [newWorkflows, endpoint]);
 
-  const handleUpdateWorkflows = (
-    index: number,
-    workflow: EndpointWorkflow
-  ) => {};
+  const handleUpdateWorkflows = (index: number, workflow: EndpointWorkflow) => {
+    setNewWorkflows((old) => {
+      const prev = newWorkflows || old;
+
+      if (!prev) {
+        return undefined;
+      }
+
+      const workflows = [...prev];
+
+      workflows[index] = workflow;
+
+      return workflows;
+    });
+
+    if (!endpoint) {
+      return;
+    }
+    // TODO: update endpoint
+    setTimeout(() => {
+      handleUpdateEndpointWorkflow(endpoint.id, workflows);
+    }, 1000);
+  };
 
   const handleRemoveWorkflow = (index: number) => {
     setNewWorkflows((old) => {
@@ -84,6 +105,9 @@ export default function Playground() {
                     workflow={workflow}
                     index={index}
                     key={index}
+                    onUpdate={(workflow) =>
+                      handleUpdateWorkflows(index, workflow)
+                    }
                     onRemove={() => handleRemoveWorkflow(index)}
                   />
                 );

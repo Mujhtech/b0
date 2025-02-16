@@ -1,6 +1,9 @@
 package dto
 
-import "github.com/mujhtech/b0/database/models"
+import (
+	"github.com/mujhtech/b0/database/models"
+	"github.com/mujhtech/b0/internal/pkg/agent"
+)
 
 type CreateEndpointRequestDto struct {
 	Name        string                `json:"name"`
@@ -14,4 +17,8 @@ type CreateEndpointRequestDto struct {
 
 type GetEndpointQuery struct {
 	ProjectID string `json:"project_id,omitempty"`
+}
+
+type UpdateEndpointWorkflowRequestDto struct {
+	Workflows []*agent.Workflow `json:"workflows"`
 }

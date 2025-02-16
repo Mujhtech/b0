@@ -173,7 +173,7 @@ func (mr *MockEndpointRepositoryMockRecorder) CreateEndpoint(arg0, arg1 any) *go
 }
 
 // UpdateEndpoint mocks base method
-func (m *MockEndpointRepository) UpdateEndpoint(arg0 context.Context, arg1 *models.Endpoint) error {
+func (m *MockEndpointRepository) UpdateEndpoint(arg0 context.Context, id string, arg1 *models.Endpoint) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "UpdateEndpoint", arg0, arg1)
 	ret0, _ := ret[0].(error)
@@ -181,9 +181,9 @@ func (m *MockEndpointRepository) UpdateEndpoint(arg0 context.Context, arg1 *mode
 }
 
 // UpdateEndpoint indicates an expected call of UpdateEndpoint.
-func (mr *MockEndpointRepositoryMockRecorder) UpdateEndpoint(arg0, arg1 any) *gomock.Call {
+func (mr *MockEndpointRepositoryMockRecorder) UpdateEndpoint(arg0, arg1, arg2 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateEndpoint", reflect.TypeOf((*MockEndpointRepository)(nil).UpdateEndpoint), arg0, arg1)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateEndpoint", reflect.TypeOf((*MockEndpointRepository)(nil).UpdateEndpoint), arg0, arg1, arg2)
 }
 
 // FindEndpointByID mocks base method

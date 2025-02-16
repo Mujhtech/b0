@@ -57,6 +57,7 @@ const formSchema = z.object({
 export default function HttpResponseConnector({
   workflow,
   onRemove,
+  onUpdate,
 }: ConnectorProps) {
   const [isOpen, setIsOpen] = useState(false);
 
@@ -75,6 +76,13 @@ export default function HttpResponseConnector({
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     try {
+      onUpdate?.({
+        ...workflow,
+        status: values.status,
+        instruction: values.description,
+        body: values.body ? JSON.parse(values.body) : undefined,
+      });
+      setIsOpen(false);
     } catch (error) {
       console.error(error);
     }

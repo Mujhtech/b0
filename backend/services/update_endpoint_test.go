@@ -79,7 +79,7 @@ func TestUpdateEndpointService_Run(t *testing.T) {
 
 				// Finally expect UpdateEndpoint
 				em.EXPECT().
-					UpdateEndpoint(gomock.Any(), &models.Endpoint{
+					UpdateEndpoint(gomock.Any(), "endpoint-id", &models.Endpoint{
 						ID:        "endpoint-id",
 						OwnerID:   "user-id",
 						ProjectID: "project-id",

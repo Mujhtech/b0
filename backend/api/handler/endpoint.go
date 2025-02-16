@@ -1,11 +1,14 @@
 package handler
 
 import (
+	"fmt"
 	"net/http"
 	"net/url"
 
 	"github.com/mujhtech/b0/api/dto"
 	"github.com/mujhtech/b0/api/middleware"
+	"github.com/mujhtech/b0/database/models"
+	"github.com/mujhtech/b0/internal/pkg/agent"
 	"github.com/mujhtech/b0/internal/pkg/request"
 	"github.com/mujhtech/b0/internal/pkg/response"
 	"github.com/mujhtech/b0/services"
@@ -127,4 +130,89 @@ func (h *Handler) UpdateEndpoint(w http.ResponseWriter, r *http.Request) {
 	}
 
 	_ = response.Ok(w, r, "endpoint updated successfully", endpoint)
+}
+
+func (h *Handler) UpdateEndpointWorkflow(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	session, ok := middleware.GetAuthSession(ctx)
+
+	if !ok {
+		_ = response.Unauthorized(w, r, nil)
+		return
+	}
+
+	endpointID, err := getEndpointIdFromPath(r)
+
+	if err != nil {
+		_ = response.BadRequest(w, r, err)
+		return
+	}
+
+	dst := new(dto.UpdateEndpointWorkflowRequestDto)
+
+	if err := request.ReadBody(r, dst); err != nil {
+		_ = response.BadRequest(w, r, err)
+		return
+	}
+
+	findEndpointService := services.FindEndpointService{
+		EndpointID:   endpointID,
+		EndpointRepo: h.store.EndpointRepo,
+		User:         session.User,
+	}
+
+	endpoint, err := findEndpointService.Run(ctx)
+
+	if err != nil {
+		_ = response.InternalServerError(w, r, err)
+		return
+	}
+
+	findProjectService := services.FindProjectService{
+		ProjectRepo: h.store.ProjectRepo,
+		User:        session.User,
+		ProjectID:   endpoint.ProjectID,
+	}
+
+	project, err := findProjectService.Run(ctx)
+
+	if err != nil {
+		_ = response.InternalServerError(w, r, err)
+		return
+	}
+
+	if err := h.store.EndpointRepo.UpdateEndpoint(ctx, endpoint.ID, &models.Endpoint{
+		Workflows:      dst.Workflows,
+		CodeGeneration: &agent.CodeGeneration{},
+	}); err != nil {
+		_ = response.InternalServerError(w, r, err)
+		return
+	}
+
+	// remove containers related to the project
+	if project.ContainerID.String != "" {
+
+		con, err := h.docker.GetContainer(ctx, project.ContainerID.String)
+
+		if err != nil {
+			_ = response.InternalServerError(w, r, err)
+			return
+		}
+
+		if err := h.docker.RemoveContainer(ctx, con.ID); err != nil {
+			_ = response.InternalServerError(w, r, err)
+			return
+		}
+
+		volumeName := fmt.Sprintf("b0-temp-%s-%s", project.OwnerID, project.Slug)
+
+		if err := h.docker.RemoveVolume(ctx, volumeName); err != nil {
+			_ = response.InternalServerError(w, r, err)
+			return
+		}
+
+	}
+
+	_ = response.Ok(w, r, "endpoint workflow updated successfully", endpoint)
 }

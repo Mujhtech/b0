@@ -180,7 +180,7 @@ func (e *endpointRepo) FindEndpointByProjectID(ctx context.Context, projectID st
 }
 
 // UpdateEndpoint implements EndpointRepository.
-func (e *endpointRepo) UpdateEndpoint(ctx context.Context, endpoint *models.Endpoint) error {
+func (e *endpointRepo) UpdateEndpoint(ctx context.Context, id string, endpoint *models.Endpoint) error {
 
 	stmt := Builder.
 		Update(endpointBaseTable).
@@ -191,8 +191,18 @@ func (e *endpointRepo) UpdateEndpoint(ctx context.Context, endpoint *models.Endp
 		// Set("status", endpoint.Status).
 		// Set("metadata", endpoint.Metadata).
 		Set("updated_at", squirrel.Expr("NOW()")).
-		Where(squirrel.Eq{"id": endpoint.ID}).
+		Where(squirrel.Eq{"id": id}).
 		Where(excludeDeleted)
+
+	if endpoint.Workflows != nil {
+
+		workflowsOutput, err := util.MarshalJSONToString(endpoint.Workflows)
+		if err != nil {
+			return err
+		}
+
+		stmt = stmt.Set("workflows", workflowsOutput)
+	}
 
 	if endpoint.CodeGeneration != nil {
 
