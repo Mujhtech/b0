@@ -1,11 +1,8 @@
 import React from "react";
 import { EndpointWorkflow } from "~/models/endpoint";
+import { ConnectorProps } from ".";
 
-export default function DiscordConnector({
-  workflow,
-}: {
-  workflow: EndpointWorkflow;
-}) {
+export default function DiscordConnector({ workflow }: ConnectorProps) {
   return (
     <div className="flex flex-col group h-min">
       <div className="border border-input w-[250px] bg-background shadow-sm flex self-center flex-col hover:drop-shadow-xl cursor-pointer">

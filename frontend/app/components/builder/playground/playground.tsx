@@ -1,9 +1,10 @@
-import React from "react";
+import React, { useMemo, useState } from "react";
 import { usePlayground } from "./provider";
 import HttpRequestConnector from "./connector/http-request";
 import { cn } from "~/lib/utils";
 import { useOptionalEndpoint } from "~/hooks/use-project";
 import Connector from "./connector";
+import { EndpointWorkflow } from "~/models/endpoint";
 
 export default function Playground() {
   const {
@@ -18,6 +19,38 @@ export default function Playground() {
   } = usePlayground();
 
   const endpoint = useOptionalEndpoint();
+
+  const [newWorkflows, setNewWorkflows] = useState<
+    Array<EndpointWorkflow> | undefined
+  >(undefined);
+
+  const workflows = useMemo(() => {
+    if (newWorkflows) {
+      return newWorkflows;
+    }
+
+    return endpoint?.workflows || [];
+  }, [newWorkflows, endpoint]);
+
+  const handleUpdateWorkflows = (
+    index: number,
+    workflow: EndpointWorkflow
+  ) => {};
+
+  const handleRemoveWorkflow = (index: number) => {
+    setNewWorkflows((old) => {
+      const prev = newWorkflows || old;
+
+      if (!prev) {
+        return undefined;
+      }
+      const workflows = [...prev];
+
+      workflows.splice(index, 1);
+
+      return workflows;
+    });
+  };
 
   return (
     <div
@@ -45,9 +78,14 @@ export default function Playground() {
           >
             <div className="mt-5 ml-20 flex flex-col justify-center ">
               <HttpRequestConnector />
-              {endpoint?.workflows?.map((workflow, index) => {
+              {workflows.map((workflow, index) => {
                 return (
-                  <Connector workflow={workflow} index={index} key={index} />
+                  <Connector
+                    workflow={workflow}
+                    index={index}
+                    key={index}
+                    onRemove={() => handleRemoveWorkflow(index)}
+                  />
                 );
               })}
             </div>

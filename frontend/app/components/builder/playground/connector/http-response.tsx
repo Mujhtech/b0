@@ -44,6 +44,7 @@ import {
 } from "~/components/ui/form";
 import { z } from "zod";
 import { CodeEditor } from "~/components/code-editor/view";
+import { ConnectorProps } from ".";
 
 const statuses = ["200", "201", "400", "401", "403", "404", "500"];
 
@@ -55,9 +56,8 @@ const formSchema = z.object({
 
 export default function HttpResponseConnector({
   workflow,
-}: {
-  workflow: EndpointWorkflow;
-}) {
+  onRemove,
+}: ConnectorProps) {
   const [isOpen, setIsOpen] = useState(false);
 
   const handleClose = useCallback(() => {
@@ -79,6 +79,11 @@ export default function HttpResponseConnector({
       console.error(error);
     }
   }
+
+  const handleDelete = () => {
+    onRemove?.();
+    setIsOpen(false);
+  };
 
   return (
     <Sheet open={isOpen} onOpenChange={setIsOpen}>
@@ -203,6 +208,8 @@ export default function HttpResponseConnector({
                   <div className="bg-background border-t border-input absolute w-full bottom-0 p-2">
                     <div className="flex items-center justify-end gap-2">
                       <Button
+                        type="button"
+                        onClick={handleDelete}
                         variant="outline"
                         className="h-8 shadow-lg border-destructive text-red-500 hover:border-destructive hover:text-red-500"
                       >

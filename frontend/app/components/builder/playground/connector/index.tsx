@@ -14,40 +14,41 @@ import ResendConnector from "./resend";
 import StripeConnector from "./stripe";
 import { EndpointWorkflow } from "~/models/endpoint";
 
-export default function Connector({
-  workflow,
-  index,
-}: {
+export interface ConnectorProps {
   workflow: EndpointWorkflow;
   index: number;
-}) {
-  switch (workflow.type) {
+  onRemove?: () => void;
+  onUpdate?: (workflow: EndpointWorkflow) => void;
+}
+
+export default function Connector(props: ConnectorProps) {
+  switch (props.workflow.type) {
     case "response":
-      return <HttpResponseConnector key={index} workflow={workflow} />;
+      return <HttpResponseConnector key={props.index} {...props} />;
     case "if":
-      return <IfConnector key={index} workflow={workflow} />;
+      return <IfConnector key={props.index} {...props} />;
     case "variable":
-      return <VariableConnector key={index} workflow={workflow} />;
+      return <VariableConnector key={props.index} {...props} />;
     case "switch":
-      return <SwitchConnector key={index} workflow={workflow} />;
+      return <SwitchConnector key={props.index} {...props} />;
     case "codeblock":
-      return <CodeblockConnector key={index} workflow={workflow} />;
+      return <CodeblockConnector key={props.index} {...props} />;
     case "openai":
-      return <OpenAIConnector key={index} workflow={workflow} />;
+      return <OpenAIConnector key={props.index} {...props} />;
     case "telegram":
-      return <TelegramConnector key={index} workflow={workflow} />;
+      return <TelegramConnector key={props.index} {...props} />;
     case "slack":
-      return <SlackConnector key={index} workflow={workflow} />;
+      return <SlackConnector key={props.index} {...props} />;
     case "discord":
-      return <DiscordConnector key={index} workflow={workflow} />;
+      return <DiscordConnector key={props.index} {...props} />;
     case "github":
-      return <GithubConnector key={index} workflow={workflow} />;
+      return <GithubConnector key={props.index} {...props} />;
     case "supabase":
-      return <SupabaseConnector key={index} workflow={workflow} />;
+      return <SupabaseConnector key={props.index} {...props} />;
     case "resend":
-      return <ResendConnector key={index} workflow={workflow} />;
+      return <ResendConnector key={props.index} {...props} />;
     case "stripe":
-      return <StripeConnector key={index} workflow={workflow} />;
+      return <StripeConnector key={props.index} {...props} />;
     case "request":
     default:
       return null;
