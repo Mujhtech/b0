@@ -30,7 +30,7 @@ const (
 	discord = {"action_id": "...", "type": "discord", "instruction":"...", "channel": "...", "message": "..."}
 	telegram = {"action_id": "...", "type": "telegram", "instruction":"...", "channel": "...", "message": "..."}
 	stripe = {"action_id": "...", "type": "stripe", "instruction":"...", "method": "...", "url": "...", "body": "..."}
-	openai = {"action_id": "...", "type": "openai", "instruction":"...", "model": "...", "prompt": "...", "temperature": "...", "max_tokens": "...", "top_p": "...", "frequency_penalty": "...", "presence_penalty": "..."}
+	openai = {"action_id": "...", "type": "openai", "model": "...", "provider": "...", "instruction":"...", "model": "...", "prompt": "...", "temperature": "...", "max_tokens": "...", "top_p": "...", "frequency_penalty": "...", "presence_penalty": "..."}
 	supabase = {"action_id": "...", "type": "supabase", "instruction":"...", "table": "...", "method": "...", "body": "..."}
 	github = {"action_id": "...", "type": "github", "instruction":"...", "method": "...", "url": "...", "body": "..."}
 

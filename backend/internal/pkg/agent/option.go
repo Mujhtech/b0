@@ -419,6 +419,9 @@ type Workflow struct {
 	Headers     []string       `json:"headers,omitempty"`
 	Body        interface{}    `json:"body,omitempty"`
 	Variables   []string       `json:"variables,omitempty"`
+	Model       string         `json:"model,omitempty"`
+	Provider    string         `json:"provider,omitempty"`
+	Prompt      string         `json:"prompt,omitempty"`
 	ActionID    string         `json:"action_id,omitempty"`
 	Status      string         `json:"status,omitempty"`
 }

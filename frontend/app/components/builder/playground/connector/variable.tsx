@@ -56,6 +56,7 @@ export default function VariableConnector({
       onUpdate?.({
         ...workflow,
         value: values.value,
+        name: values.name,
       });
       setIsOpen(false);
     } catch (error) {
