@@ -16,6 +16,7 @@ import { useProject } from "~/hooks/use-project";
 import { useCallback, useMemo, useState } from "react";
 import { Spinner } from "@phosphor-icons/react";
 import { useNavigate } from "@remix-run/react";
+import { LogPreviewDialog } from "~/components/builder/log-preview-dialog";
 
 export default function Page() {
   return (
@@ -97,6 +98,7 @@ const PageContent = () => {
       </div>
       <BuilderMenu />
       <BuilderTools />
+      <LogPreviewDialog />
     </main>
   );
 };

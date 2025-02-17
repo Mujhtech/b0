@@ -41,8 +41,44 @@ import {
 } from "~/components/ui/popover";
 import { cn } from "~/lib/utils";
 
-const providers = ["OpenAI", "Deepseek", "Gemini"];
-const models = ["gpt-3.5-turbo", "gpt-4"];
+const providers = ["openai", "deepseek", "google"];
+const models = [
+  {
+    id: "gpt-3",
+    name: "GPT-3",
+    provider: "openai",
+  },
+  {
+    id: "gpt-4",
+    name: "GPT-4",
+    provider: "openai",
+  },
+  {
+    id: "gpt-5",
+    name: "GPT-5",
+    provider: "openai",
+  },
+  {
+    id: "gemini-1.5-flash",
+    name: "Gemini 1.5 Flash",
+    provider: "google",
+  },
+  {
+    id: "gemini-2.0-flash",
+    name: "Gemini 2.0 Flash",
+    provider: "google",
+  },
+  {
+    id: "deepseek-chat",
+    name: "Deepseek Chat",
+    provider: "deepseek",
+  },
+  {
+    id: "deepseek-r1",
+    name: "Deepseek R1",
+    provider: "deepseek",
+  },
+];
 
 const formSchema = z.object({
   provider: z.string().optional(),
@@ -148,7 +184,10 @@ export default function OpenAIConnector({
                             <FormControl>
                               <SelecteProviderDialog
                                 value={field.value}
-                                onChange={field.onChange}
+                                onChange={(value) => {
+                                  field.onChange(value);
+                                  form.resetField("model");
+                                }}
                               />
                             </FormControl>
 
@@ -166,6 +205,13 @@ export default function OpenAIConnector({
                               <SelectModelDialog
                                 value={field.value}
                                 onChange={field.onChange}
+                                models={models
+                                  .filter(
+                                    (item) =>
+                                      item.provider ===
+                                      form.getValues("provider")
+                                  )
+                                  .map((item) => item.id)}
                               />
                             </FormControl>
 
@@ -201,9 +247,11 @@ export default function OpenAIConnector({
 function SelectModelDialog({
   value,
   onChange,
+  models,
 }: {
   value?: string;
   onChange: (value: string) => void;
+  models: string[];
 }) {
   const [open, setOpen] = useState(false);
 
@@ -293,7 +341,7 @@ function SelecteProviderDialog({
                 >
                   <Check
                     className={cn(
-                      "mr-2 h-4 w-4",
+                      "mr-2 h-4 w-4 capitalize",
                       value === provider ? "opacity-100" : "opacity-0"
                     )}
                   />

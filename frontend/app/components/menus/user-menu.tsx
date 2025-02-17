@@ -90,7 +90,7 @@ export const UserAvatar = ({
       )}
     >
       {user.avatar_url && <AvatarImage src={user?.avatar_url} />}
-      <AvatarFallback>{user.name[0]}</AvatarFallback>
+      <AvatarFallback className="rounded-none">{user.name[0]}</AvatarFallback>
     </Avatar>
   );
 };

@@ -9,7 +9,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { clientApi } from "~/services/api.client";
 import { useAuthToken, usePlatformUrl } from "~/hooks/use-user";
-import { useProject } from "~/hooks/use-project";
+import { useOptionalEndpoint, useProject } from "~/hooks/use-project";
 import { Form, FormControl, FormField, FormItem } from "../ui/form";
 import { ServerResponse, ServerResponseSchema } from "~/models/default";
 
@@ -34,6 +34,7 @@ export default function AskB0({
   const accessToken = useAuthToken();
   const backendBaseUrl = usePlatformUrl();
   const project = useProject();
+  const endpoint = useOptionalEndpoint();
 
   const form = useForm<Chat>({
     resolver: zodResolver(chatSchema),
@@ -50,7 +51,7 @@ export default function AskB0({
       }
       setIsLoading(true);
       await clientApi.post<ServerResponse>({
-        path: "/chat/" + project.id,
+        path: "/chat/" + project.id + "?endpoint=" + endpoint?.id,
         body: { ...values },
         backendBaseUrl: backendBaseUrl!,
         accessToken: accessToken!,
@@ -93,6 +94,7 @@ export default function AskB0({
                     className="h-8 border-none focus-visible:ring-0 w-72 px-2"
                     placeholder="Ask b0 anything..."
                     value={field.value}
+                    autoComplete="off"
                     onChange={field.onChange}
                     onBlur={field.onBlur}
                   />
