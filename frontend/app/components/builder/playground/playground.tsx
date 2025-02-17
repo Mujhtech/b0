@@ -55,9 +55,11 @@ export default function Playground() {
     // TODO: update endpoint
     setTimeout(() => {
       setIsSaving(true);
-      handleUpdateEndpointWorkflow(endpoint.id, workflows).finally(() => {
-        setIsSaving(false);
-      });
+      handleUpdateEndpointWorkflow(endpoint.id, workflows)
+        .catch((err) => {})
+        .finally(() => {
+          setIsSaving(false);
+        });
     }, 1000);
   };
 
