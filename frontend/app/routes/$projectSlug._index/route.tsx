@@ -29,7 +29,8 @@ export default function Page() {
 
 const PageContent = () => {
   const project = useProject();
-  const { isThinking, contextMessage, error } = usePlaygroundBuilder();
+  const { isThinking, contextMessage, error, isSaving } =
+    usePlaygroundBuilder();
   const user = useUser();
 
   const messageToDisplay = useMemo(() => {
@@ -45,8 +46,16 @@ const PageContent = () => {
       return "Thinking...";
     }
 
+    if (isSaving) {
+      return "Saving...";
+    }
+
     return undefined;
-  }, [contextMessage, error, isThinking]);
+  }, [contextMessage, error, isThinking, isSaving]);
+
+  const showLoaderIcon = useMemo(() => {
+    return isThinking || isSaving;
+  }, [isSaving, isThinking]);
 
   return (
     <main className="h-full w-full relative canvas-bg">
@@ -55,7 +64,7 @@ const PageContent = () => {
       <div className="absolute bottom-4 w-full z-10">
         {messageToDisplay != undefined && (
           <div className="flex items-center justify-center gap-2 mb-1">
-            {isThinking && (
+            {showLoaderIcon && (
               <Spinner
                 size={18}
                 className="text-muted-foreground animate-spin"

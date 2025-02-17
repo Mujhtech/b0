@@ -28,6 +28,8 @@ interface PlaygroundBuilderProviderProps {
   error: string | undefined;
   contextMessage: string | undefined;
   logs: string[];
+  isSaving: boolean;
+  setIsSaving: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
 const PlaygroundBuilderProviderContext = createContext<
@@ -50,6 +52,7 @@ export const PlaygroundBuilderProvider = ({
     "task_completed",
   ];
   const [isThinking, setIsThinking] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | undefined>(undefined);
   const [contextMessage, setContextMessage] = useState<string | undefined>(
     undefined
@@ -168,6 +171,8 @@ export const PlaygroundBuilderProvider = ({
       error,
       contextMessage,
       logs,
+      isSaving,
+      setIsSaving,
     }),
     [
       project,
@@ -179,6 +184,8 @@ export const PlaygroundBuilderProvider = ({
       contextMessage,
       logs,
       setLogs,
+      isSaving,
+      setIsSaving,
     ]
   );
 

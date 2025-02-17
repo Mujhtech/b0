@@ -18,7 +18,7 @@ export default function Playground() {
     zoom,
     handleDrag,
   } = usePlayground();
-  const { handleUpdateEndpointWorkflow } = usePlaygroundBuilder();
+  const { handleUpdateEndpointWorkflow, setIsSaving } = usePlaygroundBuilder();
 
   const endpoint = useOptionalEndpoint();
 
@@ -54,7 +54,10 @@ export default function Playground() {
     }
     // TODO: update endpoint
     setTimeout(() => {
-      handleUpdateEndpointWorkflow(endpoint.id, workflows);
+      setIsSaving(true);
+      handleUpdateEndpointWorkflow(endpoint.id, workflows).finally(() => {
+        setIsSaving(false);
+      });
     }, 1000);
   };
 
