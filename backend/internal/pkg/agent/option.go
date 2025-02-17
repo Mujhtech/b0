@@ -532,7 +532,143 @@ var AvailableCodeGenerationOptions = []CodeGenerationOption{
 		- Make sure all files are in the src directory except the configuration files like package.json, tsconfig.json, and tsconfig.node.json, etc
 		- For all api key, use this format: process.env.B0_API_KEY e.g process.env.B0_OPENAI_KEY, process.env.B0_SLACK_KEY, etc
 
+		Example of simple Hono web api:
 
+		import { Hono } from 'hono';
+
+		const app = new Hono();
+
+		app.get('/', (c) => c.text('Pretty Blog API'))
+
+		export default app;
+
+		To bind request body, here is example of how to bind request body:
+
+		type Bindings = {
+			USERNAME: string
+			PASSWORD: string
+		}
+
+		const api = new Hono<{ Bindings: Bindings }>()
+
+		api.post(
+			'/posts',
+			async (c, next) => {
+				const { USERNAME, PASSWORD } = c.env
+				// do something with USERNAME and PASSWORD
+			},
+			async (c) => {
+				const post = await c.req.json<Post>()
+				const ok = createPost({ post })
+				return c.json({ ok })
+			}
+		)
+
+		app.route('/api', api)
+
+		To return json response, here is example of how to return json response:
+
+		import { prettyJSON } from 'hono/pretty-json'
+
+		app.use(prettyJSON())
+
+		app.get('/', (c) => c.json({ message: 'Hello', ok: true }, 200))
+
+		To handle 404 error, here is example of how to handle 404 error:
+
+		app.notFound((c) => c.json({ message: 'Not Found', ok: false }, 404))
+
+		To handle cors, here is example of how to handle cors:
+
+		import { cors } from 'hono/cors'
+
+		app.use('*', cors())
+
+		For basic auth implementation, here is example of how to implement basic auth:
+
+		import { basicAuth } from 'hono/basic-auth'
+
+		For request body validation, here is example of how to validate request body:
+		depedencies:
+		@hono/zod-validator: "^0.4.3"
+		zod: "^3.24.2"
+
+
+		import { z } from 'zod'
+		import { zValidator } from '@hono/zod-validator'
+
+		const schema = z.object({
+			name: z.string(),
+			age: z.number(),
+		})
+
+		app.post('/author', zValidator('json', schema), (c) => {
+			const data = c.req.valid('json')
+			return c.json({
+				success: true,
+				message: data.name+' is '+data.age+' years old',
+			})
+		})
+
+		For cache control, here is example of how to implement cache control:
+		import { cache } from 'hono/cache'
+
+		app.get(
+			'*',
+			cache({
+				cacheName: 'my-app',
+				cacheControl: 'max-age=3600',
+			})
+		)
+
+		For compression, here is example of how to implement compression:
+		import { compress } from 'hono/compress'
+
+		app.use(compress())
+
+		For timeout, here is example of how to implement timeout:
+		import { timeout } from 'hono/timeout'
+
+		app.use('/api', timeout(5000))
+
+		For request id, here is example of how to implement request id:
+		import { requestId } from 'hono/request-id'
+
+		app.use('*', requestId())
+
+		app.get('/', (c) => {
+			return c.text('Your request id is ' + c.get('requestId'))
+		})
+
+		For logging, here is example of how to implement logging:
+		import { logger } from 'hono/logger'
+
+		app.use(logger())
+
+		For jwt,, here is example of how to implement jwt:
+
+		import { jwt } from 'hono/jwt'
+		import type { JwtVariables } from 'hono/jwt'
+
+		type Variables = JwtVariables
+
+		const app = new Hono<{ Variables: Variables }>()
+
+		app.use(
+			'/auth/*',
+			jwt({
+				secret: 'it-is-very-secret',
+			})
+		)
+
+		app.get('/auth/page', (c) => {
+			return c.text('You are authorized')
+		})
+
+		app.get('/auth/page', (c) => {
+			const payload = c.get('jwtPayload')
+			return c.json(payload) // eg: { "sub": "1234567890", "name": "John Doe", "iat": 1516239022 }
+		})
 		` + nodeJSInstructions,
 	},
 }
