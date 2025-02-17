@@ -97,8 +97,9 @@ const (
 	- Discord
 	Use the following package to interact with the Discord API:
 	dependencies:
-	@discordjs/core
-	@discordjs/rest
+	@discordjs/core: "^2.0.1"
+	@discordjs/rest: "^2.4.3"
+	discord-api-types: "^0.37.119"
 
 	e.g To send a message to a channel:
 
@@ -182,7 +183,7 @@ const (
 	// For anthropic
 	@ai-sdk/anthropic: "^1.1.8"
 
-	// For Gemini
+	// For Gemini/Google
 	@ai-sdk/google: "^1.1.14"
 
 	// DeepSeek
@@ -216,7 +217,7 @@ const (
 		prompt: 'Write a vegetarian lasagna recipe for 4 people.',
 	});
 
-	E.g To interact with the Gemini API:
+	E.g To interact with the Gemini/Google API:
 	import { createGoogleGenerativeAI } from '@ai-sdk/google';
 	import { generateText } from 'ai';
 
@@ -257,6 +258,15 @@ const (
 			},
 		]
 	});
+
+	While working with Node cron, you can use the following package:
+	dependencies:
+	node-cron: "^3.0.3"
+
+	devDependencies:
+	@types/node-cron: "^3.0.11"
+
+	For type checking, when using process environment variables in your code, make sure to add ! to the variable to avoid type checking error e.g process.env.B0_DISCORD_KEY! instead of process.env.B0_DISCORD_KEY excluding the B0_PORT variable.
 	`
 
 	goInstructions = `
@@ -426,6 +436,11 @@ type Workflow struct {
 	Status      string         `json:"status,omitempty"`
 }
 
+type WorkflowGenerationOption struct {
+	Workflows []*Workflow `json:"workflows"`
+	Prompt    string      `json:"prompt"`
+}
+
 type CodeGenerationOption struct {
 	ID                   string      `json:"id"`
 	Language             string      `json:"language"`
@@ -435,12 +450,17 @@ type CodeGenerationOption struct {
 	Image                string      `json:"-"`
 }
 
+type CodeGenEnvVar struct {
+	Key   string `json:"key"`
+	Value string `json:"value"`
+}
+
 type CodeGeneration struct {
-	FileContents    []FileContent `json:"fileContents"`
-	InstallCommands []string      `json:"installCommands"`
-	BuildCommands   string        `json:"buildCommands"`
-	RunCommands     string        `json:"runCommands"`
-	EnvVars         []string      `json:"envVars"`
+	FileContents    []FileContent   `json:"fileContents"`
+	InstallCommands []string        `json:"installCommands"`
+	BuildCommands   string          `json:"buildCommands"`
+	RunCommands     string          `json:"runCommands"`
+	EnvVars         []CodeGenEnvVar `json:"envVars"`
 }
 
 type FileContent struct {

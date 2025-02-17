@@ -44,6 +44,7 @@ func NewJob(cfg *config.Config, appCtx context.Context, redis *redis.Redis) (*Jo
 
 func (j *Job) RegisterAndStart(store *store.Store, agent *agent.Agent, sse sse.Streamer, container *container.Container) error {
 	j.Executor.RegisterJobHandler(JobNameWorkflowCreate, asynq.HandlerFunc(handlers.HandleCreateWorkflow(j.aesCfb, store, agent, sse)))
+	j.Executor.RegisterJobHandler(JobNameWorkflowUpdate, asynq.HandlerFunc(handlers.HandleUpdateWorkflow(j.aesCfb, store, agent, sse)))
 	j.Executor.RegisterJobHandler(JobNameWebhook, asynq.HandlerFunc(handlers.HandleWebhook(j.aesCfb, store)))
 	j.Executor.RegisterJobHandler(JobNameProjectDeploy, asynq.HandlerFunc(handlers.HandleDeployProject(j.aesCfb, store, agent, sse, container)))
 

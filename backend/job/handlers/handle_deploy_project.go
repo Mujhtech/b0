@@ -54,17 +54,17 @@ func HandleDeployProject(aesCfb encrypt.Encrypt, store *store.Store, agent *aa.A
 
 		serverPort := generatePort()
 
-		existContainerWithPort, err := docker.IsContainerExist(ctx, con.FilterContainerOption{
-			Port: serverPort,
-		})
+		// existContainerWithPort, err := docker.IsContainerExist(ctx, con.FilterContainerOption{
+		// 	Port: serverPort,
+		// })
 
-		if err != nil {
-			return err
-		}
+		// if err != nil {
+		// 	return err
+		// }
 
-		if existContainerWithPort {
-			serverPort = generatePort()
-		}
+		// if existContainerWithPort {
+		// 	serverPort = generatePort()
+		// }
 
 		codeGenOption, err := aa.GetLanguageCodeGeneration(project.Language, project.Framework)
 
@@ -261,7 +261,12 @@ func HandleDeployProject(aesCfb encrypt.Encrypt, store *store.Store, agent *aa.A
 				}
 
 				if code.EnvVars != nil {
-					envs = append(envs, code.EnvVars...)
+					for _, env := range code.EnvVars {
+						if env.Key == "B0_PORT" {
+							continue
+						}
+						envs = append(envs, fmt.Sprintf("%s=%s", env.Key, env.Value))
+					}
 				}
 
 				newContainerID, err := docker.CreateContainer(ctx, con.CreateContainerOption{
@@ -367,7 +372,8 @@ func HandleDeployProject(aesCfb encrypt.Encrypt, store *store.Store, agent *aa.A
 		time.Sleep(1 * time.Second)
 
 		sendEvent(ctx, project.ID, sse.EventTypeTaskCompleted, AgentData{
-			Message: "b0 has successfully deployed your project",
+			Message:   "b0 has successfully deployed your project",
+			Deploying: true,
 		}, event)
 
 		return nil
