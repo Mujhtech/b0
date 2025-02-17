@@ -74,6 +74,7 @@ const (
 	2. installCommands: The command to install the necessary dependencies. (array of strings)
 	3. buildCommands: The command to build the code. (string)
 	4. runCommands: The command to run the code. (string)
+	5. envVars: The environment variables to set. (array of {key: string, value: string})
 	- Ignore comments in the workflow diagram.
 	- Ensure all necessary imports are included
 	- Ensure that the generated code is valid and can be run without any errors.

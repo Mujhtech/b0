@@ -437,6 +437,7 @@ type CodeGeneration struct {
 	InstallCommands []string      `json:"installCommands"`
 	BuildCommands   string        `json:"buildCommands"`
 	RunCommands     string        `json:"runCommands"`
+	EnvVars         []string      `json:"envVars"`
 }
 
 type FileContent struct {
@@ -453,7 +454,7 @@ var AvailableCodeGenerationOptions = []CodeGenerationOption{
 		FrameworkInsructions: `
 		## Framework instructions
 		- For router, use go-chi/chi/v5
-		- Use port %s for the server
+		- Access the server port from OS environment variable B0_PORT
 
 
 		` + goInstructions,
@@ -466,7 +467,7 @@ var AvailableCodeGenerationOptions = []CodeGenerationOption{
 		FrameworkInsructions: `
 		## Framework instructions
 		- Use Echo framework
-		- Use port %s for the server
+		- Access the server port from OS environment variable B0_PORT
 
 		` + goInstructions,
 	},
@@ -478,7 +479,7 @@ var AvailableCodeGenerationOptions = []CodeGenerationOption{
 		FrameworkInsructions: `
 		## Framework instructions
 		- Use Gin framework
-		- Use port %s for the server
+		- Access the server port from OS environment variable B0_PORT
 
 		` + goInstructions,
 	},
@@ -491,7 +492,7 @@ var AvailableCodeGenerationOptions = []CodeGenerationOption{
 		## Framework instructions
 		- Use Express framework
 		- Make sure to add package.json and don't forget to include all neccessary dependencies
-		- Use port %s for the server
+		- Use process.env.B0_PORT for the server port
 		- Use npm run build for buildCommands
 		- Use npm run start for runCommands
 		- Make sure to add the necessary scripts in the package.json file e.g "build": "npx -y tsc", "start": "node dist/index.js"
@@ -508,7 +509,7 @@ var AvailableCodeGenerationOptions = []CodeGenerationOption{
 		FrameworkInsructions: `
 		## Framework instructions
 		- Use Fastify framework
-		- Use port %s for the server
+		- Use process.env.B0_PORT for the server port
 		- Make sure to add package.json and don't forget to include all neccessary dependencies
 		- For all api key, use this format: process.env.B0_API_KEY e.g process.env.B0_OPENAI_KEY, process.env.B0_SLACK_KEY, etc
 
@@ -523,7 +524,7 @@ var AvailableCodeGenerationOptions = []CodeGenerationOption{
 		FrameworkInsructions: `
 		## Framework instructions
 		- Use Hono framework
-		- Use port %s for the server
+		- Use process.env.B0_PORT for the server port
 		- Make sure to add package.json and don't forget to include all neccessary dependencies
 		- Below are the basic dependencies you need to add to your package.json file
 		1. "hono": "^4.7.1"

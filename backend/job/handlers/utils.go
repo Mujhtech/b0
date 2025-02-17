@@ -7,6 +7,8 @@ import (
 	"os"
 	"path/filepath"
 
+	"math/rand/v2"
+
 	"github.com/docker/docker/pkg/archive"
 	"github.com/mujhtech/b0/internal/pkg/agent"
 	"github.com/mujhtech/b0/internal/pkg/sse"
@@ -108,4 +110,12 @@ func cloneProjectToTar(userId, projectSlug string) (io.ReadCloser, error) {
 	}
 
 	return tar, nil
+}
+
+func generatePort() string {
+	r := rand.IntN(1999)
+
+	port := r + 5000
+
+	return fmt.Sprintf("%d", port)
 }

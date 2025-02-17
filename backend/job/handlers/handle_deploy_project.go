@@ -52,7 +52,19 @@ func HandleDeployProject(aesCfb encrypt.Encrypt, store *store.Store, agent *aa.A
 		// delay 1 seconds
 		time.Sleep(1 * time.Second)
 
-		serverPort := "5670"
+		serverPort := generatePort()
+
+		existContainerWithPort, err := docker.IsContainerExist(ctx, con.FilterContainerOption{
+			Port: serverPort,
+		})
+
+		if err != nil {
+			return err
+		}
+
+		if existContainerWithPort {
+			serverPort = generatePort()
+		}
 
 		codeGenOption, err := aa.GetLanguageCodeGeneration(project.Language, project.Framework)
 
@@ -203,15 +215,6 @@ func HandleDeployProject(aesCfb encrypt.Encrypt, store *store.Store, agent *aa.A
 				return nil
 			}
 
-			// check if container with same port exists
-			// existContainerWithPort, err := container.IsContainerExist(ctx, con.FilterContainerOption{
-			// 	Port: "8080",
-			// })
-
-			// if err != nil {
-			// 	return err
-			// }
-
 			if !existContainerWithName {
 
 				sendEvent(ctx, project.ID, sse.EventTypeTaskUpdate, AgentData{
@@ -223,12 +226,43 @@ func HandleDeployProject(aesCfb encrypt.Encrypt, store *store.Store, agent *aa.A
 					return err
 				}
 
-				commands := []string{"/bin/sh", "-c", fmt.Sprintf(`
-					cd /app && \
-					NODE_ENV=development %s && \
-					%s && \
-					NODE_ENV=production %s
-				`, strings.Join(code.InstallCommands, " && "), code.BuildCommands, code.RunCommands)}
+				isNodeProject := false
+
+				if strings.Contains(project.Language, "Node") {
+					isNodeProject = true
+				}
+
+				projectCommand := ""
+
+				if isNodeProject {
+					projectCommand = fmt.Sprintf(`
+						cd /app && \
+						NODE_ENV=development %s && \
+						%s && \
+						NODE_ENV=production %s
+					`, strings.Join(code.InstallCommands, " && "), code.BuildCommands, code.RunCommands)
+				} else {
+					projectCommand = fmt.Sprintf(`
+						cd /app && \
+						%s && \
+						%s && \
+						%s
+					`, strings.Join(code.InstallCommands, " && "), code.BuildCommands, code.RunCommands)
+				}
+
+				commands := []string{"/bin/sh", "-c", projectCommand}
+
+				envs := []string{
+					fmt.Sprintf("B0_PORT=%s", serverPort),
+				}
+
+				if isNodeProject {
+					envs = append(envs, "NODE_ENV=development")
+				}
+
+				if code.EnvVars != nil {
+					envs = append(envs, code.EnvVars...)
+				}
 
 				newContainerID, err := docker.CreateContainer(ctx, con.CreateContainerOption{
 					Name:            project.Slug,
@@ -238,10 +272,7 @@ func HandleDeployProject(aesCfb encrypt.Encrypt, store *store.Store, agent *aa.A
 					HostConfigBinds: []string{fmt.Sprintf("%s:/app", volumeName)},
 					Command:         commands,
 					WorkingDir:      "/app",
-					Env: []string{
-						"NODE_ENV=development",
-						fmt.Sprintf("PORT=%s", serverPort),
-					},
+					Env:             envs,
 					Labels: map[string]string{
 						"traefik.enable": "true",
 						fmt.Sprintf("traefik.http.routers.%s.rule", project.Slug):        fmt.Sprintf("Host(`%s`)", strings.Replace(serverUrl, "https://", "", 1)),
