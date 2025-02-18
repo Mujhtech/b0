@@ -154,7 +154,7 @@ func startServer(configFile string, logLevel string) error {
 	g, gCtx := errgroup.WithContext(ctx)
 
 	g.Go(func() error {
-		return job.RegisterAndStart(store, agent, sse, container)
+		return job.RegisterAndStart(cfg, store, agent, sse, container)
 	})
 
 	gHTTP, shutdownHTTP := server.ListenAndServe()

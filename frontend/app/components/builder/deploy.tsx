@@ -37,7 +37,11 @@ export default function DeployAndTestBtn({
 
   return (
     <div className="flex items-center gap-2 ">
-      <Button variant="outline" className="h-8 shadow-lg">
+      <Button
+        variant="outline"
+        className="h-8 shadow-lg"
+        disabled={isLoading || isThinking == true}
+      >
         <TestTube size={20} className="h-4 w-4" />
         Test
       </Button>
@@ -56,8 +60,8 @@ export default function DeployAndTestBtn({
         </Button>
         <DropdownMenu onOpenChange={setIsOpen} open={isOpen}>
           <DropdownMenuTrigger
-            className="h-full px-4 focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-ring"
-            disabled={isLoading}
+            className="h-full px-4 focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-ring disabled:cursor-not-allowed"
+            disabled={isLoading || isThinking == true}
           >
             <CaretDown size={20} className="h-4 w-4" />
           </DropdownMenuTrigger>

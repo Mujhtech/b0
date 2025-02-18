@@ -12,6 +12,7 @@ const (
 	AgentModelDeepSeekR1        AgentModel = "deepseek-reasoner"
 	AgentModelGeminiFlash1Dot5  AgentModel = "gemini-1.5-flash"
 	AgentModelGeminiFlash2Dot0  AgentModel = "gemini-2.0-flash"
+	AgentModelGrok2Dot0         AgentModel = "grok-2-latest"
 	AgentModelNone              AgentModel = "none"
 
 	WorkflowTypeRequest  WorkflowType = "request"
@@ -99,19 +100,13 @@ const (
 	dependencies:
 	@discordjs/core: "^2.0.1"
 	@discordjs/rest: "^2.4.3"
-	discord-api-types: "^0.37.119"
 
 	e.g To send a message to a channel:
 
-	import { API, ChannelsAPI, GuildsAPI, InteractionsAPI } from "@discordjs/core";
+	import { API, ChannelsAPI } from "@discordjs/core";
 	import { REST } from "@discordjs/rest";
 
-	const rest = new REST({ version: "10" }).setToken(process.env.B0_DISCORD_KEY);
-	const channel = new ChannelsAPI(rest);
-
-	await channel.createMessage(process.env.B0_DISCORD_CHANNEL_ID, {
-		content: "Hello, world!",
-	});
+	const rest = new REST({ version: "10" }).setToken(process.env.B0_DISCORD_KEY!);
 
 	- Telegram
 	Use fetch to interact with the Telegram BOT API, e.g to send message
@@ -258,6 +253,8 @@ const (
 			},
 		]
 	});
+
+	To use any of the mentioned sdk above make sure you install the ai package mentioned above.
 
 	While working with Node cron, you can use the following package:
 	dependencies:
@@ -768,6 +765,14 @@ var AvailableCatalogs = []ModeCatalog{
 		IsDefault:      false,
 		IsPremium:      false,
 	},
+	{
+		Name:           "Grok 2.0",
+		Model:          AgentModelGrok2Dot0,
+		IsEnabled:      true,
+		IsExperimental: true,
+		IsDefault:      false,
+		IsPremium:      false,
+	},
 }
 
 func GetModel(model string) (AgentModel, error) {
@@ -794,6 +799,7 @@ type Config struct {
 	DeepSeekKey  string
 	AnthropicKey string
 	GeminiKey    string
+	XAIKey       string
 }
 
 type OptionFunc func(*Config)

@@ -9,6 +9,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/guregu/null"
 	"github.com/hibiken/asynq"
+	"github.com/mujhtech/b0/config"
 	"github.com/mujhtech/b0/database/models"
 	"github.com/mujhtech/b0/database/store"
 	aa "github.com/mujhtech/b0/internal/pkg/agent"
@@ -18,7 +19,7 @@ import (
 	"github.com/rs/zerolog"
 )
 
-func HandleDeployProject(aesCfb encrypt.Encrypt, store *store.Store, agent *aa.Agent, event sse.Streamer, docker *con.Container) func(context.Context, *asynq.Task) error {
+func HandleDeployProject(aesCfb encrypt.Encrypt, cfg *config.Config, store *store.Store, agent *aa.Agent, event sse.Streamer, docker *con.Container) func(context.Context, *asynq.Task) error {
 	return func(ctx context.Context, t *asynq.Task) error {
 
 		projectId, err := aesCfb.Decrypt(string(t.Payload()))
@@ -262,9 +263,41 @@ func HandleDeployProject(aesCfb encrypt.Encrypt, store *store.Store, agent *aa.A
 
 				if code.EnvVars != nil {
 					for _, env := range code.EnvVars {
+
 						if env.Key == "B0_PORT" {
 							continue
 						}
+
+						if env.Key == "B0_SERVER_URL" {
+							envs = append(envs, fmt.Sprintf("B0_SERVER_URL=%s", serverUrl))
+							continue
+						}
+
+						if env.Key == "B0_GEMINI_KEY" {
+							envs = append(envs, fmt.Sprintf("B0_GEMINI_KEY=%s", cfg.Agent.GeminiKey))
+							continue
+						}
+
+						if env.Key == "B0_OPENAI_KEY" {
+							envs = append(envs, fmt.Sprintf("B0_OPENAI_KEY=%s", cfg.Agent.GeminiKey))
+							continue
+						}
+
+						if env.Key == "B0_TELEGRAM_KEY" {
+							envs = append(envs, fmt.Sprintf("B0_TELEGRAM_KEY=%s", cfg.Integrations.Telegram.TelegramBotToken))
+							continue
+						}
+
+						if env.Key == "B0_DISCORD_KEY" {
+							envs = append(envs, fmt.Sprintf("B0_DISCORD_KEY=%s", cfg.Integrations.Discord.DiscordBotToken))
+							continue
+						}
+
+						if env.Key == "B0_DISCORD_CHANNEL_ID" {
+							envs = append(envs, fmt.Sprintf("B0_DISCORD_CHANNEL_ID=%s", cfg.Integrations.Discord.ChannelID))
+							continue
+						}
+
 						envs = append(envs, fmt.Sprintf("%s=%s", env.Key, env.Value))
 					}
 				}

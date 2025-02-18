@@ -16,6 +16,7 @@ const (
 	deepSeekBaseUrl = "https://api.deepseek.com/v1"
 	openaiBaseUrl   = "https://api.openai.com/v1"
 	geminiBaseUrl   = "https://generativelanguage.googleapis.com/v1beta/openai/"
+	xAIbaseUrl      = "https://api.x.ai/v1"
 )
 
 type Agent struct {
@@ -31,6 +32,7 @@ func New(cfg *config.Config) *Agent {
 			DeepSeekKey:  cfg.Agent.DeepSeekKey,
 			AnthropicKey: cfg.Agent.AnthropicKey,
 			GeminiKey:    cfg.Agent.GeminiKey,
+			XAIKey:       cfg.Agent.XAIKey,
 		},
 	}
 }
@@ -49,9 +51,12 @@ func (a *Agent) client(opts ...option.RequestOption) *openai.Client {
 	case AgentModelClaudeSonnet3Dot5:
 		baseUrl = openaiBaseUrl
 		apiKey = a.cfg.AnthropicKey
-	case AgentModelGeminiFlash1Dot5:
+	case AgentModelGeminiFlash1Dot5, AgentModelGeminiFlash2Dot0:
 		baseUrl = geminiBaseUrl
 		apiKey = a.cfg.GeminiKey
+	case AgentModelGrok2Dot0:
+		baseUrl = xAIbaseUrl
+		apiKey = a.cfg.XAIKey
 	}
 
 	opts = append(opts, option.WithBaseURL(baseUrl), option.WithAPIKey(apiKey))
