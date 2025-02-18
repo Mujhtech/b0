@@ -133,7 +133,6 @@ func checkUsageLimit(ctx context.Context, store *store.Store, project *models.Pr
 	usageCount, err := store.AIUsageRepo.GetTotalUsageInCurrentMonth(ctx, user.ID)
 
 	if err != nil {
-
 		return nil, fmt.Errorf("failed to get usage count")
 	}
 
@@ -142,7 +141,7 @@ func checkUsageLimit(ctx context.Context, store *store.Store, project *models.Pr
 	}
 
 	if user.SubscriptionPlan == "pro" && usageCount.TotalUsage >= 100 {
-		return user, fmt.Errorf("you have reached the maximum number of requests for the current month")
+		return user, fmt.Errorf("you have reached the maximum number of requests for the current month, enable pay as you go to continue")
 	}
 
 	return user, nil
