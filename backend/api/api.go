@@ -13,6 +13,7 @@ import (
 	"github.com/mujhtech/b0/config"
 	"github.com/mujhtech/b0/database/store"
 	"github.com/mujhtech/b0/internal/pkg/agent"
+	"github.com/mujhtech/b0/internal/pkg/billing/stripe"
 	"github.com/mujhtech/b0/internal/pkg/container"
 	"github.com/mujhtech/b0/internal/pkg/sse"
 	"github.com/mujhtech/b0/job"
@@ -38,9 +39,10 @@ func New(
 	sse sse.Streamer,
 	job *job.Job,
 	docker *container.Container,
+	billing stripe.Stripe,
 ) (*Api, error) {
 
-	h, err := handler.New(cfg, ctx, store, cache, agent, sse, job, docker)
+	h, err := handler.New(cfg, ctx, store, cache, agent, sse, job, docker, billing)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create handler: %w", err)
 	}
@@ -122,6 +124,7 @@ func (a *Api) BuildRouter() *chi.Mux {
 			// billing route
 			r.Route("/billing", func(r chi.Router) {
 				r.Get("/usage", a.handler.GetUsage)
+				r.Post("/upgrade", a.handler.UpgradePlan)
 			})
 		})
 	})
