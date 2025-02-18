@@ -12,29 +12,38 @@ import (
 	aa "github.com/mujhtech/b0/internal/pkg/agent"
 	"github.com/mujhtech/b0/internal/pkg/encrypt"
 	"github.com/mujhtech/b0/internal/pkg/sse"
+	"github.com/mujhtech/b0/internal/util"
 	"github.com/rs/zerolog"
 )
 
-type AgentData struct {
-	Log                string         `json:"log,omitempty"`
-	Message            string         `json:"message,omitempty"`
-	Error              string         `json:"error,omitempty"`
-	Workflows          []*aa.Workflow `json:"workflows,omitempty"`
-	Deploying          bool           `json:"deploying,omitempty"`
-	Code               interface{}    `json:"code,omitempty"`
-	ShouldReloadWindow bool           `json:"should_reload_window,omitempty"`
+type UpdateWorkflowPayload struct {
+	ProjectId  string `json:"project_id"`
+	EndpointId string `json:"endpoint_id"`
+	Prompt     string `json:"prompt"`
 }
 
-func HandleCreateWorkflow(aesCfb encrypt.Encrypt, store *store.Store, agent *aa.Agent, event sse.Streamer) func(context.Context, *asynq.Task) error {
+func HandleUpdateWorkflow(aesCfb encrypt.Encrypt, store *store.Store, agent *aa.Agent, event sse.Streamer) func(context.Context, *asynq.Task) error {
 	return func(ctx context.Context, t *asynq.Task) error {
 
-		projectId, err := aesCfb.Decrypt(string(t.Payload()))
+		rawPayload, err := aesCfb.Decrypt(string(t.Payload()))
 
 		if err != nil {
 			return err
 		}
 
-		project, err := store.ProjectRepo.FindProjectByID(ctx, projectId)
+		var payload UpdateWorkflowPayload
+
+		if err := util.UnmarshalJSON([]byte(rawPayload), &payload); err != nil {
+			return err
+		}
+
+		project, err := store.ProjectRepo.FindProjectByID(ctx, payload.ProjectId)
+
+		if err != nil {
+			return err
+		}
+
+		endpoint, err := store.EndpointRepo.FindEndpointByID(ctx, payload.EndpointId)
 
 		if err != nil {
 			return err
@@ -52,7 +61,8 @@ func HandleCreateWorkflow(aesCfb encrypt.Encrypt, store *store.Store, agent *aa.
 		}, event)
 
 		workflows, agentToken, err := agent.GenerateWorkflow(ctx, aa.WorkflowGenerationOption{
-			Prompt: project.Description.String,
+			Prompt:    payload.Prompt,
+			Workflows: endpoint.Workflows,
 		}, aa.WithModel(aa.ToModel(project.Model.String)))
 
 		if err != nil {
@@ -70,26 +80,9 @@ func HandleCreateWorkflow(aesCfb encrypt.Encrypt, store *store.Store, agent *aa.
 
 		zerolog.Ctx(ctx).Info().Msgf("workflows: %v", workflows)
 
-		// pick first workflow
-		requestWorkflow := workflows[0]
-
-		endpoint := &models.Endpoint{
-			ID:          uuid.New().String(),
-			OwnerID:     project.OwnerID,
-			ProjectID:   project.ID,
-			Name:        requestWorkflow.Name,
-			Description: null.NewString(requestWorkflow.Instruction, requestWorkflow.Instruction != ""),
-			Path:        requestWorkflow.Url,
-			Method:      models.EndpointMethod(requestWorkflow.Method),
-			Workflows:   workflows,
-			Metadata:    null.NewString("{}", true),
-			IsPublic:    false,
-			Status:      models.EndpointStatusDraft,
-			CreatedAt:   time.Now(),
-			UpdatedAt:   time.Now(),
-		}
-
-		err = store.EndpointRepo.CreateEndpoint(ctx, endpoint)
+		err = store.EndpointRepo.UpdateEndpoint(ctx, endpoint.ID, &models.Endpoint{
+			Workflows: workflows,
+		})
 
 		if err != nil {
 			return err
@@ -110,7 +103,7 @@ func HandleCreateWorkflow(aesCfb encrypt.Encrypt, store *store.Store, agent *aa.
 		}
 
 		sendEvent(ctx, project.ID, sse.EventTypeTaskUpdate, AgentData{
-			Message:            "b0 has successfully generated your workflow, reloading...",
+			Message:            "b0 has successfully updated your workflow, reloading...",
 			Workflows:          workflows,
 			ShouldReloadWindow: true,
 		}, event)

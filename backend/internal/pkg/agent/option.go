@@ -12,6 +12,7 @@ const (
 	AgentModelDeepSeekR1        AgentModel = "deepseek-reasoner"
 	AgentModelGeminiFlash1Dot5  AgentModel = "gemini-1.5-flash"
 	AgentModelGeminiFlash2Dot0  AgentModel = "gemini-2.0-flash"
+	AgentModelGrok2Dot0         AgentModel = "grok-2-latest"
 	AgentModelNone              AgentModel = "none"
 
 	WorkflowTypeRequest  WorkflowType = "request"
@@ -97,19 +98,19 @@ const (
 	- Discord
 	Use the following package to interact with the Discord API:
 	dependencies:
-	@discordjs/core
-	@discordjs/rest
+	@discordjs/rest: "^2.4.3"
+	discord-api-types: "^0.37.119"
 
 	e.g To send a message to a channel:
 
-	import { API, ChannelsAPI, GuildsAPI, InteractionsAPI } from "@discordjs/core";
 	import { REST } from "@discordjs/rest";
 
-	const rest = new REST({ version: "10" }).setToken(process.env.B0_DISCORD_KEY);
-	const channel = new ChannelsAPI(rest);
+	const rest = new REST({ version: "10" }).setToken(process.env.B0_DISCORD_KEY!);
 
-	await channel.createMessage(process.env.B0_DISCORD_CHANNEL_ID, {
-		content: "Hello, world!",
+	await rest.post(Routes.channelMessages(process.env.B0_DISCORD_CHANNEL_ID!), { {
+		body: {
+			content: "Hello, world!",
+		},
 	});
 
 	- Telegram
@@ -182,7 +183,7 @@ const (
 	// For anthropic
 	@ai-sdk/anthropic: "^1.1.8"
 
-	// For Gemini
+	// For Gemini/Google
 	@ai-sdk/google: "^1.1.14"
 
 	// DeepSeek
@@ -216,7 +217,7 @@ const (
 		prompt: 'Write a vegetarian lasagna recipe for 4 people.',
 	});
 
-	E.g To interact with the Gemini API:
+	E.g To interact with the Gemini/Google API:
 	import { createGoogleGenerativeAI } from '@ai-sdk/google';
 	import { generateText } from 'ai';
 
@@ -257,6 +258,17 @@ const (
 			},
 		]
 	});
+
+	To use any of the mentioned sdk above make sure you install the ai package mentioned above.
+
+	While working with Node cron, you can use the following package:
+	dependencies:
+	node-cron: "^3.0.3"
+
+	devDependencies:
+	@types/node-cron: "^3.0.11"
+
+	For type checking, when using process environment variables in your code, make sure to add ! to the variable to avoid type checking error e.g process.env.B0_DISCORD_KEY! instead of process.env.B0_DISCORD_KEY excluding the B0_PORT variable.
 	`
 
 	goInstructions = `
@@ -419,8 +431,16 @@ type Workflow struct {
 	Headers     []string       `json:"headers,omitempty"`
 	Body        interface{}    `json:"body,omitempty"`
 	Variables   []string       `json:"variables,omitempty"`
+	Model       string         `json:"model,omitempty"`
+	Provider    string         `json:"provider,omitempty"`
+	Prompt      string         `json:"prompt,omitempty"`
 	ActionID    string         `json:"action_id,omitempty"`
 	Status      string         `json:"status,omitempty"`
+}
+
+type WorkflowGenerationOption struct {
+	Workflows []*Workflow `json:"workflows"`
+	Prompt    string      `json:"prompt"`
 }
 
 type CodeGenerationOption struct {
@@ -432,11 +452,17 @@ type CodeGenerationOption struct {
 	Image                string      `json:"-"`
 }
 
+type CodeGenEnvVar struct {
+	Key   string `json:"key"`
+	Value string `json:"value"`
+}
+
 type CodeGeneration struct {
-	FileContents    []FileContent `json:"fileContents"`
-	InstallCommands []string      `json:"installCommands"`
-	BuildCommands   string        `json:"buildCommands"`
-	RunCommands     string        `json:"runCommands"`
+	FileContents    []FileContent   `json:"fileContents"`
+	InstallCommands []string        `json:"installCommands"`
+	BuildCommands   string          `json:"buildCommands"`
+	RunCommands     string          `json:"runCommands"`
+	EnvVars         []CodeGenEnvVar `json:"envVars"`
 }
 
 type FileContent struct {
@@ -453,7 +479,7 @@ var AvailableCodeGenerationOptions = []CodeGenerationOption{
 		FrameworkInsructions: `
 		## Framework instructions
 		- For router, use go-chi/chi/v5
-		- Use port %s for the server
+		- Access the server port from OS environment variable B0_PORT
 
 
 		` + goInstructions,
@@ -466,7 +492,7 @@ var AvailableCodeGenerationOptions = []CodeGenerationOption{
 		FrameworkInsructions: `
 		## Framework instructions
 		- Use Echo framework
-		- Use port %s for the server
+		- Access the server port from OS environment variable B0_PORT
 
 		` + goInstructions,
 	},
@@ -478,7 +504,7 @@ var AvailableCodeGenerationOptions = []CodeGenerationOption{
 		FrameworkInsructions: `
 		## Framework instructions
 		- Use Gin framework
-		- Use port %s for the server
+		- Access the server port from OS environment variable B0_PORT
 
 		` + goInstructions,
 	},
@@ -491,7 +517,7 @@ var AvailableCodeGenerationOptions = []CodeGenerationOption{
 		## Framework instructions
 		- Use Express framework
 		- Make sure to add package.json and don't forget to include all neccessary dependencies
-		- Use port %s for the server
+		- Use process.env.B0_PORT for the server port
 		- Use npm run build for buildCommands
 		- Use npm run start for runCommands
 		- Make sure to add the necessary scripts in the package.json file e.g "build": "npx -y tsc", "start": "node dist/index.js"
@@ -508,7 +534,7 @@ var AvailableCodeGenerationOptions = []CodeGenerationOption{
 		FrameworkInsructions: `
 		## Framework instructions
 		- Use Fastify framework
-		- Use port %s for the server
+		- Use process.env.B0_PORT for the server port
 		- Make sure to add package.json and don't forget to include all neccessary dependencies
 		- For all api key, use this format: process.env.B0_API_KEY e.g process.env.B0_OPENAI_KEY, process.env.B0_SLACK_KEY, etc
 
@@ -523,7 +549,7 @@ var AvailableCodeGenerationOptions = []CodeGenerationOption{
 		FrameworkInsructions: `
 		## Framework instructions
 		- Use Hono framework
-		- Use port %s for the server
+		- Use process.env.B0_PORT for the server port
 		- Make sure to add package.json and don't forget to include all neccessary dependencies
 		- Below are the basic dependencies you need to add to your package.json file
 		1. "hono": "^4.7.1"
@@ -531,7 +557,143 @@ var AvailableCodeGenerationOptions = []CodeGenerationOption{
 		- Make sure all files are in the src directory except the configuration files like package.json, tsconfig.json, and tsconfig.node.json, etc
 		- For all api key, use this format: process.env.B0_API_KEY e.g process.env.B0_OPENAI_KEY, process.env.B0_SLACK_KEY, etc
 
+		Example of simple Hono web api:
 
+		import { Hono } from 'hono';
+
+		const app = new Hono();
+
+		app.get('/', (c) => c.text('Pretty Blog API'))
+
+		export default app;
+
+		To bind request body, here is example of how to bind request body:
+
+		type Bindings = {
+			USERNAME: string
+			PASSWORD: string
+		}
+
+		const api = new Hono<{ Bindings: Bindings }>()
+
+		api.post(
+			'/posts',
+			async (c, next) => {
+				const { USERNAME, PASSWORD } = c.env
+				// do something with USERNAME and PASSWORD
+			},
+			async (c) => {
+				const post = await c.req.json<Post>()
+				const ok = createPost({ post })
+				return c.json({ ok })
+			}
+		)
+
+		app.route('/api', api)
+
+		To return json response, here is example of how to return json response:
+
+		import { prettyJSON } from 'hono/pretty-json'
+
+		app.use(prettyJSON())
+
+		app.get('/', (c) => c.json({ message: 'Hello', ok: true }, 200))
+
+		To handle 404 error, here is example of how to handle 404 error:
+
+		app.notFound((c) => c.json({ message: 'Not Found', ok: false }, 404))
+
+		To handle cors, here is example of how to handle cors:
+
+		import { cors } from 'hono/cors'
+
+		app.use('*', cors())
+
+		For basic auth implementation, here is example of how to implement basic auth:
+
+		import { basicAuth } from 'hono/basic-auth'
+
+		For request body validation, here is example of how to validate request body:
+		depedencies:
+		@hono/zod-validator: "^0.4.3"
+		zod: "^3.24.2"
+
+
+		import { z } from 'zod'
+		import { zValidator } from '@hono/zod-validator'
+
+		const schema = z.object({
+			name: z.string(),
+			age: z.number(),
+		})
+
+		app.post('/author', zValidator('json', schema), (c) => {
+			const data = c.req.valid('json')
+			return c.json({
+				success: true,
+				message: data.name+' is '+data.age+' years old',
+			})
+		})
+
+		For cache control, here is example of how to implement cache control:
+		import { cache } from 'hono/cache'
+
+		app.get(
+			'*',
+			cache({
+				cacheName: 'my-app',
+				cacheControl: 'max-age=3600',
+			})
+		)
+
+		For compression, here is example of how to implement compression:
+		import { compress } from 'hono/compress'
+
+		app.use(compress())
+
+		For timeout, here is example of how to implement timeout:
+		import { timeout } from 'hono/timeout'
+
+		app.use('/api', timeout(5000))
+
+		For request id, here is example of how to implement request id:
+		import { requestId } from 'hono/request-id'
+
+		app.use('*', requestId())
+
+		app.get('/', (c) => {
+			return c.text('Your request id is ' + c.get('requestId'))
+		})
+
+		For logging, here is example of how to implement logging:
+		import { logger } from 'hono/logger'
+
+		app.use(logger())
+
+		For jwt,, here is example of how to implement jwt:
+
+		import { jwt } from 'hono/jwt'
+		import type { JwtVariables } from 'hono/jwt'
+
+		type Variables = JwtVariables
+
+		const app = new Hono<{ Variables: Variables }>()
+
+		app.use(
+			'/auth/*',
+			jwt({
+				secret: 'it-is-very-secret',
+			})
+		)
+
+		app.get('/auth/page', (c) => {
+			return c.text('You are authorized')
+		})
+
+		app.get('/auth/page', (c) => {
+			const payload = c.get('jwtPayload')
+			return c.json(payload) // eg: { "sub": "1234567890", "name": "John Doe", "iat": 1516239022 }
+		})
 		` + nodeJSInstructions,
 	},
 }
@@ -608,6 +770,14 @@ var AvailableCatalogs = []ModeCatalog{
 		IsDefault:      false,
 		IsPremium:      false,
 	},
+	{
+		Name:           "Grok 2.0",
+		Model:          AgentModelGrok2Dot0,
+		IsEnabled:      true,
+		IsExperimental: true,
+		IsDefault:      false,
+		IsPremium:      false,
+	},
 }
 
 func GetModel(model string) (AgentModel, error) {
@@ -634,6 +804,7 @@ type Config struct {
 	DeepSeekKey  string
 	AnthropicKey string
 	GeminiKey    string
+	XAIKey       string
 }
 
 type OptionFunc func(*Config)

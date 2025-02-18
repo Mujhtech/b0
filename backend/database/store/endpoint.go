@@ -125,12 +125,12 @@ func (e *endpointRepo) FindEndpointByID(ctx context.Context, id string) (*models
 		return nil, err
 	}
 
-	dst := new(models.Endpoint)
+	dst := new(models.EndpointFromDB)
 	if err := e.db.GetDB().GetContext(ctx, dst, sql, args...); err != nil {
 		return nil, ProcessSQLErrorfWithCtx(ctx, sql, err, "failed to find endpoint by id")
 	}
 
-	return dst, nil
+	return models.ToEndpoint(dst), nil
 }
 
 // FindEndpointByOwnerID implements EndpointRepository.

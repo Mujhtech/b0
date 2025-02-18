@@ -33,19 +33,42 @@ const (
 )
 
 type Config struct {
-	EncryptionKey string    `json:"encryption_key" envconfig:"ENCRYPTION_KEY"`
-	Database      Database  `json:"database"`
-	Redis         Redis     `json:"redis"`
-	Aws           Aws       `json:"aws"`
-	Server        Server    `json:"server"`
-	Auth          Auth      `json:"auth"`
-	Email         Email     `json:"email"`
-	Job           Job       `json:"job"`
-	Pubsub        Pubsub    `json:"pubsub"`
-	Cors          Cors      `json:"cors"`
-	Cache         Cache     `json:"cache"`
-	Telemetry     Telemetry `json:"telemetry"`
-	Agent         Agent     `json:"agent"`
+	EncryptionKey string       `json:"encryption_key" envconfig:"ENCRYPTION_KEY"`
+	Database      Database     `json:"database"`
+	Redis         Redis        `json:"redis"`
+	Aws           Aws          `json:"aws"`
+	Server        Server       `json:"server"`
+	Auth          Auth         `json:"auth"`
+	Email         Email        `json:"email"`
+	Job           Job          `json:"job"`
+	Pubsub        Pubsub       `json:"pubsub"`
+	Cors          Cors         `json:"cors"`
+	Cache         Cache        `json:"cache"`
+	Telemetry     Telemetry    `json:"telemetry"`
+	Agent         Agent        `json:"agent"`
+	Integrations  Integrations `json:"integrations"`
+	Stripe        Stripe       `json:"stripe"`
+}
+
+type Stripe struct {
+	ApiKey                   string `json:"api_key" envconfig:"STRIPE_API_KEY"`
+	ProSubscriptionPriceID   string `json:"pro_subscription_price_id" envconfig:"STRIPE_PRO_SUBSCRIPTION_PRICE_ID"`
+	ScaleSubscriptionPriceID string `json:"scale_subscription_price_id" envconfig:"STRIPE_SCALE_SUBSCRIPTION_PRICE_ID"`
+}
+
+type Integrations struct {
+	Discord  Discord  `json:"discord"`
+	Telegram Telegram `json:"telegram"`
+}
+
+type Telegram struct {
+	TelegramBotToken string `json:"telegram_bot_token" envconfig:"TELEGRAM_BOT_TOKEN"`
+	ChatID           string `json:"channel_id" envconfig:"TELEGRAM_CHAT_ID"`
+}
+
+type Discord struct {
+	DiscordBotToken string `json:"discord_bot_token" envconfig:"DISCORD_BOT_TOKEN"`
+	ChannelID       string `json:"channel_id" envconfig:"DISCORD_CHANNEL_ID"`
 }
 
 type Telemetry struct {
@@ -59,6 +82,7 @@ type Agent struct {
 	DeepSeekKey  string `json:"deepseek_key" envconfig:"AGENT_DEEPSEEK_KEY"`
 	AnthropicKey string `json:"anthropic_key" envconfig:"AGENT_ANTHROPIC_KEY"`
 	GeminiKey    string `json:"gemini_key" envconfig:"AGENT_GEMINI_KEY"`
+	XAIKey       string `json:"xai_key" envconfig:"AGENT_XAI_KEY"`
 }
 
 type Sentry struct {

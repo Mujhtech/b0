@@ -12,16 +12,11 @@ import {
 import { CodeBlock } from "../codeblock";
 import { usePlaygroundBuilder } from "./provider";
 
-export function LogPreviewDialog({
-  open,
-  setOpen,
-}: {
-  open: boolean;
-  setOpen: (open: boolean) => void;
-}) {
-  const { logs } = usePlaygroundBuilder();
+export function LogPreviewDialog() {
+  const { logs, openLogPreviewDialog, setOpenLogPreviewDialog } =
+    usePlaygroundBuilder();
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={openLogPreviewDialog} onOpenChange={setOpenLogPreviewDialog}>
       <DialogContent className="sm:max-w-[90%] h-[90%] flex flex-col p-0">
         <DialogHeader className="hidden">
           <DialogTitle>Log</DialogTitle>

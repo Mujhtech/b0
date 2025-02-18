@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"net/url"
 
+	"github.com/guregu/null"
 	"github.com/mujhtech/b0/api/dto"
 	"github.com/mujhtech/b0/api/middleware"
 	"github.com/mujhtech/b0/database/models"
@@ -193,6 +194,13 @@ func (h *Handler) UpdateEndpointWorkflow(w http.ResponseWriter, r *http.Request)
 	// remove containers related to the project
 	if project.ContainerID.String != "" {
 
+		project.ContainerID = null.NewString("", false)
+
+		if err := h.store.ProjectRepo.UpdateProject(ctx, project); err != nil {
+			_ = response.InternalServerError(w, r, err)
+			return
+		}
+
 		con, err := h.docker.GetContainer(ctx, project.ContainerID.String)
 
 		if err != nil {
@@ -212,6 +220,14 @@ func (h *Handler) UpdateEndpointWorkflow(w http.ResponseWriter, r *http.Request)
 			return
 		}
 
+	}
+
+	// get updated endpoint
+	endpoint, err = findEndpointService.Run(ctx)
+
+	if err != nil {
+		_ = response.InternalServerError(w, r, err)
+		return
 	}
 
 	_ = response.Ok(w, r, "endpoint workflow updated successfully", endpoint)

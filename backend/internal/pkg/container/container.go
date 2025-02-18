@@ -224,7 +224,7 @@ func (c *Container) GetContainerLogsStream(ctx context.Context, id string) (io.R
 		ShowStderr: true,
 		Follow:     true,
 		Details:    false,
-		Timestamps: true,
+		Timestamps: false,
 		Tail:       "all",
 	})
 	if err != nil {

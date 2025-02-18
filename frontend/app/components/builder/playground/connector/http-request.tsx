@@ -135,6 +135,7 @@ export default function HttpRequestConnector() {
         className="bg-transparent border-none p-4"
         hideCloseBtn={true}
       >
+        <SheetDescription className="hidden"></SheetDescription>
         <div className="relative bg-background w-full h-full border border-input">
           <SheetHeader className="flex flex-row items-center justify-between border-b border-input space-y-0 p-2">
             <SheetTitle className="text-xs font-mono text-muted-foreground">

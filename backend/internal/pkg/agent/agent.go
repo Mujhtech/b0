@@ -16,6 +16,7 @@ const (
 	deepSeekBaseUrl = "https://api.deepseek.com/v1"
 	openaiBaseUrl   = "https://api.openai.com/v1"
 	geminiBaseUrl   = "https://generativelanguage.googleapis.com/v1beta/openai/"
+	xAIbaseUrl      = "https://api.x.ai/v1"
 )
 
 type Agent struct {
@@ -31,6 +32,7 @@ func New(cfg *config.Config) *Agent {
 			DeepSeekKey:  cfg.Agent.DeepSeekKey,
 			AnthropicKey: cfg.Agent.AnthropicKey,
 			GeminiKey:    cfg.Agent.GeminiKey,
+			XAIKey:       cfg.Agent.XAIKey,
 		},
 	}
 }
@@ -49,9 +51,12 @@ func (a *Agent) client(opts ...option.RequestOption) *openai.Client {
 	case AgentModelClaudeSonnet3Dot5:
 		baseUrl = openaiBaseUrl
 		apiKey = a.cfg.AnthropicKey
-	case AgentModelGeminiFlash1Dot5:
+	case AgentModelGeminiFlash1Dot5, AgentModelGeminiFlash2Dot0:
 		baseUrl = geminiBaseUrl
 		apiKey = a.cfg.GeminiKey
+	case AgentModelGrok2Dot0:
+		baseUrl = xAIbaseUrl
+		apiKey = a.cfg.XAIKey
 	}
 
 	opts = append(opts, option.WithBaseURL(baseUrl), option.WithAPIKey(apiKey))
@@ -68,7 +73,11 @@ func (a *Agent) GenerateTitleAndSlugWithSchema(ctx context.Context, prompt strin
 	}
 
 	agentToken := &AgentToken{
-		Input: fmt.Sprintf("%s%s", fmt.Sprintf(b0ProjectWorkflowSystemMessage, a.cfg.Model), prompt),
+		Input: fmt.Sprintf(`
+		%s
+		
+		%s
+		`, fmt.Sprintf(b0ProjectTitleAndSlugSystemMessage, a.cfg.Model), prompt),
 	}
 
 	client := a.client()
@@ -113,7 +122,11 @@ func (a *Agent) GenerateTitleAndSlug(ctx context.Context, prompt string, opts ..
 	}
 
 	agentToken := &AgentToken{
-		Input: fmt.Sprintf("%s%s", fmt.Sprintf(b0ProjectWorkflowSystemMessage, a.cfg.Model), prompt),
+		Input: fmt.Sprintf(`
+		%s
+		
+		%s
+		`, fmt.Sprintf(b0ProjectTitleAndSlugSystemMessage, a.cfg.Model), prompt),
 	}
 
 	client := a.client()
@@ -141,11 +154,7 @@ func (a *Agent) GenerateTitleAndSlug(ctx context.Context, prompt string, opts ..
 	}
 
 	// cleanup the message
-	projectTitleAndSlug = strings.ReplaceAll(projectTitleAndSlug, "Generated title and slug:", "")
-	projectTitleAndSlug = strings.ReplaceAll(projectTitleAndSlug, "json", "")
-	projectTitleAndSlug = strings.ReplaceAll(projectTitleAndSlug, "```", "")
-	projectTitleAndSlug = strings.ReplaceAll(projectTitleAndSlug, "\n", "")
-	projectTitleAndSlug = strings.ReplaceAll(projectTitleAndSlug, `\`, "")
+	projectTitleAndSlug = removeJSONMarkdown(projectTitleAndSlug)
 
 	zerolog.Ctx(ctx).Info().Msgf("cleanup response: %s", strings.TrimSpace(projectTitleAndSlug))
 
@@ -162,7 +171,7 @@ func (a *Agent) GenerateTitleAndSlug(ctx context.Context, prompt string, opts ..
 }
 
 // GenerateWorkflow generates a workflow diagram based on the given prompt.
-func (a *Agent) GenerateWorkflow(ctx context.Context, prompt string, opts ...OptionFunc) ([]*Workflow, *AgentToken, error) {
+func (a *Agent) GenerateWorkflow(ctx context.Context, options WorkflowGenerationOption, opts ...OptionFunc) ([]*Workflow, *AgentToken, error) {
 	opCfg := *a.cfg
 	for _, opt := range opts {
 		opt(&opCfg)
@@ -170,14 +179,36 @@ func (a *Agent) GenerateWorkflow(ctx context.Context, prompt string, opts ...Opt
 
 	client := a.client()
 
+	otherInstructions := ""
+
+	if len(options.Workflows) > 0 {
+
+		otherInstructions = fmt.Sprintf(`
+		## Genereated Workflows
+		The following workflows are already generated, please use them as a reference:
+		%v
+
+		`, options.Workflows)
+	}
+
+	systemPrompt := fmt.Sprintf(b0ProjectWorkflowSystemMessage, a.cfg.Model, otherInstructions)
+
+	if len(options.Workflows) > 0 {
+		systemPrompt = fmt.Sprintf(b0UpdateProjectWorkflowSystemMessage, a.cfg.Model, otherInstructions)
+	}
+
 	agentToken := &AgentToken{
-		Input: fmt.Sprintf("%s%s", fmt.Sprintf(b0ProjectWorkflowSystemMessage, a.cfg.Model), prompt),
+		Input: fmt.Sprintf(`
+		%s
+		
+		%s
+		`, systemPrompt, options.Prompt),
 	}
 
 	chat, err := client.Chat.Completions.New(ctx, openai.ChatCompletionNewParams{
 		Messages: openai.F([]openai.ChatCompletionMessageParamUnion{
-			openai.SystemMessage(fmt.Sprintf(b0ProjectWorkflowSystemMessage, a.cfg.Model)),
-			openai.UserMessage(prompt),
+			openai.SystemMessage(systemPrompt),
+			openai.UserMessage(options.Prompt),
 		}),
 		Model: openai.F(openai.ChatModel(a.cfg.Model)),
 	})
@@ -192,10 +223,7 @@ func (a *Agent) GenerateWorkflow(ctx context.Context, prompt string, opts ...Opt
 
 	agentToken.Output = workflowString
 
-	workflowString = strings.ReplaceAll(workflowString, "json", "")
-	workflowString = strings.ReplaceAll(workflowString, "```", "")
-	workflowString = strings.ReplaceAll(workflowString, "\n", "")
-	workflowString = strings.ReplaceAll(workflowString, `\`, "")
+	workflowString = removeJSONMarkdown(workflowString)
 
 	var rawDogData map[string]interface{}
 
@@ -231,7 +259,11 @@ func (a *Agent) CodeGeneration(ctx context.Context, prompt string, option CodeGe
 	}
 
 	agentToken := &AgentToken{
-		Input: fmt.Sprintf("%s%s", fmt.Sprintf(b0ProjectWorkflowSystemMessage, a.cfg.Model), prompt),
+		Input: fmt.Sprintf(`
+		%s
+		
+		%s
+		`, fmt.Sprintf(b0WorkflowToCodeGenerationSystemMessage, a.cfg.Model, option.Language, option.FrameworkInsructions, option.Workflows), prompt),
 	}
 
 	client := a.client()
@@ -249,6 +281,8 @@ func (a *Agent) CodeGeneration(ctx context.Context, prompt string, option CodeGe
 	}
 
 	agentToken.Output = chat.Choices[0].Message.Content
+
+	zerolog.Ctx(ctx).Info().Msgf("Generated code: %s", chat.Choices[0].Message.Content)
 
 	var codeGeneration *CodeGeneration
 

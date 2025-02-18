@@ -11,6 +11,7 @@ import {
 } from "~/components/ui/dialog";
 import { useOptionalProjects } from "~/hooks/use-project";
 import Paragraph from "../ui/paragraph";
+import moment from "moment";
 
 export function ProjectsDialog({
   open,
@@ -52,7 +53,10 @@ export function ProjectsDialog({
                       </div>
                       <div className="border-input border-t"></div>
                       <div className="mt-1">
-                        <Paragraph>Created At: {project.created_at}</Paragraph>
+                        <Paragraph>
+                          Created At:{" "}
+                          {moment(project.created_at).format("DD/MM/YYYY")}
+                        </Paragraph>
                       </div>
                     </div>
                   </Link>

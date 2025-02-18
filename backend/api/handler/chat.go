@@ -1,7 +1,6 @@
 package handler
 
 import (
-	"context"
 	"fmt"
 	"net/http"
 
@@ -11,11 +10,11 @@ import (
 	"github.com/mujhtech/b0/internal/pkg/agent"
 	"github.com/mujhtech/b0/internal/pkg/request"
 	"github.com/mujhtech/b0/internal/pkg/response"
-	"github.com/mujhtech/b0/internal/pkg/sse"
+	"github.com/mujhtech/b0/internal/util"
+	"github.com/mujhtech/b0/job"
+	"github.com/mujhtech/b0/job/handlers"
 	"github.com/mujhtech/b0/services"
-	"github.com/rs/zerolog/log"
-
-	jobHandler "github.com/mujhtech/b0/job/handlers"
+	"github.com/rs/zerolog"
 )
 
 func (h *Handler) Chat(w http.ResponseWriter, r *http.Request) {
@@ -57,6 +56,23 @@ func (h *Handler) Chat(w http.ResponseWriter, r *http.Request) {
 			_ = response.BadRequest(w, r, fmt.Errorf("you are not allowed to use premium models with the free plan"))
 			return
 		}
+
+		usageCount, err := h.store.AIUsageRepo.GetTotalUsageInCurrentMonth(ctx, session.User.ID)
+
+		if err != nil {
+			_ = response.InternalServerError(w, r, err)
+			return
+		}
+
+		if session.User.SubscriptionPlan == "premium" && usageCount.TotalUsage >= 20 {
+			_ = response.BadRequest(w, r, fmt.Errorf("you have reached the maximum number of requests for the current month"))
+			return
+		}
+
+		if session.User.SubscriptionPlan == "pro" && usageCount.TotalUsage >= 100 {
+			_ = response.BadRequest(w, r, fmt.Errorf("you have reached the maximum number of requests for the current month"))
+			return
+		}
 	}
 
 	findProjectService := services.FindProjectService{
@@ -91,6 +107,25 @@ func (h *Handler) Chat(w http.ResponseWriter, r *http.Request) {
 
 	}
 
+	payload := handlers.UpdateWorkflowPayload{
+		ProjectId:  project.ID,
+		EndpointId: endpoint.ID,
+		Prompt:     dst.Text,
+	}
+
+	var payloadRaw []byte
+
+	if payloadRaw, err = util.MarshalJSON(payload); err != nil {
+		_ = response.InternalServerError(w, r, err)
+		return
+	}
+
+	if err = h.job.Client.Enqueue(job.QueueNameDefault, job.JobNameWorkflowUpdate, &job.ClientPayload{
+		Data: payloadRaw,
+	}); err != nil {
+		zerolog.Ctx(ctx).Error().Err(err).Msg("failed to enqueue job")
+	}
+
 	// id := uuid.New().String()
 	// name := "test.txt"
 	// progress := 0
@@ -98,63 +133,63 @@ func (h *Handler) Chat(w http.ResponseWriter, r *http.Request) {
 	// // Create background context for the goroutine
 	// bgCtx := context.Background()
 
-	if err = h.sse.Publish(ctx, project.ID, sse.EventTypeTaskStarted, jobHandler.AgentData{
-		Message: "b0 is working on your request...",
-	}); err != nil {
-		log.Printf("failed to publish task started event: %v", err)
-	}
+	// if err = h.sse.Publish(ctx, project.ID, sse.EventTypeTaskStarted, jobHandler.AgentData{
+	// 	Message: "b0 is working on your request...",
+	// }); err != nil {
+	// 	log.Printf("failed to publish task started event: %v", err)
+	// }
 
 	// Use background context in goroutine
-	bgCtx := context.Background()
+	//bgCtx := context.Background()
 
-	go func(ctx context.Context, project *models.Project, endpoint *models.Endpoint) {
+	// go func(ctx context.Context, project *models.Project, endpoint *models.Endpoint) {
 
-		workflows, agentToken, err := h.agent.GenerateWorkflow(ctx, project.Description.String, agent.WithModel(agent.ToModel(dst.Model)))
+	// 	workflows, agentToken, err := h.agent.GenerateWorkflow(ctx, project.Description.String, agent.WithModel(agent.ToModel(dst.Model)))
 
-		if err != nil {
-			if err = h.sse.Publish(ctx, project.ID, sse.EventTypeTaskFailed, jobHandler.AgentData{
-				Message: agentToken.Output,
-				Error:   err.Error(),
-			}); err != nil {
-				log.Printf("failed to publish task failed event: %v", err)
-			}
-		}
+	// 	if err != nil {
+	// 		if err = h.sse.Publish(ctx, project.ID, sse.EventTypeTaskFailed, jobHandler.AgentData{
+	// 			Message: agentToken.Output,
+	// 			Error:   err.Error(),
+	// 		}); err != nil {
+	// 			log.Printf("failed to publish task failed event: %v", err)
+	// 		}
+	// 	}
 
-		if err = h.sse.Publish(ctx, project.ID, sse.EventTypeTaskUpdate, jobHandler.AgentData{
-			Message:   agentToken.Output,
-			Workflows: workflows,
-		}); err != nil {
-			log.Printf("failed to publish task updated event: %v", err)
-		}
+	// 	if err = h.sse.Publish(ctx, project.ID, sse.EventTypeTaskUpdate, jobHandler.AgentData{
+	// 		Message:   agentToken.Output,
+	// 		Workflows: workflows,
+	// 	}); err != nil {
+	// 		log.Printf("failed to publish task updated event: %v", err)
+	// 	}
 
-		// for progress < 100 {
-		// 	progress += 5
-		// 	if err = h.sse.Publish(ctx, appID, sse.EventTypeUploadProgress, UploadProgress{
-		// 		FileID:   id,
-		// 		Name:     name,
-		// 		Status:   UploadProgressStatusUploading,
-		// 		Progress: progress,
-		// 	}); err != nil {
-		// 		log.Printf("failed to publish upload progress event: %v", err)
-		// 	}
-		// 	time.Sleep(1 * time.Second)
-		// 	if progress == 100 {
-		// 		if err = h.sse.Publish(ctx, appID, sse.EventTypeUploadCompleted, UploadProgress{
-		// 			FileID:   id,
-		// 			Name:     name,
-		// 			Status:   UploadProgressStatusCompleted,
-		// 			Progress: progress,
-		// 		}); err != nil {
-		// 			log.Printf("failed to publish upload completed event: %v", err)
-		// 		}
-		// 	}
-		// }
-		if err = h.sse.Publish(ctx, project.ID, sse.EventTypeTaskCompleted, jobHandler.AgentData{
-			Message: "b0 has completed your request",
-		}); err != nil {
-			log.Printf("failed to publish task started event: %v", err)
-		}
-	}(bgCtx, project, endpoint)
+	// 	// for progress < 100 {
+	// 	// 	progress += 5
+	// 	// 	if err = h.sse.Publish(ctx, appID, sse.EventTypeUploadProgress, UploadProgress{
+	// 	// 		FileID:   id,
+	// 	// 		Name:     name,
+	// 	// 		Status:   UploadProgressStatusUploading,
+	// 	// 		Progress: progress,
+	// 	// 	}); err != nil {
+	// 	// 		log.Printf("failed to publish upload progress event: %v", err)
+	// 	// 	}
+	// 	// 	time.Sleep(1 * time.Second)
+	// 	// 	if progress == 100 {
+	// 	// 		if err = h.sse.Publish(ctx, appID, sse.EventTypeUploadCompleted, UploadProgress{
+	// 	// 			FileID:   id,
+	// 	// 			Name:     name,
+	// 	// 			Status:   UploadProgressStatusCompleted,
+	// 	// 			Progress: progress,
+	// 	// 		}); err != nil {
+	// 	// 			log.Printf("failed to publish upload completed event: %v", err)
+	// 	// 		}
+	// 	// 	}
+	// 	// }
+	// 	if err = h.sse.Publish(ctx, project.ID, sse.EventTypeTaskCompleted, jobHandler.AgentData{
+	// 		Message: "b0 has completed your request",
+	// 	}); err != nil {
+	// 		log.Printf("failed to publish task started event: %v", err)
+	// 	}
+	// }(bgCtx, project, endpoint)
 
 	//_ = response.Ok(w, r, "file uploaded", nil)
 

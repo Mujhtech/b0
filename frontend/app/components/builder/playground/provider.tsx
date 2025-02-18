@@ -65,7 +65,7 @@ export const PlaygroundProvider = ({ children }: { children: ReactNode }) => {
   } | null>(null);
   const [mousePosition, setMousePosition] = useState<Position>({ x: 0, y: 0 });
   const [zoom, setZoom] = useState(100);
-  const [pan, setPan] = useState<Position>({ x: 39.15, y: 55.5222 });
+  const [pan, setPan] = useState<Position>({ x: -30.15, y: 90.5222 });
   const [isPanning, setIsPanning] = useState(false);
   const [lastMousePos, setLastMousePos] = useState<Position>({ x: 0, y: 0 });
   const [expandToolPanel, setExpandToolPanel] = useState(false);

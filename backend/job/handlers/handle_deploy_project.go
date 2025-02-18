@@ -9,6 +9,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/guregu/null"
 	"github.com/hibiken/asynq"
+	"github.com/mujhtech/b0/config"
 	"github.com/mujhtech/b0/database/models"
 	"github.com/mujhtech/b0/database/store"
 	aa "github.com/mujhtech/b0/internal/pkg/agent"
@@ -18,7 +19,7 @@ import (
 	"github.com/rs/zerolog"
 )
 
-func HandleDeployProject(aesCfb encrypt.Encrypt, store *store.Store, agent *aa.Agent, event sse.Streamer, docker *con.Container) func(context.Context, *asynq.Task) error {
+func HandleDeployProject(aesCfb encrypt.Encrypt, cfg *config.Config, store *store.Store, agent *aa.Agent, event sse.Streamer, docker *con.Container) func(context.Context, *asynq.Task) error {
 	return func(ctx context.Context, t *asynq.Task) error {
 
 		projectId, err := aesCfb.Decrypt(string(t.Payload()))
@@ -52,7 +53,19 @@ func HandleDeployProject(aesCfb encrypt.Encrypt, store *store.Store, agent *aa.A
 		// delay 1 seconds
 		time.Sleep(1 * time.Second)
 
-		serverPort := "5670"
+		serverPort := generatePort()
+
+		// existContainerWithPort, err := docker.IsContainerExist(ctx, con.FilterContainerOption{
+		// 	Port: serverPort,
+		// })
+
+		// if err != nil {
+		// 	return err
+		// }
+
+		// if existContainerWithPort {
+		// 	serverPort = generatePort()
+		// }
 
 		codeGenOption, err := aa.GetLanguageCodeGeneration(project.Language, project.Framework)
 
@@ -73,6 +86,14 @@ func HandleDeployProject(aesCfb encrypt.Encrypt, store *store.Store, agent *aa.A
 		if endpoint.CodeGeneration != nil && len(endpoint.CodeGeneration.FileContents) > 0 {
 			code = endpoint.CodeGeneration
 		} else {
+
+			if _, err := checkUsageLimit(ctx, store, project); err != nil {
+				sendEvent(ctx, project.ID, sse.EventTypeTaskFailed, AgentData{
+					Error: err.Error(),
+				}, event)
+				return nil
+			}
+
 			sendEvent(ctx, project.ID, sse.EventTypeTaskUpdate, AgentData{
 				Message: "b0 has started generating the code",
 			}, event)
@@ -203,15 +224,6 @@ func HandleDeployProject(aesCfb encrypt.Encrypt, store *store.Store, agent *aa.A
 				return nil
 			}
 
-			// check if container with same port exists
-			// existContainerWithPort, err := container.IsContainerExist(ctx, con.FilterContainerOption{
-			// 	Port: "8080",
-			// })
-
-			// if err != nil {
-			// 	return err
-			// }
-
 			if !existContainerWithName {
 
 				sendEvent(ctx, project.ID, sse.EventTypeTaskUpdate, AgentData{
@@ -223,12 +235,80 @@ func HandleDeployProject(aesCfb encrypt.Encrypt, store *store.Store, agent *aa.A
 					return err
 				}
 
-				commands := []string{"/bin/sh", "-c", fmt.Sprintf(`
-					cd /app && \
-					NODE_ENV=development %s && \
-					%s && \
-					NODE_ENV=production %s
-				`, strings.Join(code.InstallCommands, " && "), code.BuildCommands, code.RunCommands)}
+				isNodeProject := false
+
+				if strings.Contains(project.Language, "Node") {
+					isNodeProject = true
+				}
+
+				projectCommand := ""
+
+				if isNodeProject {
+					projectCommand = fmt.Sprintf(`
+						cd /app && \
+						NODE_ENV=development %s && \
+						%s && \
+						NODE_ENV=production %s
+					`, strings.Join(code.InstallCommands, " && "), code.BuildCommands, code.RunCommands)
+				} else {
+					projectCommand = fmt.Sprintf(`
+						cd /app && \
+						%s && \
+						%s && \
+						%s
+					`, strings.Join(code.InstallCommands, " && "), code.BuildCommands, code.RunCommands)
+				}
+
+				commands := []string{"/bin/sh", "-c", projectCommand}
+
+				envs := []string{
+					fmt.Sprintf("B0_PORT=%s", serverPort),
+				}
+
+				if isNodeProject {
+					envs = append(envs, "NODE_ENV=development")
+				}
+
+				if code.EnvVars != nil {
+					for _, env := range code.EnvVars {
+
+						if env.Key == "B0_PORT" {
+							continue
+						}
+
+						if env.Key == "B0_SERVER_URL" {
+							envs = append(envs, fmt.Sprintf("B0_SERVER_URL=%s", serverUrl))
+							continue
+						}
+
+						if env.Key == "B0_GEMINI_KEY" {
+							envs = append(envs, fmt.Sprintf("B0_GEMINI_KEY=%s", cfg.Agent.GeminiKey))
+							continue
+						}
+
+						if env.Key == "B0_OPENAI_KEY" {
+							envs = append(envs, fmt.Sprintf("B0_OPENAI_KEY=%s", cfg.Agent.GeminiKey))
+							continue
+						}
+
+						if env.Key == "B0_TELEGRAM_KEY" {
+							envs = append(envs, fmt.Sprintf("B0_TELEGRAM_KEY=%s", cfg.Integrations.Telegram.TelegramBotToken))
+							continue
+						}
+
+						if env.Key == "B0_DISCORD_KEY" {
+							envs = append(envs, fmt.Sprintf("B0_DISCORD_KEY=%s", cfg.Integrations.Discord.DiscordBotToken))
+							continue
+						}
+
+						if env.Key == "B0_DISCORD_CHANNEL_ID" {
+							envs = append(envs, fmt.Sprintf("B0_DISCORD_CHANNEL_ID=%s", cfg.Integrations.Discord.ChannelID))
+							continue
+						}
+
+						envs = append(envs, fmt.Sprintf("%s=%s", env.Key, env.Value))
+					}
+				}
 
 				newContainerID, err := docker.CreateContainer(ctx, con.CreateContainerOption{
 					Name:            project.Slug,
@@ -238,10 +318,7 @@ func HandleDeployProject(aesCfb encrypt.Encrypt, store *store.Store, agent *aa.A
 					HostConfigBinds: []string{fmt.Sprintf("%s:/app", volumeName)},
 					Command:         commands,
 					WorkingDir:      "/app",
-					Env: []string{
-						"NODE_ENV=development",
-						fmt.Sprintf("PORT=%s", serverPort),
-					},
+					Env:             envs,
 					Labels: map[string]string{
 						"traefik.enable": "true",
 						fmt.Sprintf("traefik.http.routers.%s.rule", project.Slug):        fmt.Sprintf("Host(`%s`)", strings.Replace(serverUrl, "https://", "", 1)),
@@ -336,7 +413,8 @@ func HandleDeployProject(aesCfb encrypt.Encrypt, store *store.Store, agent *aa.A
 		time.Sleep(1 * time.Second)
 
 		sendEvent(ctx, project.ID, sse.EventTypeTaskCompleted, AgentData{
-			Message: "b0 has successfully deployed your project",
+			Message:   "b0 has successfully deployed your project",
+			Deploying: true,
 		}, event)
 
 		return nil

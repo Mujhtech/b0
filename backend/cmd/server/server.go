@@ -15,6 +15,7 @@ import (
 	"github.com/mujhtech/b0/database/store"
 	"github.com/mujhtech/b0/http"
 	"github.com/mujhtech/b0/internal/pkg/agent"
+	"github.com/mujhtech/b0/internal/pkg/billing/stripe"
 	"github.com/mujhtech/b0/internal/pkg/container"
 	"github.com/mujhtech/b0/internal/pkg/pubsub"
 	"github.com/mujhtech/b0/internal/pkg/sse"
@@ -137,6 +138,7 @@ func startServer(configFile string, logLevel string) error {
 		sse,
 		job,
 		container,
+		stripe.New(cfg),
 	)
 
 	if err != nil {
@@ -154,7 +156,7 @@ func startServer(configFile string, logLevel string) error {
 	g, gCtx := errgroup.WithContext(ctx)
 
 	g.Go(func() error {
-		return job.RegisterAndStart(store, agent, sse, container)
+		return job.RegisterAndStart(cfg, store, agent, sse, container)
 	})
 
 	gHTTP, shutdownHTTP := server.ListenAndServe()

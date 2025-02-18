@@ -28,6 +28,10 @@ interface PlaygroundBuilderProviderProps {
   error: string | undefined;
   contextMessage: string | undefined;
   logs: string[];
+  isSaving: boolean;
+  setIsSaving: React.Dispatch<React.SetStateAction<boolean>>;
+  openLogPreviewDialog: boolean;
+  setOpenLogPreviewDialog: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
 const PlaygroundBuilderProviderContext = createContext<
@@ -50,11 +54,14 @@ export const PlaygroundBuilderProvider = ({
     "task_completed",
   ];
   const [isThinking, setIsThinking] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | undefined>(undefined);
   const [contextMessage, setContextMessage] = useState<string | undefined>(
     undefined
   );
   const [logs, setLogs] = useState<string[]>([]);
+  const [openLogPreviewDialog, setOpenLogPreviewDialog] = useState(false);
+  const [deploying, setDeploying] = useState(false);
   const navigate = useNavigate();
 
   async function handleProjectAction(action: string) {
@@ -92,8 +99,14 @@ export const PlaygroundBuilderProvider = ({
     events: useMemo(() => DEFAULT_EVENTS, []),
     onEvent: useCallback(
       (type: string, data: any) => {
-        const { message, workflows, code, error, should_reload_window } =
-          JSON.parse(data);
+        const {
+          message,
+          workflows,
+          code,
+          deploying,
+          error,
+          should_reload_window,
+        } = JSON.parse(data);
 
         if (code != undefined) {
           console.log("CODE GENERATION", code);
@@ -121,6 +134,11 @@ export const PlaygroundBuilderProvider = ({
           }
         }
 
+        if (deploying && deploying == true) {
+          setDeploying(true);
+          setOpenLogPreviewDialog(true);
+        }
+
         if (should_reload_window && should_reload_window == true) {
           setTimeout(() => {
             navigate(`/${project.slug}`);
@@ -140,10 +158,13 @@ export const PlaygroundBuilderProvider = ({
 
   useSSE({
     baseUrl: `${backendBaseUrl}/projects/${project.id}/log`,
-    shouldRun: true,
+    shouldRun: deploying,
     projectId: project.id,
     accessToken: accessToken ?? "",
-    events: useMemo(() => ["log_started", "log_updated"], []),
+    events: useMemo(
+      () => ["log_started", "log_updated", "log_failed", "log_completed"],
+      []
+    ),
     onEvent: useCallback(
       (type: string, data: any) => {
         const { message, log, error } = JSON.parse(data);
@@ -168,6 +189,10 @@ export const PlaygroundBuilderProvider = ({
       error,
       contextMessage,
       logs,
+      isSaving,
+      setIsSaving,
+      openLogPreviewDialog,
+      setOpenLogPreviewDialog,
     }),
     [
       project,
@@ -179,6 +204,10 @@ export const PlaygroundBuilderProvider = ({
       contextMessage,
       logs,
       setLogs,
+      isSaving,
+      setIsSaving,
+      openLogPreviewDialog,
+      setOpenLogPreviewDialog,
     ]
   );
 

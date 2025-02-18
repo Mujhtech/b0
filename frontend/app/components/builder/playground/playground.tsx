@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useCallback, useMemo, useState } from "react";
 import { usePlayground } from "./provider";
 import HttpRequestConnector from "./connector/http-request";
 import { cn } from "~/lib/utils";
@@ -6,6 +6,8 @@ import { useOptionalEndpoint } from "~/hooks/use-project";
 import Connector from "./connector";
 import { EndpointWorkflow } from "~/models/endpoint";
 import { usePlaygroundBuilder } from "../provider";
+import { ToastUI } from "~/components/custom-toast";
+import { toast } from "sonner";
 
 export default function Playground() {
   const {
@@ -18,7 +20,7 @@ export default function Playground() {
     zoom,
     handleDrag,
   } = usePlayground();
-  const { handleUpdateEndpointWorkflow } = usePlaygroundBuilder();
+  const { handleUpdateEndpointWorkflow, setIsSaving } = usePlaygroundBuilder();
 
   const endpoint = useOptionalEndpoint();
 
@@ -32,30 +34,40 @@ export default function Playground() {
     }
 
     return endpoint?.workflows || [];
-  }, [newWorkflows, endpoint]);
+  }, [newWorkflows, endpoint, setNewWorkflows]);
 
   const handleUpdateWorkflows = (index: number, workflow: EndpointWorkflow) => {
-    setNewWorkflows((old) => {
-      const prev = newWorkflows || old;
+    const newWorkflows = workflows;
 
-      if (!prev) {
-        return undefined;
-      }
+    newWorkflows[index] = workflow;
 
-      const workflows = [...prev];
-
-      workflows[index] = workflow;
-
-      return workflows;
-    });
+    setNewWorkflows(newWorkflows);
 
     if (!endpoint) {
       return;
     }
-    // TODO: update endpoint
+
     setTimeout(() => {
-      handleUpdateEndpointWorkflow(endpoint.id, workflows);
-    }, 1000);
+      setIsSaving(true);
+      handleUpdateEndpointWorkflow(endpoint.id, newWorkflows)
+        .catch((err) => {
+          if (err.error) {
+            toast.custom(
+              (t) => (
+                <ToastUI
+                  variant={"error"}
+                  message={err.error}
+                  t={t as string}
+                />
+              ),
+              {}
+            );
+          }
+        })
+        .finally(() => {
+          setIsSaving(false);
+        });
+    }, 2500);
   };
 
   const handleRemoveWorkflow = (index: number) => {
@@ -105,9 +117,9 @@ export default function Playground() {
                     workflow={workflow}
                     index={index}
                     key={index}
-                    onUpdate={(workflow) =>
-                      handleUpdateWorkflows(index, workflow)
-                    }
+                    onUpdate={(workflow) => {
+                      handleUpdateWorkflows(index, workflow);
+                    }}
                     onRemove={() => handleRemoveWorkflow(index)}
                   />
                 );
