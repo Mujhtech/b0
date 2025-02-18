@@ -10,6 +10,8 @@ import (
 	"math/rand/v2"
 
 	"github.com/docker/docker/pkg/archive"
+	"github.com/mujhtech/b0/database/models"
+	"github.com/mujhtech/b0/database/store"
 	"github.com/mujhtech/b0/internal/pkg/agent"
 	"github.com/mujhtech/b0/internal/pkg/sse"
 	"github.com/rs/zerolog"
@@ -118,4 +120,30 @@ func generatePort() string {
 	port := r + 5000
 
 	return fmt.Sprintf("%d", port)
+}
+
+func checkUsageLimit(ctx context.Context, store *store.Store, project *models.Project) (*models.User, error) {
+
+	user, err := store.UserRepo.FindUserByID(ctx, project.OwnerID)
+
+	if err != nil {
+		return nil, fmt.Errorf("failed to get project owner")
+	}
+
+	usageCount, err := store.AIUsageRepo.GetTotalUsageInCurrentMonth(ctx, user.ID)
+
+	if err != nil {
+
+		return nil, fmt.Errorf("failed to get usage count")
+	}
+
+	if user.SubscriptionPlan == "free" && usageCount.TotalUsage >= 20 {
+		return user, fmt.Errorf("you have reached the maximum number of requests for the current month")
+	}
+
+	if user.SubscriptionPlan == "pro" && usageCount.TotalUsage >= 100 {
+		return user, fmt.Errorf("you have reached the maximum number of requests for the current month")
+	}
+
+	return user, nil
 }

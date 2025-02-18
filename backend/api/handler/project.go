@@ -136,6 +136,23 @@ func (h *Handler) CreateProject(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
+		usageCount, err := h.store.AIUsageRepo.GetTotalUsageInCurrentMonth(ctx, session.User.ID)
+
+		if err != nil {
+			_ = response.InternalServerError(w, r, err)
+			return
+		}
+
+		if session.User.SubscriptionPlan == "premium" && usageCount.TotalUsage >= 20 {
+			_ = response.BadRequest(w, r, fmt.Errorf("you have reached the maximum number of requests for the current month"))
+			return
+		}
+
+		if session.User.SubscriptionPlan == "pro" && usageCount.TotalUsage >= 100 {
+			_ = response.BadRequest(w, r, fmt.Errorf("you have reached the maximum number of requests for the current month"))
+			return
+		}
+
 		agentModel = catalog.Model
 	}
 

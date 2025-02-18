@@ -86,6 +86,14 @@ func HandleDeployProject(aesCfb encrypt.Encrypt, cfg *config.Config, store *stor
 		if endpoint.CodeGeneration != nil && len(endpoint.CodeGeneration.FileContents) > 0 {
 			code = endpoint.CodeGeneration
 		} else {
+
+			if _, err := checkUsageLimit(ctx, store, project); err != nil {
+				sendEvent(ctx, project.ID, sse.EventTypeTaskFailed, AgentData{
+					Error: err.Error(),
+				}, event)
+				return nil
+			}
+
 			sendEvent(ctx, project.ID, sse.EventTypeTaskUpdate, AgentData{
 				Message: "b0 has started generating the code",
 			}, event)

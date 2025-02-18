@@ -98,15 +98,20 @@ const (
 	- Discord
 	Use the following package to interact with the Discord API:
 	dependencies:
-	@discordjs/core: "^2.0.1"
 	@discordjs/rest: "^2.4.3"
+	discord-api-types: "^0.37.119"
 
 	e.g To send a message to a channel:
 
-	import { API, ChannelsAPI } from "@discordjs/core";
 	import { REST } from "@discordjs/rest";
 
 	const rest = new REST({ version: "10" }).setToken(process.env.B0_DISCORD_KEY!);
+
+	await rest.post(Routes.channelMessages(process.env.B0_DISCORD_CHANNEL_ID!), { {
+		body: {
+			content: "Hello, world!",
+		},
+	});
 
 	- Telegram
 	Use fetch to interact with the Telegram BOT API, e.g to send message

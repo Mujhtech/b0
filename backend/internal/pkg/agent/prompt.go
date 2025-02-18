@@ -102,39 +102,7 @@ const (
 	- For the code generation, you are to generate the code based on the workflow diagram.
 	- Make sure each workflow are implemented without any comment to implement the code myself
 	- Make sure to follow the workflow diagram below
-	- While working with discordjs, do not use/import discord-api-types package, rather import the necessary api from @discordjs/core package. 
-
-	E.g
-	To interact with the channels api: import { ChannelsAPI } from "@discordjs/core";
-
-	const channel = new ChannelsAPI(rest);
-
-	await channel.createMessage(process.env.B0_DISCORD_CHANNEL_ID!, {
-		content: "Hello, world!",
-	});
-
-	To interact with the guards api: import { GuildsAPI } from "@discordjs/core";
-
-	const guild = new GuildsAPI(rest);
-
-	await guild.createRole(process.env.B0_DISCORD_GUILD_ID!, {
-		name: "My Role",
-		color: 16711680,
-	});
-
-	To interact with the interactions api: import { InteractionsAPI } from "@discordjs/core";
-
-	const interaction = new InteractionsAPI(rest);
-
-	await interaction.createInteractionResponse(process.env.B0_DISCORD_INTERACTION_ID!, process.env.B0_DISCORD_INTERACTION_TOKEN!, {
-		type: 4,
-		data: {
-			content: "Hello, world!",
-		},
-	});
-
-	I repeat do not use/import discord-api-types package, rather import the necessary api from @discordjs/core package.
-
+	
 	%s
 
 	## Workflow Diagram:

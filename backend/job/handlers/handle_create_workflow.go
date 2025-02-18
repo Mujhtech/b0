@@ -40,6 +40,13 @@ func HandleCreateWorkflow(aesCfb encrypt.Encrypt, store *store.Store, agent *aa.
 			return err
 		}
 
+		if _, err := checkUsageLimit(ctx, store, project); err != nil {
+			sendEvent(ctx, project.ID, sse.EventTypeTaskFailed, AgentData{
+				Error: err.Error(),
+			}, event)
+			return nil
+		}
+
 		sendEvent(ctx, project.ID, sse.EventTypeTaskStarted, AgentData{
 			Message: "b0 is working on your request...",
 		}, event)

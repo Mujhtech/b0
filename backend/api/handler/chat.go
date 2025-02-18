@@ -56,6 +56,23 @@ func (h *Handler) Chat(w http.ResponseWriter, r *http.Request) {
 			_ = response.BadRequest(w, r, fmt.Errorf("you are not allowed to use premium models with the free plan"))
 			return
 		}
+
+		usageCount, err := h.store.AIUsageRepo.GetTotalUsageInCurrentMonth(ctx, session.User.ID)
+
+		if err != nil {
+			_ = response.InternalServerError(w, r, err)
+			return
+		}
+
+		if session.User.SubscriptionPlan == "premium" && usageCount.TotalUsage >= 20 {
+			_ = response.BadRequest(w, r, fmt.Errorf("you have reached the maximum number of requests for the current month"))
+			return
+		}
+
+		if session.User.SubscriptionPlan == "pro" && usageCount.TotalUsage >= 100 {
+			_ = response.BadRequest(w, r, fmt.Errorf("you have reached the maximum number of requests for the current month"))
+			return
+		}
 	}
 
 	findProjectService := services.FindProjectService{
