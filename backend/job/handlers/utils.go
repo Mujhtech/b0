@@ -115,7 +115,7 @@ func cloneProjectToTar(userId, projectSlug string) (io.ReadCloser, error) {
 }
 
 func generatePort() string {
-	r := rand.IntN(1999)
+	r := rand.IntN(1999) // #nosec G404
 
 	port := r + 5000
 
