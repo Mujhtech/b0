@@ -1,0 +1,1 @@
+ALTER TABLE "ai_usages" ADD COLUMN "is_premium" BOOLEAN NOT NULL DEFAULT false;
