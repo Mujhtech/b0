@@ -15,6 +15,7 @@ type AIUsage struct {
 	OutputToken string      `json:"output_tokens" db:"output_tokens"`
 	Model       string      `json:"model" db:"model"`
 	UsageType   string      `json:"usage_type" db:"usage_type"`
+	IsPremium   bool        `json:"is_premium" db:"is_premium"`
 	Metadata    interface{} `json:"metadata" db:"metadata"`
 	CreatedAt   time.Time   `json:"created_at,omitempty" db:"created_at,omitempty"`
 	UpdatedAt   time.Time   `json:"updated_at,omitempty" db:"updated_at,omitempty"`

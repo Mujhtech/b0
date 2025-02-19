@@ -11,7 +11,7 @@ import (
 
 const (
 	userBaseTable    = "users"
-	userSelectColumn = "id, given_name, display_name, email, email_verified, avatar_url, authentication_method, password, subscription_plan, stripe_customer_id, stripe_subscription_id, stripe_subscription_status, created_at, updated_at, deleted_at"
+	userSelectColumn = "id, given_name, display_name, email, email_verified, avatar_url, authentication_method, password, subscription_plan, stripe_customer_id, stripe_subscription_id, stripe_subscription_status, enable_pay_as_you_go, created_at, updated_at, deleted_at"
 )
 
 type userRepo struct {

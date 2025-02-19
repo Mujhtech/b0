@@ -122,15 +122,18 @@ func generatePort() string {
 	return fmt.Sprintf("%d", port)
 }
 
-func checkUsageLimit(ctx context.Context, store *store.Store, project *models.Project) (*models.User, error) {
+func checkUsageLimit(ctx context.Context, s *store.Store, project *models.Project) (*models.User, error) {
 
-	user, err := store.UserRepo.FindUserByID(ctx, project.OwnerID)
+	user, err := s.UserRepo.FindUserByID(ctx, project.OwnerID)
 
 	if err != nil {
 		return nil, fmt.Errorf("failed to get project owner")
 	}
 
-	usageCount, err := store.AIUsageRepo.GetTotalUsageInCurrentMonth(ctx, user.ID)
+	usageCount, err := s.AIUsageRepo.GetTotalUsage(ctx, store.TotalAIUsageFilter{
+		OwnerID: user.ID,
+		Range:   store.TotalAIUsageFilterRangeMonth,
+	})
 
 	if err != nil {
 		return nil, fmt.Errorf("failed to get usage count")

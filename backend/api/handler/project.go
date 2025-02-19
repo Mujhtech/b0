@@ -9,6 +9,7 @@ import (
 	"github.com/mujhtech/b0/api/dto"
 	"github.com/mujhtech/b0/api/middleware"
 	"github.com/mujhtech/b0/database/models"
+	"github.com/mujhtech/b0/database/store"
 	"github.com/mujhtech/b0/internal/pkg/agent"
 	"github.com/mujhtech/b0/internal/pkg/request"
 	"github.com/mujhtech/b0/internal/pkg/response"
@@ -121,7 +122,7 @@ func (h *Handler) CreateProject(w http.ResponseWriter, r *http.Request) {
 
 	var framework agent.CodeGenerationOption
 
-	var agentModel agent.AgentModel
+	var catalog agent.ModeCatalog
 
 	if dst.Model != "" {
 		var agentModelErr error
@@ -136,7 +137,10 @@ func (h *Handler) CreateProject(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		usageCount, err := h.store.AIUsageRepo.GetTotalUsageInCurrentMonth(ctx, session.User.ID)
+		usageCount, err := h.store.AIUsageRepo.GetTotalUsage(ctx, store.TotalAIUsageFilter{
+			OwnerID: session.User.ID,
+			Range:   store.TotalAIUsageFilterRangeMonth,
+		})
 
 		if err != nil {
 			_ = response.InternalServerError(w, r, err)
@@ -152,8 +156,6 @@ func (h *Handler) CreateProject(w http.ResponseWriter, r *http.Request) {
 			_ = response.BadRequest(w, r, fmt.Errorf("you have reached the maximum number of requests for the current month"))
 			return
 		}
-
-		agentModel = catalog.Model
 	}
 
 	if dst.FramekworkID != "" {
@@ -165,7 +167,7 @@ func (h *Handler) CreateProject(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	agentProjectTitleAndSlug, agentToken, err := h.agent.GenerateTitleAndSlug(ctx, dst.Prompt, agent.WithModel(agentModel))
+	agentProjectTitleAndSlug, agentToken, err := h.agent.GenerateTitleAndSlug(ctx, dst.Prompt, agent.WithModel(catalog.Model))
 
 	if err != nil {
 		_ = response.InternalServerError(w, r, err)
@@ -195,6 +197,7 @@ func (h *Handler) CreateProject(w http.ResponseWriter, r *http.Request) {
 		UsageType:   "project_creation",
 		InputToken:  agentToken.Input,
 		OutputToken: agentToken.Output,
+		IsPremium:   catalog.IsPremium,
 	}); err != nil {
 		zerolog.Ctx(ctx).Error().Err(err).Msg("failed to create AI usage")
 	}

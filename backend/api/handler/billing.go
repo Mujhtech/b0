@@ -6,6 +6,7 @@ import (
 	"github.com/guregu/null"
 	"github.com/mujhtech/b0/api/dto"
 	"github.com/mujhtech/b0/api/middleware"
+	"github.com/mujhtech/b0/database/store"
 	"github.com/mujhtech/b0/internal/pkg/request"
 	"github.com/mujhtech/b0/internal/pkg/response"
 	"github.com/rs/zerolog/log"
@@ -21,7 +22,10 @@ func (h *Handler) GetUsage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	usage, err := h.store.AIUsageRepo.GetTotalUsageInCurrentMonth(ctx, session.User.ID)
+	usage, err := h.store.AIUsageRepo.GetTotalUsage(ctx, store.TotalAIUsageFilter{
+		OwnerID: session.User.ID,
+		Range:   store.TotalAIUsageFilterRangeMonth,
+	})
 
 	if err != nil {
 		_ = response.InternalServerError(w, r, err)
@@ -78,6 +82,7 @@ func (h *Handler) UpgradePlan(w http.ResponseWriter, r *http.Request) {
 	}
 
 	user.StripeSubscriptionId = null.NewString(subscription, true)
+	user.EnablePayAsYouGo = true
 
 	if err := h.store.UserRepo.UpdateUser(ctx, user); err != nil {
 		_ = response.InternalServerError(w, r, err)

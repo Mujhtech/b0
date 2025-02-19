@@ -87,6 +87,15 @@ func HandleDeployProject(aesCfb encrypt.Encrypt, cfg *config.Config, store *stor
 			code = endpoint.CodeGeneration
 		} else {
 
+			catalog, err := aa.GetModelCatalog(project.Model.String)
+
+			if err != nil {
+				sendEvent(ctx, project.ID, sse.EventTypeTaskFailed, AgentData{
+					Error: err.Error(),
+				}, event)
+				return nil
+			}
+
 			if _, err := checkUsageLimit(ctx, store, project); err != nil {
 				sendEvent(ctx, project.ID, sse.EventTypeTaskFailed, AgentData{
 					Error: err.Error(),
@@ -98,7 +107,7 @@ func HandleDeployProject(aesCfb encrypt.Encrypt, cfg *config.Config, store *stor
 				Message: "b0 has started generating the code",
 			}, event)
 
-			newCode, agentToken, err := agent.CodeGeneration(ctx, project.Description.String, codeGenOption, aa.WithModel(aa.ToModel(project.Model.String)))
+			newCode, agentToken, err := agent.CodeGeneration(ctx, project.Description.String, codeGenOption, aa.WithModel(catalog.Model))
 
 			if err != nil {
 				sendEvent(ctx, project.ID, sse.EventTypeTaskFailed, AgentData{
@@ -129,6 +138,7 @@ func HandleDeployProject(aesCfb encrypt.Encrypt, cfg *config.Config, store *stor
 				UsageType:   "code_generation",
 				InputToken:  agentToken.Input,
 				OutputToken: agentToken.Output,
+				IsPremium:   catalog.IsPremium,
 			}); err != nil {
 				zerolog.Ctx(ctx).Error().Err(err).Msg("failed to create AI usage")
 			}

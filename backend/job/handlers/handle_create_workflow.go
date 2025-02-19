@@ -40,6 +40,15 @@ func HandleCreateWorkflow(aesCfb encrypt.Encrypt, store *store.Store, agent *aa.
 			return err
 		}
 
+		catalog, err := aa.GetModelCatalog(project.Model.String)
+
+		if err != nil {
+			sendEvent(ctx, project.ID, sse.EventTypeTaskFailed, AgentData{
+				Error: err.Error(),
+			}, event)
+			return nil
+		}
+
 		if _, err := checkUsageLimit(ctx, store, project); err != nil {
 			sendEvent(ctx, project.ID, sse.EventTypeTaskFailed, AgentData{
 				Error: err.Error(),
@@ -53,7 +62,7 @@ func HandleCreateWorkflow(aesCfb encrypt.Encrypt, store *store.Store, agent *aa.
 
 		workflows, agentToken, err := agent.GenerateWorkflow(ctx, aa.WorkflowGenerationOption{
 			Prompt: project.Description.String,
-		}, aa.WithModel(aa.ToModel(project.Model.String)))
+		}, aa.WithModel(catalog.Model))
 
 		if err != nil {
 			sendEvent(ctx, project.ID, sse.EventTypeTaskFailed, AgentData{
@@ -105,6 +114,7 @@ func HandleCreateWorkflow(aesCfb encrypt.Encrypt, store *store.Store, agent *aa.
 			UsageType:   "workflow",
 			InputToken:  agentToken.Input,
 			OutputToken: agentToken.Output,
+			IsPremium:   catalog.IsPremium,
 		}); err != nil {
 			zerolog.Ctx(ctx).Error().Err(err).Msg("failed to create AI usage")
 		}

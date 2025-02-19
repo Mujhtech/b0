@@ -7,6 +7,7 @@ import (
 	"github.com/mujhtech/b0/api/dto"
 	"github.com/mujhtech/b0/api/middleware"
 	"github.com/mujhtech/b0/database/models"
+	"github.com/mujhtech/b0/database/store"
 	"github.com/mujhtech/b0/internal/pkg/agent"
 	"github.com/mujhtech/b0/internal/pkg/request"
 	"github.com/mujhtech/b0/internal/pkg/response"
@@ -57,7 +58,10 @@ func (h *Handler) Chat(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		usageCount, err := h.store.AIUsageRepo.GetTotalUsageInCurrentMonth(ctx, session.User.ID)
+		usageCount, err := h.store.AIUsageRepo.GetTotalUsage(ctx, store.TotalAIUsageFilter{
+			OwnerID: session.User.ID,
+			Range:   store.TotalAIUsageFilterRangeMonth,
+		})
 
 		if err != nil {
 			_ = response.InternalServerError(w, r, err)
