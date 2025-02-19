@@ -1,5 +1,10 @@
 import { api } from "./api.server";
-import { GetUsage, GetUsageSchema } from "~/models/billing";
+import {
+  GetUsage,
+  GetUsageSchema,
+  UpgradePlan,
+  UpgradePlanSchema,
+} from "~/models/billing";
 
 export async function getUsage(request: Request) {
   const res = await api.get<GetUsage>({
@@ -9,4 +14,17 @@ export async function getUsage(request: Request) {
   });
 
   return res.data;
+}
+
+export async function upgradePlan(request: Request, plan: string) {
+  const res = await api.post<UpgradePlan>({
+    request,
+    path: "/billing/upgrade",
+    schema: UpgradePlanSchema,
+    body: {
+      plan,
+    },
+  });
+
+  return res.data.portal_link;
 }

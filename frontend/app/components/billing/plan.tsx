@@ -1,12 +1,15 @@
 import React from "react";
 import { Card, CardContent, CardHeader } from "../ui/card";
-import { Form } from "@remix-run/react";
+import { Form, useFetcher } from "@remix-run/react";
 import { Button } from "../ui/button";
 import { CheckIcon, X } from "lucide-react";
 import { cn } from "~/lib/utils";
 import { Separator } from "../ui/separator";
 import Paragraph from "../ui/paragraph";
 import { useUser } from "~/hooks/use-user";
+import { parseWithZod } from "@conform-to/zod";
+import { useForm } from "@conform-to/react";
+import { z } from "zod";
 
 export function BasicPlanCard() {
   return (
@@ -98,9 +101,24 @@ export default function PlanCard({
   storage?: number;
 }) {
   const user = useUser();
+  const fetcher = useFetcher();
+  const [form, fields] = useForm({
+    id: "upgrade-plan-form",
+    shouldValidate: "onBlur",
+    shouldRevalidate: "onSubmit",
+    onValidate({ formData }) {
+      return parseWithZod(formData, {
+        schema: z.object({
+          plan: z.string(),
+        }),
+      });
+    },
+  });
+
   return (
     <Card className={cn("w-full p-2", recommended && "border-white border-2")}>
-      <Form method="post">
+      <fetcher.Form onSubmit={form.onSubmit} method="post">
+        <input type="hidden" name="plan" value={title} />
         <CardHeader className="!gap-3">
           <h3 className="font-medium text-muted-foreground capitalize">
             {title}
@@ -125,7 +143,7 @@ export default function PlanCard({
           </Button>
           {feature}
         </CardContent>
-      </Form>
+      </fetcher.Form>
     </Card>
   );
 }

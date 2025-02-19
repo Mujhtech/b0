@@ -9,7 +9,6 @@ import (
 	"github.com/mujhtech/b0/database/store"
 	"github.com/mujhtech/b0/internal/pkg/request"
 	"github.com/mujhtech/b0/internal/pkg/response"
-	"github.com/rs/zerolog/log"
 )
 
 func (h *Handler) GetUsage(w http.ResponseWriter, r *http.Request) {
@@ -96,8 +95,11 @@ func (h *Handler) UpgradePlan(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := response.Redirect(w, r, portalLink, http.StatusTemporaryRedirect, true); err != nil {
-		log.Error().Err(err).Msg("failed to redirect")
-		return
-	}
+	// if err := response.Redirect(w, r, portalLink, http.StatusTemporaryRedirect, true); err != nil {
+	// 	log.Error().Err(err).Msg("failed to redirect")
+	// 	return
+	// }
+	_ = response.Ok(w, r, "upgrade plan", map[string]string{
+		"portal_link": portalLink,
+	})
 }

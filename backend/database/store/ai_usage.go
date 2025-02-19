@@ -217,12 +217,12 @@ func (a *aiUsageRepo) GetTotalUsage(ctx context.Context, opts TotalAIUsageFilter
 		From(aiUsageBaseTable).
 		Where(excludeDeleted)
 
-	if opts.Model != "" {
-		stmt = stmt.Where(squirrel.Eq{"model": opts.Model})
+	if opts.OwnerID != "" {
+		stmt = stmt.Where(squirrel.Eq{"owner_id": opts.OwnerID})
 	}
 
-	if opts.OwnerID != "" {
-		stmt = stmt.Where(squirrel.Eq{"endpoint_id": opts.OwnerID})
+	if opts.Model != "" {
+		stmt = stmt.Where(squirrel.Eq{"model": opts.Model})
 	}
 
 	if opts.ProjectID != "" {
