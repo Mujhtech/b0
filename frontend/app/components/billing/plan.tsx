@@ -37,6 +37,34 @@ export function BasicPlanCard() {
   );
 }
 
+export function StarterPlanCard() {
+  return (
+    <PlanCard
+      recommended
+      title="starter"
+      price={8}
+      storage={2}
+      feature={
+        <ul className="flex flex-col gap-3">
+          <Item checked>Access to b0</Item>
+          <Item checked>1.5x monthly limits</Item>
+          <Item checked>Up 10 public and private project</Item>
+          <Item checked>Deploy on the go</Item>
+          <Item checked>Export project</Item>
+          <Item checked={false}>
+            Access to Claude Sonnet 3.5 & OpenAI GPT-4o
+          </Item>
+          <Item checked>Integration</Item>
+          <Item checked>Pay-as-you-go for additional usage</Item>
+          <Item checked={false}>Custom Domain</Item>
+          <Item checked>Log retention</Item>
+          <Item checked>Support</Item>
+        </ul>
+      }
+    />
+  );
+}
+
 export function ProPlanCard() {
   return (
     <PlanCard

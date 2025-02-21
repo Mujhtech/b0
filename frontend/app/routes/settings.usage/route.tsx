@@ -38,6 +38,8 @@ export default function Page() {
     switch (user.subscription_plan) {
       case "free":
         return 20;
+      case "starter":
+        return 50;
       case "pro":
         return 100;
       case "scale":

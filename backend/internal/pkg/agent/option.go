@@ -757,9 +757,9 @@ var AvailableCatalogs = []ModeCatalog{
 	{
 		Name:           "Gemini 1.5 Flash",
 		Model:          AgentModelGeminiFlash1Dot5,
-		IsEnabled:      true,
+		IsEnabled:      false,
 		IsExperimental: true,
-		IsDefault:      true,
+		IsDefault:      false,
 		IsPremium:      false,
 	},
 	{
@@ -767,7 +767,7 @@ var AvailableCatalogs = []ModeCatalog{
 		Model:          AgentModelGeminiFlash2Dot0,
 		IsEnabled:      true,
 		IsExperimental: true,
-		IsDefault:      false,
+		IsDefault:      true,
 		IsPremium:      false,
 	},
 	{

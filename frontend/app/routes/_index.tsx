@@ -62,7 +62,9 @@ export const meta: MetaFunction = () => {
 export default function Index() {
   const fetcher = useFetcher();
   const { available_models } = useFeature();
-  const defaultModel = available_models.find((model) => model.is_default);
+  const defaultModel = available_models.find(
+    (model) => model.is_default && model.is_enabled
+  );
   const [model, setModel] = React.useState<string | undefined>(
     defaultModel?.model
   );

@@ -53,7 +53,7 @@ func (h *Handler) Chat(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		if session.User.SubscriptionPlan == "free" && catalog.IsPremium {
+		if (session.User.SubscriptionPlan == "free" || session.User.SubscriptionPlan == "starter") && catalog.IsPremium {
 			_ = response.BadRequest(w, r, fmt.Errorf("you are not allowed to use premium models with the free plan"))
 			return
 		}
@@ -68,7 +68,12 @@ func (h *Handler) Chat(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		if session.User.SubscriptionPlan == "premium" && usageCount.TotalUsage >= 20 {
+		if session.User.SubscriptionPlan == "free" && usageCount.TotalUsage >= 20 {
+			_ = response.BadRequest(w, r, fmt.Errorf("you have reached the maximum number of requests for the current month"))
+			return
+		}
+
+		if session.User.SubscriptionPlan == "starter" && usageCount.TotalUsage >= 50 {
 			_ = response.BadRequest(w, r, fmt.Errorf("you have reached the maximum number of requests for the current month"))
 			return
 		}

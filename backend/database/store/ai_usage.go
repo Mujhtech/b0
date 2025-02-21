@@ -108,6 +108,7 @@ func (a *aiUsageRepo) UpdateAIUsage(ctx context.Context, aiUsage *models.AIUsage
 
 	stmt := Builder.
 		Update(aiUsageBaseTable).
+		Set("updated_at", squirrel.Expr("NOW()")).
 		Where(squirrel.Eq{"id": aiUsage.ID}).
 		Where(excludeDeleted)
 

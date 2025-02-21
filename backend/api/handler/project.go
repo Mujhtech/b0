@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -13,6 +14,7 @@ import (
 	"github.com/mujhtech/b0/internal/pkg/agent"
 	"github.com/mujhtech/b0/internal/pkg/request"
 	"github.com/mujhtech/b0/internal/pkg/response"
+	"github.com/mujhtech/b0/internal/util"
 	"github.com/mujhtech/b0/job"
 	"github.com/mujhtech/b0/services"
 	"github.com/rs/zerolog"
@@ -106,16 +108,23 @@ func (h *Handler) CreateProject(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if session.User.SubscriptionPlan == "free" {
-		count, err := h.store.ProjectRepo.CountByOwnerID(ctx, session.User.ID)
+	// Check project limits based on subscription plan
+	count, err := h.store.ProjectRepo.CountByOwnerID(ctx, session.User.ID)
+	if err != nil {
+		_ = response.InternalServerError(w, r, err)
+		return
+	}
 
-		if err != nil {
-			_ = response.InternalServerError(w, r, err)
-			return
-		}
-
+	// Check project limits based on plan
+	switch session.User.SubscriptionPlan {
+	case "free":
 		if count >= 3 {
 			_ = response.BadRequest(w, r, fmt.Errorf("you have reached the maximum number of projects allowed for the free plan"))
+			return
+		}
+	case "starter":
+		if count >= 10 {
+			_ = response.BadRequest(w, r, fmt.Errorf("you have reached the maximum number of projects allowed for the starter plan"))
 			return
 		}
 	}
@@ -132,7 +141,7 @@ func (h *Handler) CreateProject(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		if session.User.SubscriptionPlan == "free" && catalog.IsPremium {
+		if (session.User.SubscriptionPlan == "free" || session.User.SubscriptionPlan == "starter") && catalog.IsPremium {
 			_ = response.BadRequest(w, r, fmt.Errorf("you are not allowed to use premium models with the free plan"))
 			return
 		}
@@ -172,6 +181,22 @@ func (h *Handler) CreateProject(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		_ = response.InternalServerError(w, r, err)
 		return
+	}
+
+	// check for duplicate slug
+	duplicateProject, err := h.store.ProjectRepo.FindProjectBySlug(ctx, agentProjectTitleAndSlug.Slug)
+
+	if err != nil && !errors.Is(err, store.ErrNotFound) {
+		_ = response.BadRequest(w, r, err)
+		return
+	}
+
+	if duplicateProject != nil {
+		// remove last 6 characters from the slug
+		newSlug := agentProjectTitleAndSlug.Slug[:len(agentProjectTitleAndSlug.Slug)-6]
+		newSlug, _ = util.GeneratePrefixedID(newSlug, "-", 6)
+
+		agentProjectTitleAndSlug.Slug = newSlug
 	}
 
 	createProjectService := services.CreateProjectService{

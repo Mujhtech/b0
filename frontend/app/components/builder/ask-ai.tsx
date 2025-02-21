@@ -28,7 +28,9 @@ export default function AskB0({
   projectModel?: string;
 }) {
   const { available_models } = useFeature();
-  const defaultModel = available_models.find((model) => model.is_default);
+  const defaultModel = available_models.find(
+    (model) => model.is_default && model.is_enabled
+  );
   const [isLoading, setIsLoading] = React.useState(false);
 
   const accessToken = useAuthToken();

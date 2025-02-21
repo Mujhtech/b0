@@ -86,11 +86,13 @@ const (
 	- The url in the request node must be a path to the endpoint not external url.
 	- You are required to update the workflow diagram node based on the user prompt. You are required not to delete any workflow from the provided workflows except if the user explicitly asks you to do so and you are only require to update any workflow that is provided in the workflows if the user asks you to do so. And you can only add new workflow nodes to the workflow diagram if the user asks you to do so.
 
-	%s
-
 	## Output:
 	- The output should be a json string in the format of {"workflows": ["..."]}
 	- For string interpolation, use {{...}} for the value.
+
+	## Workflow Diagram:
+	Below is an existing workflow diagram to modify, please use them as a reference:
+	%s
 	`
 
 	b0WorkflowToCodeGenerationSystemMessage = b0DefaultSystemMessage + `You are here to help user generate code from a workflow diagram. The workflow diagram will be in json format and you are to generate the code based on the diagram.

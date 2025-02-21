@@ -143,6 +143,10 @@ func checkUsageLimit(ctx context.Context, s *store.Store, project *models.Projec
 		return user, fmt.Errorf("you have reached the maximum number of requests for the current month")
 	}
 
+	if user.SubscriptionPlan == "starter" && usageCount.TotalUsage >= 50 {
+		return user, fmt.Errorf("you have reached the maximum number of requests for the current month")
+	}
+
 	if user.SubscriptionPlan == "pro" && usageCount.TotalUsage >= 100 {
 		return user, fmt.Errorf("you have reached the maximum number of requests for the current month, enable pay as you go to continue")
 	}

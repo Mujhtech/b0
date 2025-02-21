@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/mujhtech/b0/config"
+	"github.com/mujhtech/b0/internal/util"
 	"github.com/openai/openai-go"
 	"github.com/openai/openai-go/option"
 	"github.com/rs/zerolog"
@@ -183,12 +184,9 @@ func (a *Agent) GenerateWorkflow(ctx context.Context, options WorkflowGeneration
 
 	if len(options.Workflows) > 0 {
 
-		otherInstructions = fmt.Sprintf(`
-		## Genereated Workflows
-		The following workflows are already generated, please use them as a reference:
-		%v
+		workflowToString, _ := util.MarshalJSONToString(options.Workflows)
 
-		`, options.Workflows)
+		otherInstructions = workflowToString
 	}
 
 	systemPrompt := fmt.Sprintf(b0ProjectWorkflowSystemMessage, a.cfg.Model, otherInstructions)
@@ -258,19 +256,25 @@ func (a *Agent) CodeGeneration(ctx context.Context, prompt string, option CodeGe
 		opt(&opCfg)
 	}
 
+	workflowToString, err := util.MarshalJSONToString(option.Workflows)
+
+	if err != nil {
+		return nil, nil, err
+	}
+
 	agentToken := &AgentToken{
 		Input: fmt.Sprintf(`
 		%s
 		
 		%s
-		`, fmt.Sprintf(b0WorkflowToCodeGenerationSystemMessage, a.cfg.Model, option.Language, option.FrameworkInsructions, option.Workflows), prompt),
+		`, fmt.Sprintf(b0WorkflowToCodeGenerationSystemMessage, a.cfg.Model, option.Language, option.FrameworkInsructions, workflowToString), prompt),
 	}
 
 	client := a.client()
 
 	chat, err := client.Chat.Completions.New(ctx, openai.ChatCompletionNewParams{
 		Messages: openai.F([]openai.ChatCompletionMessageParamUnion{
-			openai.SystemMessage(fmt.Sprintf(b0WorkflowToCodeGenerationSystemMessage, a.cfg.Model, option.Language, option.FrameworkInsructions, option.Workflows)),
+			openai.SystemMessage(fmt.Sprintf(b0WorkflowToCodeGenerationSystemMessage, a.cfg.Model, option.Language, option.FrameworkInsructions, workflowToString)),
 			openai.UserMessage(prompt),
 		}),
 		Model: openai.F(openai.ChatModel(a.cfg.Model)),
