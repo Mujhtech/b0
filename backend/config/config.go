@@ -76,6 +76,9 @@ var DefaultConfig = &Config{
 			SampleRate:         1.0,
 		},
 	},
+	SecretManager: SecretManager{
+		Provider: SecretManagerProviderLocal,
+	},
 }
 
 func LoadConfig() (*Config, error) {

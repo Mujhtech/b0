@@ -10,6 +10,7 @@ type DatabaseDriver string
 type PubsubProvider string
 type CacheProvider string
 type TelemetryProvider string
+type SecretManagerProvider string
 
 const (
 	DatabaseDriverPostgres DatabaseDriver = "postgres"
@@ -30,24 +31,34 @@ const (
 	TelemetryProviderSentry TelemetryProvider = "sentry"
 	TelemetryProviderOtel   TelemetryProvider = "otel"
 	TelemetryProviderNone   TelemetryProvider = "none"
+
+	SecretManagerProviderAws    SecretManagerProvider = "aws"
+	SecretManagerProviderGoogle SecretManagerProvider = "google"
+	SecretManagerProviderLocal  SecretManagerProvider = "local"
+	SecretManagerProviderNone   SecretManagerProvider = "none"
 )
 
 type Config struct {
-	EncryptionKey string       `json:"encryption_key" envconfig:"ENCRYPTION_KEY"`
-	Database      Database     `json:"database"`
-	Redis         Redis        `json:"redis"`
-	Aws           Aws          `json:"aws"`
-	Server        Server       `json:"server"`
-	Auth          Auth         `json:"auth"`
-	Email         Email        `json:"email"`
-	Job           Job          `json:"job"`
-	Pubsub        Pubsub       `json:"pubsub"`
-	Cors          Cors         `json:"cors"`
-	Cache         Cache        `json:"cache"`
-	Telemetry     Telemetry    `json:"telemetry"`
-	Agent         Agent        `json:"agent"`
-	Integrations  Integrations `json:"integrations"`
-	Stripe        Stripe       `json:"stripe"`
+	EncryptionKey string        `json:"encryption_key" envconfig:"ENCRYPTION_KEY"`
+	Database      Database      `json:"database"`
+	Redis         Redis         `json:"redis"`
+	Aws           Aws           `json:"aws"`
+	Server        Server        `json:"server"`
+	Auth          Auth          `json:"auth"`
+	Email         Email         `json:"email"`
+	Job           Job           `json:"job"`
+	Pubsub        Pubsub        `json:"pubsub"`
+	Cors          Cors          `json:"cors"`
+	Cache         Cache         `json:"cache"`
+	Telemetry     Telemetry     `json:"telemetry"`
+	Agent         Agent         `json:"agent"`
+	Integrations  Integrations  `json:"integrations"`
+	Stripe        Stripe        `json:"stripe"`
+	SecretManager SecretManager `json:"secret_manager"`
+}
+
+type SecretManager struct {
+	Provider SecretManagerProvider `json:"provider" envconfig:"SECRET_MANAGER_PROVIDER"`
 }
 
 type Stripe struct {

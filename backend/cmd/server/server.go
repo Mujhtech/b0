@@ -26,6 +26,8 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 	"golang.org/x/sync/errgroup"
+
+	secretmanager "github.com/mujhtech/b0/internal/pkg/secret_manager"
 )
 
 func RegisterServerCommand() *cobra.Command {
@@ -129,6 +131,12 @@ func startServer(configFile string, logLevel string) error {
 		return fmt.Errorf("failed to create container client: %w", err)
 	}
 
+	secretManager, err := secretmanager.New(ctx, cfg, cache)
+
+	if err != nil {
+		return fmt.Errorf("failed to create secret manager: %w", err)
+	}
+
 	app, err := api.New(
 		cfg,
 		ctx,
@@ -139,6 +147,7 @@ func startServer(configFile string, logLevel string) error {
 		job,
 		container,
 		stripe.New(cfg),
+		secretManager,
 	)
 
 	if err != nil {
