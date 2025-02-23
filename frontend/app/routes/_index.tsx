@@ -1,9 +1,4 @@
-import {
-  ArrowUpRight,
-  Folder,
-  GlobeHemisphereWest,
-  PaperPlaneTilt,
-} from "@phosphor-icons/react";
+import { ArrowUpRight, PaperPlaneTilt } from "@phosphor-icons/react";
 import {
   redirect,
   type ActionFunction,
@@ -127,18 +122,6 @@ export default function Index() {
                   }}
                 />
                 <LanguagePicker value={language} onSelect={setLanguage} />
-                {/* <button
-                  type="button"
-                  className="border border-input h-6 w-6 p-1 inline-flex items-center justify-center"
-                >
-                  <Folder className="h-5 w-5" />
-                </button> */}
-                <button
-                  type="button"
-                  className="border border-input h-6 w-6 p-1 inline-flex items-center justify-center"
-                >
-                  <GlobeHemisphereWest className="h-5 w-5" />
-                </button>
               </div>
               <div className="ml-auto flex items-center gap-2">
                 <button

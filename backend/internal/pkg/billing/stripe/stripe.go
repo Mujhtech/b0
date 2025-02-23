@@ -43,6 +43,8 @@ func (s Stripe) CreateCustomerSubscription(customerID, plan string) (string, err
 	var priceId string
 
 	switch plan {
+	case "starter":
+		priceId = s.cfg.StarterSubscriptionPriceID
 	case "pro":
 		priceId = s.cfg.ProSubscriptionPriceID
 	case "scale":

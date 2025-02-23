@@ -51,9 +51,10 @@ type Config struct {
 }
 
 type Stripe struct {
-	ApiKey                   string `json:"api_key" envconfig:"STRIPE_API_KEY"`
-	ProSubscriptionPriceID   string `json:"pro_subscription_price_id" envconfig:"STRIPE_PRO_SUBSCRIPTION_PRICE_ID"`
-	ScaleSubscriptionPriceID string `json:"scale_subscription_price_id" envconfig:"STRIPE_SCALE_SUBSCRIPTION_PRICE_ID"`
+	ApiKey                     string `json:"api_key" envconfig:"STRIPE_API_KEY"`
+	StarterSubscriptionPriceID string `json:"starter_subscription_price_id" envconfig:"STRIPE_STARTER_SUBSCRIPTION_PRICE_ID"`
+	ProSubscriptionPriceID     string `json:"pro_subscription_price_id" envconfig:"STRIPE_PRO_SUBSCRIPTION_PRICE_ID"`
+	ScaleSubscriptionPriceID   string `json:"scale_subscription_price_id" envconfig:"STRIPE_SCALE_SUBSCRIPTION_PRICE_ID"`
 }
 
 type Integrations struct {
