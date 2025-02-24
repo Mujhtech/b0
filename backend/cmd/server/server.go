@@ -131,7 +131,7 @@ func startServer(configFile string, logLevel string) error {
 		return fmt.Errorf("failed to create container client: %w", err)
 	}
 
-	secretManager, err := secretmanager.New(ctx, cfg, cache)
+	secretManager, err := secretmanager.New(ctx, cfg, redis, cache)
 
 	if err != nil {
 		return fmt.Errorf("failed to create secret manager: %w", err)
@@ -165,7 +165,7 @@ func startServer(configFile string, logLevel string) error {
 	g, gCtx := errgroup.WithContext(ctx)
 
 	g.Go(func() error {
-		return job.RegisterAndStart(cfg, store, agent, sse, container)
+		return job.RegisterAndStart(cfg, store, agent, sse, container, secretManager)
 	})
 
 	gHTTP, shutdownHTTP := server.ListenAndServe()

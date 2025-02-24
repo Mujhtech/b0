@@ -1,8 +1,8 @@
-import { MetaFunction } from "@remix-run/node";
-import { Outlet } from "@remix-run/react";
+import { LoaderFunctionArgs, MetaFunction } from "@remix-run/node";
+import { Outlet, useNavigate } from "@remix-run/react";
 import React from "react";
 import Paragraph from "~/components/ui/paragraph";
-import { useUser } from "~/hooks/use-user";
+import { useAuthToken, usePlatformUrl, useUser } from "~/hooks/use-user";
 import { Card, CardContent, CardHeader } from "~/components/ui/card";
 import DeleteProjectDialog from "~/components/projects/delete-project-dialog";
 
@@ -22,6 +22,33 @@ import { Input } from "~/components/ui/input";
 import { useProject } from "~/hooks/use-project";
 import { Textarea } from "~/components/ui/textarea";
 import { Plus } from "@phosphor-icons/react";
+import { typedjson, useTypedLoaderData } from "remix-typedjson";
+import { getSecrets } from "~/services/secret.server";
+import { Secrets } from "~/models/secret";
+import { getProject } from "~/services/project.server";
+import { ProjectSlugParamSchema } from "../$projectSlug/route";
+import invariant from "tiny-invariant";
+import { clientApi } from "~/services/api.client";
+import { ServerResponse, ServerResponseSchema } from "~/models/default";
+import { toast } from "sonner";
+import { ToastUI } from "~/components/custom-toast";
+
+export const loader = async ({ request, params }: LoaderFunctionArgs) => {
+  const { projectSlug } = ProjectSlugParamSchema.parse(params);
+
+  invariant(projectSlug, "No project found in request.");
+
+  let secrets: Secrets = [];
+
+  try {
+    const project = await getProject(request, projectSlug);
+    secrets = await getSecrets(request, project.id);
+  } catch (err) {}
+
+  return typedjson({
+    secrets,
+  });
+};
 
 export const meta: MetaFunction = () => {
   return [
@@ -32,7 +59,7 @@ export const meta: MetaFunction = () => {
 };
 
 const env = z.object({
-  key: z.string(),
+  name: z.string(),
   value: z.string(),
   note: z.string().optional(),
   protected: z.boolean().optional(),
@@ -43,23 +70,47 @@ const formSchema = z.object({
 });
 
 export default function Page() {
+  const { secrets } = useTypedLoaderData<typeof loader>();
+
   const project = useProject();
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      envs: [{ key: "", value: "" }],
+      envs: secrets,
     },
   });
 
+  const navigate = useNavigate();
+  const accessToken = useAuthToken();
+  const backendBaseUrl = usePlatformUrl();
+
   async function onSubmit(values: z.infer<typeof formSchema>) {
     try {
-    } catch (error) {
-      console.error(error);
+      const res = await clientApi.post<ServerResponse>({
+        path: `/projects/${project.id}/secrets`,
+        body: { secrets: values.envs },
+        backendBaseUrl: backendBaseUrl!,
+        accessToken: accessToken!,
+        schema: ServerResponseSchema,
+      });
+      toast.custom(
+        (t) => (
+          <ToastUI variant={"success"} message={res.message} t={t as string} />
+        ),
+        {}
+      );
+    } catch (error: any) {
+      toast.custom(
+        (t) => (
+          <ToastUI variant={"error"} message={error.message} t={t as string} />
+        ),
+        {}
+      );
     }
   }
 
   const addEnv = () => {
-    form.setValue("envs", [...form.getValues("envs"), { key: "", value: "" }]);
+    form.setValue("envs", [...form.getValues("envs"), { name: "", value: "" }]);
   };
 
   return (
@@ -74,11 +125,11 @@ export default function Page() {
               <div className="flex flex-col p-4 gap-4">
                 {form.watch("envs").map((_, index) => {
                   return (
-                    <div className="flex flex-col gap-2">
+                    <div className="flex flex-col gap-2" key={index}>
                       <div className="grid grid-cols-2 gap-2">
                         <FormField
                           control={form.control}
-                          name={`envs.${index}.key`}
+                          name={`envs.${index}.name`}
                           render={({ field }) => (
                             <FormItem>
                               <FormLabel>Key</FormLabel>
@@ -140,9 +191,7 @@ export default function Page() {
                       Add
                     </Button>
                   </div>
-                  <Button disabled={true} className="h-8 shadow-none">
-                    Save
-                  </Button>
+                  <Button className="h-8 shadow-none">Save</Button>
                 </div>
               </div>
             </form>

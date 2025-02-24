@@ -5,6 +5,7 @@ import (
 
 	"github.com/mujhtech/b0/cache"
 	"github.com/mujhtech/b0/config"
+	"github.com/mujhtech/b0/internal/redis"
 )
 
 type SecretManager interface {
@@ -22,14 +23,14 @@ func (s *secretManager) SetSecret(ctx context.Context, secretName string, secret
 	return nil
 }
 
-func New(ctx context.Context, cfg *config.Config, cache cache.Cache) (SecretManager, error) {
+func New(ctx context.Context, cfg *config.Config, redis *redis.Redis, cache cache.Cache) (SecretManager, error) {
 	switch cfg.SecretManager.Provider {
 	case config.SecretManagerProviderGoogle:
 		return NewGoogleClient(ctx)
 	case config.SecretManagerProviderAws:
 		return NewAwsClient(ctx, cfg)
 	case config.SecretManagerProviderLocal:
-		return NewLocalClient(cfg, cache)
+		return NewLocalClient(cfg, redis, cache)
 	default:
 		return &secretManager{}, nil
 	}

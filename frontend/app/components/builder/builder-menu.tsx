@@ -3,14 +3,24 @@ import { usePlayground } from "./playground/provider";
 import { cn } from "~/lib/utils";
 import Paragraph from "../ui/paragraph";
 import { usePlaygroundBuilder } from "./provider";
+import { useNavigate } from "@remix-run/react";
+import { useOptionalProject } from "~/hooks/use-project";
 
 export default function BuilderMenu() {
   const {} = usePlayground();
   const { setOpenLogPreviewDialog, openLogPreviewDialog } =
     usePlaygroundBuilder();
 
+  const navigate = useNavigate();
+
+  const project = useOptionalProject();
+
   const handleOpenLog = () => {
     setOpenLogPreviewDialog(!openLogPreviewDialog);
+  };
+
+  const handleGotToSettings = () => {
+    navigate(`/${project?.slug}/settings`);
   };
   return (
     <div className="absolute left-4 top-4 z-10">
@@ -32,13 +42,13 @@ export default function BuilderMenu() {
               className="cursor-pointer font-bold"
               onClick={handleOpenLog}
             >
-              Debug
+              Logs
             </Paragraph>
             <Paragraph
               className="cursor-pointer font-bold"
-              onClick={handleOpenLog}
+              onClick={handleGotToSettings}
             >
-              Logs
+              Settings
             </Paragraph>
           </div>
         </div>

@@ -9,6 +9,7 @@ import (
 	"github.com/mujhtech/b0/internal/pkg/request"
 	"github.com/mujhtech/b0/internal/pkg/response"
 	"github.com/mujhtech/b0/internal/util"
+	jobHandlers "github.com/mujhtech/b0/job/handlers"
 	"github.com/mujhtech/b0/services"
 )
 
@@ -44,8 +45,6 @@ func (h *Handler) GetScret(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	secretId := project.ID
-
 	if endpointId != "" {
 
 		findEndpointService := services.FindEndpointService{
@@ -61,27 +60,18 @@ func (h *Handler) GetScret(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		secretId = fmt.Sprintf("%s_%s", secretId, endpoint.ID)
+		endpointId = endpoint.ID
 
 	}
 
-	secretName := fmt.Sprintf("projects/b0/%s/env-variables", secretId)
-
-	secret, err := h.secretManager.GetSecret(ctx, secretName)
+	secrets, err := jobHandlers.GetEnvVars(ctx, h.secretManager, project.ID, endpointId)
 
 	if err != nil {
 		_ = response.InternalServerError(w, r, err)
 		return
 	}
 
-	var secrets []dto.Secret
-
-	if err := util.UnmarshalJSON(secret, &secrets); err != nil {
-		_ = response.InternalServerError(w, r, err)
-		return
-	}
-
-	_ = response.Ok(w, r, "ok", secrets)
+	_ = response.Ok(w, r, "environmental variable retrieved", secrets)
 }
 
 func (h *Handler) CreateOrUpdateScret(w http.ResponseWriter, r *http.Request) {
@@ -159,5 +149,5 @@ func (h *Handler) CreateOrUpdateScret(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	_ = response.Ok(w, r, "ok", nil)
+	_ = response.Ok(w, r, "environmental variable saved", nil)
 }

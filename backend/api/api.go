@@ -106,10 +106,10 @@ func (a *Api) BuildRouter() *chi.Mux {
 				r.Get(fmt.Sprintf("/{%s}", handler.ProjectParamId), a.handler.GetProject)
 				r.Get(fmt.Sprintf("/{%s}/log", handler.ProjectParamId), a.handler.ProjectLog)
 				r.Get(fmt.Sprintf("/{%s}/sse", handler.ProjectParamId), a.handler.ProjectEvent)
-				r.Get(fmt.Sprintf("/{%s}/secret", handler.ProjectParamId), a.handler.GetScret)
+				r.Get(fmt.Sprintf("/{%s}/secrets", handler.ProjectParamId), a.handler.GetScret)
 				r.Put(fmt.Sprintf("/{%s}", handler.ProjectParamId), a.handler.UpdateProject)
 				r.Post(fmt.Sprintf("/{%s}/action", handler.ProjectParamId), a.handler.ProjectAction)
-				r.Post(fmt.Sprintf("/{%s}/secret", handler.ProjectParamId), a.handler.CreateOrUpdateScret)
+				r.Post(fmt.Sprintf("/{%s}/secrets", handler.ProjectParamId), a.handler.CreateOrUpdateScret)
 			})
 
 			// projects route

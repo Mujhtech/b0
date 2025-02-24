@@ -10,10 +10,13 @@ import (
 	"math/rand/v2"
 
 	"github.com/docker/docker/pkg/archive"
+	"github.com/mujhtech/b0/api/dto"
 	"github.com/mujhtech/b0/database/models"
 	"github.com/mujhtech/b0/database/store"
 	"github.com/mujhtech/b0/internal/pkg/agent"
+	secretmanager "github.com/mujhtech/b0/internal/pkg/secret_manager"
 	"github.com/mujhtech/b0/internal/pkg/sse"
+	"github.com/mujhtech/b0/internal/util"
 	"github.com/rs/zerolog"
 )
 
@@ -152,4 +155,31 @@ func checkUsageLimit(ctx context.Context, s *store.Store, project *models.Projec
 	}
 
 	return user, nil
+}
+
+func GetEnvVars(ctx context.Context, secretManager secretmanager.SecretManager, projectId, endpointId string) ([]*dto.Secret, error) {
+
+	secrets := []*dto.Secret{}
+
+	secretId := projectId
+
+	if endpointId != "" {
+		secretId = fmt.Sprintf("%s_%s", secretId, endpointId)
+	}
+
+	secretName := fmt.Sprintf("projects/b0/%s/env-variables", secretId)
+
+	secret, err := secretManager.GetSecret(ctx, secretName)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if secret != nil {
+		if err := util.UnmarshalJSON(secret, &secrets); err != nil {
+			return nil, err
+		}
+	}
+
+	return secrets, nil
 }

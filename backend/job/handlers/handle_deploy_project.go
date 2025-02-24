@@ -15,11 +15,12 @@ import (
 	aa "github.com/mujhtech/b0/internal/pkg/agent"
 	con "github.com/mujhtech/b0/internal/pkg/container"
 	"github.com/mujhtech/b0/internal/pkg/encrypt"
+	secretmanager "github.com/mujhtech/b0/internal/pkg/secret_manager"
 	"github.com/mujhtech/b0/internal/pkg/sse"
 	"github.com/rs/zerolog"
 )
 
-func HandleDeployProject(aesCfb encrypt.Encrypt, cfg *config.Config, store *store.Store, agent *aa.Agent, event sse.Streamer, docker *con.Container) func(context.Context, *asynq.Task) error {
+func HandleDeployProject(aesCfb encrypt.Encrypt, cfg *config.Config, store *store.Store, agent *aa.Agent, event sse.Streamer, docker *con.Container, secretManager secretmanager.SecretManager) func(context.Context, *asynq.Task) error {
 	return func(ctx context.Context, t *asynq.Task) error {
 
 		projectId, err := aesCfb.Decrypt(string(t.Payload()))
@@ -291,33 +292,47 @@ func HandleDeployProject(aesCfb encrypt.Encrypt, cfg *config.Config, store *stor
 							continue
 						}
 
-						if env.Key == "B0_GEMINI_KEY" {
-							envs = append(envs, fmt.Sprintf("B0_GEMINI_KEY=%s", cfg.Agent.GeminiKey))
-							continue
-						}
+						// if env.Key == "B0_GEMINI_KEY" {
+						// 	envs = append(envs, fmt.Sprintf("B0_GEMINI_KEY=%s", cfg.Agent.GeminiKey))
+						// 	continue
+						// }
 
-						if env.Key == "B0_OPENAI_KEY" {
-							envs = append(envs, fmt.Sprintf("B0_OPENAI_KEY=%s", cfg.Agent.GeminiKey))
-							continue
-						}
+						// if env.Key == "B0_OPENAI_KEY" {
+						// 	envs = append(envs, fmt.Sprintf("B0_OPENAI_KEY=%s", cfg.Agent.GeminiKey))
+						// 	continue
+						// }
 
-						if env.Key == "B0_TELEGRAM_KEY" {
-							envs = append(envs, fmt.Sprintf("B0_TELEGRAM_KEY=%s", cfg.Integrations.Telegram.TelegramBotToken))
-							continue
-						}
+						// if env.Key == "B0_TELEGRAM_KEY" {
+						// 	envs = append(envs, fmt.Sprintf("B0_TELEGRAM_KEY=%s", cfg.Integrations.Telegram.TelegramBotToken))
+						// 	continue
+						// }
 
-						if env.Key == "B0_DISCORD_KEY" {
-							envs = append(envs, fmt.Sprintf("B0_DISCORD_KEY=%s", cfg.Integrations.Discord.DiscordBotToken))
-							continue
-						}
+						// if env.Key == "B0_DISCORD_KEY" {
+						// 	envs = append(envs, fmt.Sprintf("B0_DISCORD_KEY=%s", cfg.Integrations.Discord.DiscordBotToken))
+						// 	continue
+						// }
 
-						if env.Key == "B0_DISCORD_CHANNEL_ID" {
-							envs = append(envs, fmt.Sprintf("B0_DISCORD_CHANNEL_ID=%s", cfg.Integrations.Discord.ChannelID))
-							continue
-						}
+						// if env.Key == "B0_DISCORD_CHANNEL_ID" {
+						// 	envs = append(envs, fmt.Sprintf("B0_DISCORD_CHANNEL_ID=%s", cfg.Integrations.Discord.ChannelID))
+						// 	continue
+						// }
 
 						envs = append(envs, fmt.Sprintf("%s=%s", env.Key, env.Value))
 					}
+				}
+
+				secrets, err := GetEnvVars(ctx, secretManager, project.ID, endpoint.ID)
+
+				if err != nil {
+					sendEvent(ctx, project.ID, sse.EventTypeTaskFailed, AgentData{
+						Message: "b0 failed to get env vars",
+						Error:   err.Error(),
+					}, event)
+					return nil
+				}
+
+				for _, secret := range secrets {
+					envs = append(envs, fmt.Sprintf("%s=%s", secret.Name, secret.Value))
 				}
 
 				newContainerID, err := docker.CreateContainer(ctx, con.CreateContainerOption{
