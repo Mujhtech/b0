@@ -9,6 +9,7 @@ const (
 	AgentModelGPT3Dot5          AgentModel = "gpt-3.5"
 	AgentModelGPT4              AgentModel = "gpt-4"
 	AgentModelClaudeSonnet3Dot5 AgentModel = "claude-sonnet-3.5"
+	AgentModelClaudeSonnet3Dot7 AgentModel = "claude-sonnet-3.7"
 	AgentModelDeepSeekR1        AgentModel = "deepseek-reasoner"
 	AgentModelGeminiFlash1Dot5  AgentModel = "gemini-1.5-flash"
 	AgentModelGeminiFlash2Dot0  AgentModel = "gemini-2.0-flash"
@@ -747,6 +748,14 @@ var AvailableCatalogs = []ModeCatalog{
 		IsPremium:      true,
 	},
 	{
+		Name:           "Claude Sonnet 3.7",
+		Model:          AgentModelClaudeSonnet3Dot7,
+		IsEnabled:      true,
+		IsExperimental: false,
+		IsDefault:      false,
+		IsPremium:      true,
+	},
+	{
 		Name:           "DeepSeek R1",
 		Model:          AgentModelDeepSeekR1,
 		IsEnabled:      true,
@@ -757,9 +766,9 @@ var AvailableCatalogs = []ModeCatalog{
 	{
 		Name:           "Gemini 1.5 Flash",
 		Model:          AgentModelGeminiFlash1Dot5,
-		IsEnabled:      true,
+		IsEnabled:      false,
 		IsExperimental: true,
-		IsDefault:      true,
+		IsDefault:      false,
 		IsPremium:      false,
 	},
 	{
@@ -767,7 +776,7 @@ var AvailableCatalogs = []ModeCatalog{
 		Model:          AgentModelGeminiFlash2Dot0,
 		IsEnabled:      true,
 		IsExperimental: true,
-		IsDefault:      false,
+		IsDefault:      true,
 		IsPremium:      false,
 	},
 	{

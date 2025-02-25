@@ -1,0 +1,1 @@
+ALTER TABLE "users" ADD COLUMN "enable_pay_as_you_go" BOOLEAN NOT NULL DEFAULT false;

@@ -14,3 +14,11 @@ export const GetUsageSchema = ServerResponseSchema.extend({
 });
 
 export type GetUsage = z.infer<typeof GetUsageSchema>;
+
+export const UpgradePlanSchema = ServerResponseSchema.extend({
+  data: z.object({
+    portal_link: z.string(),
+  }),
+});
+
+export type UpgradePlan = z.infer<typeof UpgradePlanSchema>;

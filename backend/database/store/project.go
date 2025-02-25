@@ -156,6 +156,7 @@ func (p *projectRepo) UpdateProject(ctx context.Context, project *models.Project
 
 	stmt := Builder.
 		Update(projectBaseTable).
+		Set("updated_at", squirrel.Expr("NOW()")).
 		Where(squirrel.Eq{"id": project.ID}).
 		Where(excludeDeleted)
 

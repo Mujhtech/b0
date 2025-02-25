@@ -20,6 +20,7 @@ import (
 	"github.com/rs/zerolog/hlog"
 
 	chiMiddleware "github.com/go-chi/chi/v5/middleware"
+	secretmanager "github.com/mujhtech/b0/internal/pkg/secret_manager"
 )
 
 type Api struct {
@@ -40,9 +41,10 @@ func New(
 	job *job.Job,
 	docker *container.Container,
 	billing stripe.Stripe,
+	secretManager secretmanager.SecretManager,
 ) (*Api, error) {
 
-	h, err := handler.New(cfg, ctx, store, cache, agent, sse, job, docker, billing)
+	h, err := handler.New(cfg, ctx, store, cache, agent, sse, job, docker, billing, secretManager)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create handler: %w", err)
 	}
@@ -104,8 +106,10 @@ func (a *Api) BuildRouter() *chi.Mux {
 				r.Get(fmt.Sprintf("/{%s}", handler.ProjectParamId), a.handler.GetProject)
 				r.Get(fmt.Sprintf("/{%s}/log", handler.ProjectParamId), a.handler.ProjectLog)
 				r.Get(fmt.Sprintf("/{%s}/sse", handler.ProjectParamId), a.handler.ProjectEvent)
+				r.Get(fmt.Sprintf("/{%s}/secrets", handler.ProjectParamId), a.handler.GetScret)
 				r.Put(fmt.Sprintf("/{%s}", handler.ProjectParamId), a.handler.UpdateProject)
 				r.Post(fmt.Sprintf("/{%s}/action", handler.ProjectParamId), a.handler.ProjectAction)
+				r.Post(fmt.Sprintf("/{%s}/secrets", handler.ProjectParamId), a.handler.CreateOrUpdateScret)
 			})
 
 			// projects route

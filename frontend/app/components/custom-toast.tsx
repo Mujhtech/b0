@@ -59,7 +59,7 @@ export function ToastUI({
         ) : (
           <ExclamationMark className="mt-1 size-6 min-w-6 text-error" />
         )}
-        <Paragraph className="py-1 text-text-bright">{message}</Paragraph>
+        <Paragraph className="py-1 text-white">{message}</Paragraph>
         <button
           className="hover:bg-midnight-800 ms-auto rounded p-2 text-text-dimmed transition hover:text-text-bright"
           onClick={() => toast.dismiss(t)}

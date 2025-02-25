@@ -9,10 +9,27 @@ import (
 	"github.com/mujhtech/b0/database/models"
 )
 
+type TotalAIUsageFilterRange string
+
 const (
 	aiUsageBaseTable    = "ai_usages"
-	aiUsageSelectColumn = "id, owner_id, project_id, endpoint_id, input_tokens, output_tokens, model, usage_type, metadata, created_at, updated_at, deleted_at"
+	aiUsageSelectColumn = "id, owner_id, project_id, endpoint_id, input_tokens, output_tokens, model, usage_type, is_premium, metadata, created_at, updated_at, deleted_at"
+
+	TotalAIUsageFilterRangeToday  TotalAIUsageFilterRange = "today"
+	TotalAIUsageFilterRangeMonth  TotalAIUsageFilterRange = "month"
+	TotalAIUsageFilterRangeCustom TotalAIUsageFilterRange = "custom"
 )
+
+type TotalAIUsageFilter struct {
+	OwnerID    string                  `json:"owner_id"`
+	Model      string                  `json:"model"`
+	ProjectID  string                  `json:"project_id"`
+	EndpointID string                  `json:"endpoint_id"`
+	From       string                  `json:"from"`
+	To         string                  `json:"to"`
+	Range      TotalAIUsageFilterRange `json:"range"`
+	IsPremium  *bool                   `json:"is_premium"`
+}
 
 type TotalAIUsage struct {
 	TotalUsage             int `db:"total_usage" json:"total_usage"`
@@ -55,6 +72,7 @@ func (a *aiUsageRepo) CreateAIUsage(ctx context.Context, aiUsage *models.AIUsage
 			"output_tokens",
 			"model",
 			"usage_type",
+			"is_premium",
 			"metadata",
 		).
 		Values(
@@ -66,6 +84,7 @@ func (a *aiUsageRepo) CreateAIUsage(ctx context.Context, aiUsage *models.AIUsage
 			aiUsage.OutputToken,
 			aiUsage.Model,
 			aiUsage.UsageType,
+			aiUsage.IsPremium,
 			metadata,
 		)
 
@@ -89,6 +108,7 @@ func (a *aiUsageRepo) UpdateAIUsage(ctx context.Context, aiUsage *models.AIUsage
 
 	stmt := Builder.
 		Update(aiUsageBaseTable).
+		Set("updated_at", squirrel.Expr("NOW()")).
 		Where(squirrel.Eq{"id": aiUsage.ID}).
 		Where(excludeDeleted)
 
@@ -191,37 +211,40 @@ func (a *aiUsageRepo) FindAIUsageByProjectID(ctx context.Context, projectId stri
 	return dst, nil
 }
 
-// GetTotalUsageInCurrentDay implements AIUsageRepository.
-func (a *aiUsageRepo) GetTotalUsageInCurrentDay(ctx context.Context, ownerId string) (*TotalAIUsage, error) {
+// GetTotalUsage implements AIUsageRepository.
+func (a *aiUsageRepo) GetTotalUsage(ctx context.Context, opts TotalAIUsageFilter) (*TotalAIUsage, error) {
 	stmt := Builder.
 		Select("COUNT(*) AS total_usage").
 		From(aiUsageBaseTable).
-		Where(squirrel.Eq{"owner_id": ownerId}).
-		Where("DATE(created_at) = CURRENT_DATE").
 		Where(excludeDeleted)
 
-	sql, args, err := stmt.ToSql()
-
-	if err != nil {
-		return nil, err
+	if opts.OwnerID != "" {
+		stmt = stmt.Where(squirrel.Eq{"owner_id": opts.OwnerID})
 	}
 
-	dst := new(TotalAIUsage)
-	if err := a.db.GetDB().GetContext(ctx, dst, sql, args...); err != nil {
-		return nil, ProcessSQLErrorfWithCtx(ctx, sql, err, "failed to get total usage in current day by owner id")
+	if opts.Model != "" {
+		stmt = stmt.Where(squirrel.Eq{"model": opts.Model})
 	}
 
-	return dst, nil
-}
+	if opts.ProjectID != "" {
+		stmt = stmt.Where(squirrel.Eq{"project_id": opts.ProjectID})
+	}
 
-// GetTotalUsageInCurrentMonth implements AIUsageRepository.
-func (a *aiUsageRepo) GetTotalUsageInCurrentMonth(ctx context.Context, ownerId string) (*TotalAIUsage, error) {
-	stmt := Builder.
-		Select("COUNT(*) AS total_usage").
-		From(aiUsageBaseTable).
-		Where(squirrel.Eq{"owner_id": ownerId}).
-		Where("DATE(created_at) >= DATE_TRUNC('month', CURRENT_DATE)").
-		Where(excludeDeleted)
+	if opts.EndpointID != "" {
+		stmt = stmt.Where(squirrel.Eq{"endpoint_id": opts.EndpointID})
+	}
+
+	if opts.IsPremium != nil {
+		stmt = stmt.Where(squirrel.Eq{"is_premium": opts.IsPremium})
+	}
+
+	switch opts.Range {
+	case TotalAIUsageFilterRangeToday:
+		stmt = stmt.Where("DATE(created_at) = CURRENT_DATE")
+	case TotalAIUsageFilterRangeMonth:
+		stmt = stmt.Where("DATE(created_at) >= DATE_TRUNC('month', CURRENT_DATE)")
+
+	}
 
 	sql, args, err := stmt.ToSql()
 

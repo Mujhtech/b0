@@ -9,6 +9,7 @@ import (
 	"github.com/mujhtech/b0/internal/pkg/agent"
 	"github.com/mujhtech/b0/internal/pkg/container"
 	"github.com/mujhtech/b0/internal/pkg/encrypt"
+	secretmanager "github.com/mujhtech/b0/internal/pkg/secret_manager"
 	"github.com/mujhtech/b0/internal/pkg/sse"
 	"github.com/mujhtech/b0/internal/redis"
 	"github.com/mujhtech/b0/job/handlers"
@@ -42,11 +43,11 @@ func NewJob(cfg *config.Config, appCtx context.Context, redis *redis.Redis) (*Jo
 	}, nil
 }
 
-func (j *Job) RegisterAndStart(cfg *config.Config, store *store.Store, agent *agent.Agent, sse sse.Streamer, container *container.Container) error {
+func (j *Job) RegisterAndStart(cfg *config.Config, store *store.Store, agent *agent.Agent, sse sse.Streamer, container *container.Container, secretManager secretmanager.SecretManager) error {
 	j.Executor.RegisterJobHandler(JobNameWorkflowCreate, asynq.HandlerFunc(handlers.HandleCreateWorkflow(j.aesCfb, store, agent, sse)))
 	j.Executor.RegisterJobHandler(JobNameWorkflowUpdate, asynq.HandlerFunc(handlers.HandleUpdateWorkflow(j.aesCfb, store, agent, sse)))
 	j.Executor.RegisterJobHandler(JobNameWebhook, asynq.HandlerFunc(handlers.HandleWebhook(j.aesCfb, store)))
-	j.Executor.RegisterJobHandler(JobNameProjectDeploy, asynq.HandlerFunc(handlers.HandleDeployProject(j.aesCfb, cfg, store, agent, sse, container)))
+	j.Executor.RegisterJobHandler(JobNameProjectDeploy, asynq.HandlerFunc(handlers.HandleDeployProject(j.aesCfb, cfg, store, agent, sse, container, secretManager)))
 
 	return j.Executor.Start()
 }

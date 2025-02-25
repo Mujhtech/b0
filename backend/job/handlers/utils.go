@@ -10,10 +10,13 @@ import (
 	"math/rand/v2"
 
 	"github.com/docker/docker/pkg/archive"
+	"github.com/mujhtech/b0/api/dto"
 	"github.com/mujhtech/b0/database/models"
 	"github.com/mujhtech/b0/database/store"
 	"github.com/mujhtech/b0/internal/pkg/agent"
+	secretmanager "github.com/mujhtech/b0/internal/pkg/secret_manager"
 	"github.com/mujhtech/b0/internal/pkg/sse"
+	"github.com/mujhtech/b0/internal/util"
 	"github.com/rs/zerolog"
 )
 
@@ -122,15 +125,18 @@ func generatePort() string {
 	return fmt.Sprintf("%d", port)
 }
 
-func checkUsageLimit(ctx context.Context, store *store.Store, project *models.Project) (*models.User, error) {
+func checkUsageLimit(ctx context.Context, s *store.Store, project *models.Project) (*models.User, error) {
 
-	user, err := store.UserRepo.FindUserByID(ctx, project.OwnerID)
+	user, err := s.UserRepo.FindUserByID(ctx, project.OwnerID)
 
 	if err != nil {
 		return nil, fmt.Errorf("failed to get project owner")
 	}
 
-	usageCount, err := store.AIUsageRepo.GetTotalUsageInCurrentMonth(ctx, user.ID)
+	usageCount, err := s.AIUsageRepo.GetTotalUsage(ctx, store.TotalAIUsageFilter{
+		OwnerID: user.ID,
+		Range:   store.TotalAIUsageFilterRangeMonth,
+	})
 
 	if err != nil {
 		return nil, fmt.Errorf("failed to get usage count")
@@ -140,9 +146,40 @@ func checkUsageLimit(ctx context.Context, store *store.Store, project *models.Pr
 		return user, fmt.Errorf("you have reached the maximum number of requests for the current month")
 	}
 
+	if user.SubscriptionPlan == "starter" && usageCount.TotalUsage >= 50 {
+		return user, fmt.Errorf("you have reached the maximum number of requests for the current month")
+	}
+
 	if user.SubscriptionPlan == "pro" && usageCount.TotalUsage >= 100 {
 		return user, fmt.Errorf("you have reached the maximum number of requests for the current month, enable pay as you go to continue")
 	}
 
 	return user, nil
+}
+
+func GetEnvVars(ctx context.Context, secretManager secretmanager.SecretManager, projectId, endpointId string) ([]*dto.Secret, error) {
+
+	secrets := []*dto.Secret{}
+
+	secretId := projectId
+
+	if endpointId != "" {
+		secretId = fmt.Sprintf("%s_%s", secretId, endpointId)
+	}
+
+	secretName := fmt.Sprintf("projects/b0/%s/env-variables", secretId)
+
+	secret, err := secretManager.GetSecret(ctx, secretName)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if secret != nil {
+		if err := util.UnmarshalJSON(secret, &secrets); err != nil {
+			return nil, err
+		}
+	}
+
+	return secrets, nil
 }

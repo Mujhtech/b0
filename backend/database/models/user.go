@@ -27,6 +27,7 @@ type User struct {
 	StripeCustomerId         null.String `json:"-" db:"stripe_customer_id"`
 	StripeSubscriptionId     null.String `json:"-" db:"stripe_subscription_id"`
 	StripeSubscriptionStatus null.String `json:"-" db:"stripe_subscription_status"`
+	EnablePayAsYouGo         bool        `json:"enable_pay_as_you_go" db:"enable_pay_as_you_go"`
 	Metadata                 interface{} `json:"metadata"`
 	CreatedAt                time.Time   `json:"created_at,omitempty" db:"created_at,omitempty"`
 	UpdatedAt                time.Time   `json:"updated_at,omitempty" db:"updated_at,omitempty"`

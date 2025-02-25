@@ -1,9 +1,4 @@
-import {
-  ArrowUpRight,
-  Folder,
-  GlobeHemisphereWest,
-  PaperPlaneTilt,
-} from "@phosphor-icons/react";
+import { ArrowUpRight, PaperPlaneTilt } from "@phosphor-icons/react";
 import {
   redirect,
   type ActionFunction,
@@ -62,7 +57,9 @@ export const meta: MetaFunction = () => {
 export default function Index() {
   const fetcher = useFetcher();
   const { available_models } = useFeature();
-  const defaultModel = available_models.find((model) => model.is_default);
+  const defaultModel = available_models.find(
+    (model) => model.is_default && model.is_enabled
+  );
   const [model, setModel] = React.useState<string | undefined>(
     defaultModel?.model
   );
@@ -125,18 +122,6 @@ export default function Index() {
                   }}
                 />
                 <LanguagePicker value={language} onSelect={setLanguage} />
-                {/* <button
-                  type="button"
-                  className="border border-input h-6 w-6 p-1 inline-flex items-center justify-center"
-                >
-                  <Folder className="h-5 w-5" />
-                </button> */}
-                <button
-                  type="button"
-                  className="border border-input h-6 w-6 p-1 inline-flex items-center justify-center"
-                >
-                  <GlobeHemisphereWest className="h-5 w-5" />
-                </button>
               </div>
               <div className="ml-auto flex items-center gap-2">
                 <button
@@ -156,15 +141,31 @@ export default function Index() {
         </div>
         <div className="mt-12 flex flex-wrap justify-center gap-3 w-full">
           {[
-            "Hello world",
-            "Stripe webhook",
-            "Telegram Bot",
-            "Discord Bot",
-            "Open AI",
+            { title: "Hello world", prompt: "Build a simple hello world app" },
+            {
+              title: "Stripe webhook",
+              prompt:
+                "Build a web server that handles and process stripe webhooks",
+            },
+            {
+              title: "Telegram Bot",
+              prompt:
+                "Build a web server that listen to telegram bot webhook and reply to it using telegram bot api",
+            },
+            {
+              title: "Discord Bot",
+              prompt:
+                "Build a discord bot web server that listen to discord bot webhook and reply to it using discordjs sdk",
+            },
+            {
+              title: "Open AI",
+              prompt: "Build a micro service that integrate with open ai",
+            },
           ].map((template, i) => (
             <TemplateCard
               key={i}
-              template={template}
+              template={template.title}
+              prompt={template.prompt}
               model={model}
               language={language}
             />
@@ -180,10 +181,12 @@ export default function Index() {
 
 const TemplateCard = ({
   template,
+  prompt,
   model,
   language,
 }: {
   template: string;
+  prompt: string;
   model?: string;
   language?: string;
 }) => {
@@ -191,7 +194,7 @@ const TemplateCard = ({
 
   const handleOnClick = () => {
     const formData = new FormData();
-    formData.append("prompt", template);
+    formData.append("prompt", prompt);
     formData.append("isTemplate", "true");
     if (model) {
       formData.append("model", model);

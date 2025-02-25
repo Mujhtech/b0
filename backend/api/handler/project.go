@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -9,9 +10,11 @@ import (
 	"github.com/mujhtech/b0/api/dto"
 	"github.com/mujhtech/b0/api/middleware"
 	"github.com/mujhtech/b0/database/models"
+	"github.com/mujhtech/b0/database/store"
 	"github.com/mujhtech/b0/internal/pkg/agent"
 	"github.com/mujhtech/b0/internal/pkg/request"
 	"github.com/mujhtech/b0/internal/pkg/response"
+	"github.com/mujhtech/b0/internal/util"
 	"github.com/mujhtech/b0/job"
 	"github.com/mujhtech/b0/services"
 	"github.com/rs/zerolog"
@@ -105,23 +108,30 @@ func (h *Handler) CreateProject(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if session.User.SubscriptionPlan == "free" {
-		count, err := h.store.ProjectRepo.CountByOwnerID(ctx, session.User.ID)
+	// Check project limits based on subscription plan
+	count, err := h.store.ProjectRepo.CountByOwnerID(ctx, session.User.ID)
+	if err != nil {
+		_ = response.InternalServerError(w, r, err)
+		return
+	}
 
-		if err != nil {
-			_ = response.InternalServerError(w, r, err)
-			return
-		}
-
+	// Check project limits based on plan
+	switch session.User.SubscriptionPlan {
+	case "free":
 		if count >= 3 {
 			_ = response.BadRequest(w, r, fmt.Errorf("you have reached the maximum number of projects allowed for the free plan"))
+			return
+		}
+	case "starter":
+		if count >= 10 {
+			_ = response.BadRequest(w, r, fmt.Errorf("you have reached the maximum number of projects allowed for the starter plan"))
 			return
 		}
 	}
 
 	var framework agent.CodeGenerationOption
 
-	var agentModel agent.AgentModel
+	var catalog agent.ModeCatalog
 
 	if dst.Model != "" {
 		var agentModelErr error
@@ -131,12 +141,15 @@ func (h *Handler) CreateProject(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		if session.User.SubscriptionPlan == "free" && catalog.IsPremium {
+		if (session.User.SubscriptionPlan == "free" || session.User.SubscriptionPlan == "starter") && catalog.IsPremium {
 			_ = response.BadRequest(w, r, fmt.Errorf("you are not allowed to use premium models with the free plan"))
 			return
 		}
 
-		usageCount, err := h.store.AIUsageRepo.GetTotalUsageInCurrentMonth(ctx, session.User.ID)
+		usageCount, err := h.store.AIUsageRepo.GetTotalUsage(ctx, store.TotalAIUsageFilter{
+			OwnerID: session.User.ID,
+			Range:   store.TotalAIUsageFilterRangeMonth,
+		})
 
 		if err != nil {
 			_ = response.InternalServerError(w, r, err)
@@ -152,8 +165,6 @@ func (h *Handler) CreateProject(w http.ResponseWriter, r *http.Request) {
 			_ = response.BadRequest(w, r, fmt.Errorf("you have reached the maximum number of requests for the current month"))
 			return
 		}
-
-		agentModel = catalog.Model
 	}
 
 	if dst.FramekworkID != "" {
@@ -165,11 +176,27 @@ func (h *Handler) CreateProject(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	agentProjectTitleAndSlug, agentToken, err := h.agent.GenerateTitleAndSlug(ctx, dst.Prompt, agent.WithModel(agentModel))
+	agentProjectTitleAndSlug, agentToken, err := h.agent.GenerateTitleAndSlug(ctx, dst.Prompt, agent.WithModel(catalog.Model))
 
 	if err != nil {
 		_ = response.InternalServerError(w, r, err)
 		return
+	}
+
+	// check for duplicate slug
+	duplicateProject, err := h.store.ProjectRepo.FindProjectBySlug(ctx, agentProjectTitleAndSlug.Slug)
+
+	if err != nil && !errors.Is(err, store.ErrNotFound) {
+		_ = response.BadRequest(w, r, err)
+		return
+	}
+
+	if duplicateProject != nil {
+		// remove last 6 characters from the slug
+		newSlug := agentProjectTitleAndSlug.Slug[:len(agentProjectTitleAndSlug.Slug)-6]
+		newSlug, _ = util.GeneratePrefixedID(newSlug, "-", 6)
+
+		agentProjectTitleAndSlug.Slug = newSlug
 	}
 
 	createProjectService := services.CreateProjectService{
@@ -195,6 +222,7 @@ func (h *Handler) CreateProject(w http.ResponseWriter, r *http.Request) {
 		UsageType:   "project_creation",
 		InputToken:  agentToken.Input,
 		OutputToken: agentToken.Output,
+		IsPremium:   catalog.IsPremium,
 	}); err != nil {
 		zerolog.Ctx(ctx).Error().Err(err).Msg("failed to create AI usage")
 	}

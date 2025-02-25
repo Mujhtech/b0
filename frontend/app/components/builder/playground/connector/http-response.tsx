@@ -58,7 +58,10 @@ export default function HttpResponseConnector({
   workflow,
   onRemove,
   onUpdate,
-}: ConnectorProps) {
+  showFlow,
+}: ConnectorProps & {
+  showFlow?: boolean;
+}) {
   const [isOpen, setIsOpen] = useState(false);
 
   const handleClose = useCallback(() => {
@@ -113,7 +116,9 @@ export default function HttpResponseConnector({
               )}
             </div>
           </div>
-          {/* <div className="relative flex self-center min-h-[22px] border-solid border-x border-input cursor-pointer"></div> */}
+          {showFlow == true && (
+            <div className="relative flex self-center min-h-[22px] border-solid border-x border-input cursor-pointer"></div>
+          )}
         </div>
       </SheetTrigger>
       <SheetContent

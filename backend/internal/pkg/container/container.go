@@ -6,7 +6,6 @@ import (
 	"io"
 	"strings"
 
-	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/filters"
 	"github.com/docker/docker/api/types/image"
@@ -55,7 +54,7 @@ func (c *Container) PullImage(ctx context.Context, imageRef string) error {
 	return nil
 }
 
-func (c *Container) GetContainer(ctx context.Context, id string) (*types.ContainerJSON, error) {
+func (c *Container) GetContainer(ctx context.Context, id string) (*container.InspectResponse, error) {
 	container, _, err := c.client.ContainerInspectWithRaw(ctx, id, true)
 	return &container, err
 }
@@ -87,7 +86,7 @@ func (c *Container) IsContainerExist(ctx context.Context, opts FilterContainerOp
 	return len(containers) > 0, nil
 }
 
-func (c *Container) GetContainerList(ctx context.Context, opts FilterContainerOption) ([]types.Container, error) {
+func (c *Container) GetContainerList(ctx context.Context, opts FilterContainerOption) ([]container.Summary, error) {
 	filter := filters.NewArgs()
 
 	if opts.Name != "" {
