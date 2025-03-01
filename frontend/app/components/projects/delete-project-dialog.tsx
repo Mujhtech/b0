@@ -32,7 +32,6 @@ export default function DeleteProjectDialog() {
     id: "delete-project",
     shouldValidate: "onBlur",
     shouldRevalidate: "onSubmit",
-
     onValidate({ formData }) {
       return parseWithZod(formData, {
         schema: formSchema,
@@ -48,8 +47,9 @@ export default function DeleteProjectDialog() {
       <DialogContent>
         <DialogTitle>Delete Project</DialogTitle>
         <fetcher.Form
-          method="post"
+          method="POST"
           className="grid grid-cols-1 gap-3"
+          action={`/resources/${project.id}/delete`}
           onSubmit={form.onSubmit}
         >
           <FormField>
@@ -57,6 +57,7 @@ export default function DeleteProjectDialog() {
               key={fields.name.key}
               name={fields.name.name}
               placeholder="Project Name"
+              autoComplete="off"
               defaultValue={fields.name.initialValue || ""}
             />
             <FormError>{fields.name.errors}</FormError>
@@ -81,12 +82,7 @@ export default function DeleteProjectDialog() {
               Close
             </Button>
 
-            <Button
-              type="submit"
-              name="intent"
-              value="create"
-              className="!bg-red-500"
-            >
+            <Button type="submit" className="!bg-red-500">
               Delete
             </Button>
           </div>
