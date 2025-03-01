@@ -278,6 +278,86 @@ func (h *Handler) UpdateProject(w http.ResponseWriter, r *http.Request) {
 	_ = response.Ok(w, r, "project updated successfully", project)
 }
 
+func (h *Handler) DeleteProject(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	session, ok := middleware.GetAuthSession(ctx)
+
+	if !ok {
+		_ = response.Unauthorized(w, r, nil)
+		return
+	}
+
+	projectId, err := getProjectIdFromPath(r)
+
+	if err != nil {
+		_ = response.BadRequest(w, r, err)
+		return
+	}
+
+	dst := new(dto.DeleteProjectRequestDto)
+
+	if err := request.ReadBody(r, dst); err != nil {
+		_ = response.BadRequest(w, r, err)
+		return
+	}
+
+	findProjectService := services.FindProjectService{
+		ProjectID:   projectId,
+		ProjectRepo: h.store.ProjectRepo,
+		User:        session.User,
+	}
+
+	project, err := findProjectService.Run(ctx)
+
+	if err != nil {
+		_ = response.InternalServerError(w, r, err)
+		return
+	}
+
+	if dst.Name != project.Name {
+		_ = response.BadRequest(w, r, fmt.Errorf("invalid project name"))
+		return
+	}
+
+	// delete project related resources
+	if project.ContainerID.Valid && project.ContainerID.String != "" {
+		if err := h.store.ProjectRepo.UpdateProject(ctx, project); err != nil {
+			_ = response.InternalServerError(w, r, err)
+			return
+		}
+
+		con, err := h.docker.GetContainer(ctx, project.ContainerID.String)
+
+		if err != nil {
+			_ = response.InternalServerError(w, r, err)
+			return
+		}
+
+		if err := h.docker.RemoveContainer(ctx, con.ID); err != nil {
+			_ = response.InternalServerError(w, r, err)
+			return
+		}
+
+		volumeName := fmt.Sprintf("b0-temp-%s-%s", project.OwnerID, project.Slug)
+
+		if err := h.docker.RemoveVolume(ctx, volumeName); err != nil {
+			_ = response.InternalServerError(w, r, err)
+			return
+		}
+	}
+
+	// delete project
+	err = h.store.ProjectRepo.DeleteProject(ctx, project.ID)
+
+	if err != nil {
+		_ = response.InternalServerError(w, r, err)
+		return
+	}
+
+	_ = response.Ok(w, r, "project deleted successfully", project)
+}
+
 func (h *Handler) ProjectAction(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 

@@ -10,3 +10,7 @@ type CreateProjectRequestDto struct {
 type ProjectActionRequestDto struct {
 	Action string `json:"action"`
 }
+
+type DeleteProjectRequestDto struct {
+	Name string `json:"name"`
+}
