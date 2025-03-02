@@ -51,3 +51,18 @@ export async function updateProject(
     schema: ServerResponseSchema,
   });
 }
+
+export async function deleteProject(
+  request: Request,
+  id: string,
+  data: {
+    name: string;
+  }
+) {
+  return await api.delete({
+    request,
+    path: `/projects/${id}`,
+    body: data,
+    schema: ServerResponseSchema,
+  });
+}

@@ -65,7 +65,7 @@ cp .env.example .env
 pnpm install
 
 # Start development server
-pnpm dev
+pnpm run dev
 ```
 
 The application will be available at:
@@ -92,7 +92,7 @@ docker compose -f docker-compose.dev.yaml up -d
 
 The application will be available at:
 
-- Frontend: http://localhost:80
+- Frontend: http://localhost:5173
 - Backend API: http://localhost:5555
 - Traefik Dashboard: http://localhost:8080
 

@@ -17,7 +17,7 @@ const (
 	
 	Example of workflow template are: if, for, while,
 	request = {"action_id": "...",  "type": "request", "name", "...", "instruction":"...", "method": "POST" | "PUT" | "GET" | "DELETE | "PATCH", "url": "...", "body": "..."}
-	if = {"action_id": "...", "type": "if", "instruction":"...", "condition": "...", "then": "...", "else": "..."}
+	if = {"action_id": "...", "type": "if", "instruction":"...", "condition": "...", "then": ["..."], "else": ["..."]}
 	for = {"action_id": "...", "type": "for", "instruction":"...", "condition": "...", "body": "..."}
 	while = {"action_id": "...", "type": "while", "instruction":"...", "condition": "...", "body": "..."}
 	variable = {"action_id": "...", "type": "variable", "name": "...", "value": "..."}
@@ -44,6 +44,7 @@ const (
 	- Use context to store and access data between nodes e.g {{context.request}}, {{context.request.body}}, {{context.response}}, {{context.response.body}},  {{context.variable_name}}
 	- Make sure that http response status code is string and not int without any additional characters e.g "200" instead of "200 Ok" etc.
 	- The url in the request node must be a path to the endpoint not external url.
+	- When working with if node, make sure that both then and else are array of nodes.
 
 	%s
 
@@ -85,6 +86,7 @@ const (
 	- Make sure that http response status code is string and not int without any additional characters e.g "200" instead of "200 Ok" etc.
 	- The url in the request node must be a path to the endpoint not external url.
 	- You are required to update the workflow diagram node based on the user prompt. You are required not to delete any workflow from the provided workflows except if the user explicitly asks you to do so and you are only require to update any workflow that is provided in the workflows if the user asks you to do so. And you can only add new workflow nodes to the workflow diagram if the user asks you to do so.
+	- When working with if node, make sure that both then and else are array of nodes.
 
 	## Output:
 	- The output should be a json string in the format of {"workflows": ["..."]}
