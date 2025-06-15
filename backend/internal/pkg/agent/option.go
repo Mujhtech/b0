@@ -6,15 +6,16 @@ type AgentModel string
 type WorkflowType string
 
 const (
-	AgentModelGPT3Dot5          AgentModel = "gpt-3.5"
-	AgentModelGPT4              AgentModel = "gpt-4"
-	AgentModelClaudeSonnet3Dot5 AgentModel = "claude-sonnet-3.5"
-	AgentModelClaudeSonnet3Dot7 AgentModel = "claude-sonnet-3.7"
-	AgentModelDeepSeekR1        AgentModel = "deepseek-reasoner"
-	AgentModelGeminiFlash1Dot5  AgentModel = "gemini-1.5-flash"
-	AgentModelGeminiFlash2Dot0  AgentModel = "gemini-2.0-flash"
-	AgentModelGrok2Dot0         AgentModel = "grok-2-latest"
-	AgentModelNone              AgentModel = "none"
+	AgentModelGPT3Dot5              AgentModel = "gpt-3.5"
+	AgentModelGPT4                  AgentModel = "gpt-4"
+	AgentModelClaudeSonnet3Dot5     AgentModel = "claude-sonnet-3.5"
+	AgentModelClaudeSonnet3Dot7     AgentModel = "claude-sonnet-3.7"
+	AgentModelDeepSeekR1            AgentModel = "deepseek-reasoner"
+	AgentModelGeminiFlash1Dot5      AgentModel = "gemini-1.5-flash"
+	AgentModelGeminiFlash2Dot0      AgentModel = "gemini-2.0-flash"
+	AgentModelGemini2Dot5ProPreview AgentModel = "gemini-2.5-pro-preview-03-25"
+	AgentModelGrok2Dot0             AgentModel = "grok-2-latest"
+	AgentModelNone                  AgentModel = "none"
 
 	WorkflowTypeRequest  WorkflowType = "request"
 	WorkflowTypeResponse WorkflowType = "response"
@@ -389,11 +390,11 @@ const (
 	client := openai.NewClient(option.WithBaseURL(baseUrl), option.WithAPIKey(apiKey))
 
 	chat, err := client.Chat.Completions.New(ctx, openai.ChatCompletionNewParams{
-		Messages: openai.F([]openai.ChatCompletionMessageParamUnion{
+		Messages: []openai.ChatCompletionMessageParamUnion{
 			openai.SystemMessage("You are a friendly assistant!"),
 			openai.UserMessage("Why is the sky blue?"),
-		}),
-		Model: openai.F("gpt-4"),
+		},
+		Model: openai.ChatModel("gpt-4"),
 	})
 
 	if err != nil {
@@ -401,6 +402,9 @@ const (
 	}
 
 	fmt.Println(chat.Choices[0].Message.Content)
+
+	Make sure to include go mod command in installCommands to initialize the go module and install all dependencies e.g go mod init b0/{project-name} follow by go mod tidy
+	Make sure to enclose all structs in the code with json tags e.g json:"name"
 	`
 )
 
@@ -726,7 +730,7 @@ var AvailableCatalogs = []ModeCatalog{
 	{
 		Name:           "GPT 3.5",
 		Model:          AgentModelGPT3Dot5,
-		IsEnabled:      true,
+		IsEnabled:      false,
 		IsExperimental: false,
 		IsDefault:      false,
 		IsPremium:      false,
@@ -734,54 +738,62 @@ var AvailableCatalogs = []ModeCatalog{
 	{
 		Name:           "GPT 4",
 		Model:          AgentModelGPT4,
-		IsEnabled:      true,
+		IsEnabled:      false,
 		IsExperimental: false,
 		IsDefault:      false,
-		IsPremium:      true,
+		IsPremium:      false,
 	},
 	{
 		Name:           "Claude Sonnet 3.5",
 		Model:          AgentModelClaudeSonnet3Dot5,
-		IsEnabled:      true,
+		IsEnabled:      false,
 		IsExperimental: false,
 		IsDefault:      false,
-		IsPremium:      true,
+		IsPremium:      false,
 	},
 	{
 		Name:           "Claude Sonnet 3.7",
 		Model:          AgentModelClaudeSonnet3Dot7,
-		IsEnabled:      true,
+		IsEnabled:      false,
 		IsExperimental: false,
 		IsDefault:      false,
-		IsPremium:      true,
+		IsPremium:      false,
 	},
 	{
 		Name:           "DeepSeek R1",
 		Model:          AgentModelDeepSeekR1,
-		IsEnabled:      true,
-		IsExperimental: true,
+		IsEnabled:      false,
+		IsExperimental: false,
 		IsDefault:      false,
-		IsPremium:      true,
+		IsPremium:      false,
 	},
 	{
 		Name:           "Gemini 1.5 Flash",
 		Model:          AgentModelGeminiFlash1Dot5,
 		IsEnabled:      false,
-		IsExperimental: true,
+		IsExperimental: false,
 		IsDefault:      false,
 		IsPremium:      false,
 	},
 	{
 		Name:           "Gemini 2.0 Flash",
 		Model:          AgentModelGeminiFlash2Dot0,
-		IsEnabled:      true,
-		IsExperimental: true,
-		IsDefault:      true,
+		IsEnabled:      false,
+		IsExperimental: false,
+		IsDefault:      false,
 		IsPremium:      false,
 	},
 	{
 		Name:           "Grok 2.0",
 		Model:          AgentModelGrok2Dot0,
+		IsEnabled:      false,
+		IsExperimental: false,
+		IsDefault:      false,
+		IsPremium:      false,
+	},
+	{
+		Name:           "Gemini 2.5 Pro Preview",
+		Model:          AgentModelGemini2Dot5ProPreview,
 		IsEnabled:      true,
 		IsExperimental: true,
 		IsDefault:      false,
@@ -839,6 +851,14 @@ func ToModel(model string) AgentModel {
 		return AgentModelDeepSeekR1
 	case string(AgentModelGeminiFlash1Dot5):
 		return AgentModelGeminiFlash1Dot5
+	case string(AgentModelGeminiFlash2Dot0):
+		return AgentModelGeminiFlash2Dot0
+	case string(AgentModelGrok2Dot0):
+		return AgentModelGrok2Dot0
+	case string(AgentModelClaudeSonnet3Dot7):
+		return AgentModelClaudeSonnet3Dot7
+	case string(AgentModelGemini2Dot5ProPreview):
+		return AgentModelGemini2Dot5ProPreview
 	default:
 		return AgentModelNone
 	}

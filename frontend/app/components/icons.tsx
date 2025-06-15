@@ -67,7 +67,7 @@ export const Icons = {
           gradientUnits="userSpaceOnUse"
         >
           <stop stop-color="#249361" />
-          <stop offset="1" stop-color="#3ECF8E" />
+          <stop offset="1" stopColor="#3ECF8E" />
         </linearGradient>
         <linearGradient
           id="paint1_linear"
@@ -78,7 +78,7 @@ export const Icons = {
           gradientUnits="userSpaceOnUse"
         >
           <stop />
-          <stop offset="1" stop-opacity="0" />
+          <stop offset="1" stopOpacity="0" />
         </linearGradient>
       </defs>
     </svg>

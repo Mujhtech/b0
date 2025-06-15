@@ -34,12 +34,14 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
   let projects: Projects = [];
 
   const session = await getSession(request.headers.get("cookie"));
-  const toastMessage = session.get("toastMessage") as ToastMessage;
+  const toastMessage = session.get("toastMessage");
 
   try {
     feature = await getFeatures(request);
+    console.log("feature", feature);
   } catch (e) {
     //
+    console.log(e);
   }
 
   try {
@@ -63,7 +65,8 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
       accessToken: accessToken,
       backendUrl,
       platformUrl,
-      toastMessage,
+      toastMessage:
+        toastMessage != undefined ? (toastMessage as ToastMessage) : undefined,
       projects,
     },
     { headers: { "Set-Cookie": await commitSession(session) } }

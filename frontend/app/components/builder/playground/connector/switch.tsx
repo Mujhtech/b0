@@ -27,14 +27,17 @@ import { X } from "@phosphor-icons/react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "~/components/ui/tabs";
 import { Input } from "~/components/ui/input";
 
-export default function SwitchConnector({ workflow }: ConnectorProps) {
+export default function SwitchConnector({
+  workflow,
+  draggable,
+}: ConnectorProps) {
   const [isOpen, setIsOpen] = useState(false);
 
   const handleClose = useCallback(() => {
     setIsOpen(false);
   }, [isOpen]);
 
-  console.log(workflow);
+  // console.log(workflow);
 
   const switchCases = useMemo(() => {
     // check if then is array
@@ -70,7 +73,13 @@ export default function SwitchConnector({ workflow }: ConnectorProps) {
   }, [switchCases]);
 
   return (
-    <div className="flex flex-col group h-min">
+    <div
+      className="flex flex-col group h-min"
+      ref={draggable?.setNodeRef}
+      style={draggable?.style}
+      {...draggable?.attributes}
+      {...draggable?.listeners}
+    >
       <div className="border border-input w-[250px] bg-background shadow-sm flex self-center flex-col hover:drop-shadow-xl cursor-pointer">
         <div className="border-b border-input flex items-center justify-center">
           <h3 className="text-xs font-mono text-muted-foreground p-2">

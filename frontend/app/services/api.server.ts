@@ -99,6 +99,8 @@ const serverRequest = async (options: {
 
   const url = `${env.PLATFORM_URL}${options.path}`;
 
+  console.log(`URL: ${url}`);
+
   const response = fetch(url, {
     method: options.method,
     headers: headers,

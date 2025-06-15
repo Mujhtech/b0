@@ -1,15 +1,22 @@
-import React, { useCallback, useMemo, useState } from "react";
 import { usePlayground } from "./provider";
 import HttpRequestConnector from "./connector/http-request";
 import { cn } from "~/lib/utils";
-import { useOptionalEndpoint } from "~/hooks/use-project";
 import Connector from "./connector";
 import { EndpointWorkflow } from "~/models/endpoint";
-import { usePlaygroundBuilder } from "../provider";
-import { ToastUI } from "~/components/custom-toast";
-import { toast } from "sonner";
 
-export default function Playground() {
+export default function Playground({
+  handleRemoveWorkflow,
+  handleUpdateWorkflows,
+  workflows,
+  activeSlot,
+  activeCard,
+}: {
+  handleRemoveWorkflow: (index: number) => void;
+  handleUpdateWorkflows: (index: number, workflow: EndpointWorkflow) => void;
+  workflows: EndpointWorkflow[];
+  activeSlot: string | null;
+  activeCard: string | null;
+}) {
   const {
     canvasRef,
     handleMouseMove,
@@ -20,70 +27,6 @@ export default function Playground() {
     zoom,
     handleDrag,
   } = usePlayground();
-  const { handleUpdateEndpointWorkflow, setIsSaving } = usePlaygroundBuilder();
-
-  const endpoint = useOptionalEndpoint();
-
-  const [newWorkflows, setNewWorkflows] = useState<
-    Array<EndpointWorkflow> | undefined
-  >(undefined);
-
-  const workflows = useMemo(() => {
-    if (newWorkflows) {
-      return newWorkflows;
-    }
-
-    return endpoint?.workflows || [];
-  }, [newWorkflows, endpoint, setNewWorkflows]);
-
-  const handleUpdateWorkflows = (index: number, workflow: EndpointWorkflow) => {
-    const newWorkflows = workflows;
-
-    newWorkflows[index] = workflow;
-
-    setNewWorkflows(newWorkflows);
-
-    if (!endpoint) {
-      return;
-    }
-
-    setTimeout(() => {
-      setIsSaving(true);
-      handleUpdateEndpointWorkflow(endpoint.id, newWorkflows)
-        .catch((err) => {
-          if (err.error) {
-            toast.custom(
-              (t) => (
-                <ToastUI
-                  variant={"error"}
-                  message={err.error}
-                  t={t as string}
-                />
-              ),
-              {}
-            );
-          }
-        })
-        .finally(() => {
-          setIsSaving(false);
-        });
-    }, 2500);
-  };
-
-  const handleRemoveWorkflow = (index: number) => {
-    setNewWorkflows((old) => {
-      const prev = newWorkflows || old;
-
-      if (!prev) {
-        return undefined;
-      }
-      const workflows = [...prev];
-
-      workflows.splice(index, 1);
-
-      return workflows;
-    });
-  };
 
   return (
     <div
@@ -112,6 +55,7 @@ export default function Playground() {
             <div className="mt-5 ml-20 flex flex-col justify-center ">
               <HttpRequestConnector />
               {workflows.map((workflow, index) => {
+                const id = workflow.action_id ?? index.toString();
                 return (
                   <Connector
                     workflow={workflow}
@@ -121,6 +65,9 @@ export default function Playground() {
                       handleUpdateWorkflows(index, workflow);
                     }}
                     onRemove={() => handleRemoveWorkflow(index)}
+                    draggable={{
+                      isActive: activeSlot === id,
+                    }}
                   />
                 );
               })}

@@ -10,7 +10,7 @@ import {
   SelectValue,
 } from "~/components/ui/select";
 import { useFeature } from "~/hooks/use-feature";
-import { useUser } from "~/hooks/use-user";
+import { useOptionalUser } from "~/hooks/use-user";
 
 export function AIModelPicker({
   onSelect,
@@ -20,7 +20,7 @@ export function AIModelPicker({
   value?: string;
 }) {
   const { available_models } = useFeature();
-  const user = useUser();
+  const user = useOptionalUser();
 
   return (
     <Select onValueChange={onSelect} value={value}>
@@ -36,7 +36,8 @@ export function AIModelPicker({
               value={model.model}
               disabled={
                 model.is_enabled === false ||
-                (user.subscription_plan === "free" && model.is_premium === true)
+                (user?.subscription_plan === "free" &&
+                  model.is_premium === true)
               }
             >
               {model.name}
@@ -56,7 +57,7 @@ export function AIModelPicker2({
   value?: string;
 }) {
   const { available_models } = useFeature();
-  const user = useUser();
+  const user = useOptionalUser();
 
   return (
     <Select onValueChange={onSelect} value={value}>
@@ -72,7 +73,8 @@ export function AIModelPicker2({
               value={model.model}
               disabled={
                 model.is_enabled === false ||
-                (user.subscription_plan === "free" && model.is_premium === true)
+                (user?.subscription_plan === "free" &&
+                  model.is_premium === true)
               }
             >
               {model.name}

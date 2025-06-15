@@ -38,7 +38,7 @@ func New(cfg *config.Config) *Agent {
 	}
 }
 
-func (a *Agent) client(opts ...option.RequestOption) *openai.Client {
+func (a *Agent) client(opts ...option.RequestOption) openai.Client {
 
 	baseUrl := ""
 	apiKey := ""
@@ -67,53 +67,53 @@ func (a *Agent) client(opts ...option.RequestOption) *openai.Client {
 	return client
 }
 
-func (a *Agent) GenerateTitleAndSlugWithSchema(ctx context.Context, prompt string, opts ...OptionFunc) (*ProjectTitleAndSlug, *AgentToken, error) {
-	opCfg := *a.cfg
-	for _, opt := range opts {
-		opt(&opCfg)
-	}
+// func (a *Agent) GenerateTitleAndSlugWithSchema(ctx context.Context, prompt string, opts ...OptionFunc) (*ProjectTitleAndSlug, *AgentToken, error) {
+// 	opCfg := *a.cfg
+// 	for _, opt := range opts {
+// 		opt(&opCfg)
+// 	}
 
-	agentToken := &AgentToken{
-		Input: fmt.Sprintf(`
-		%s
-		
-		%s
-		`, fmt.Sprintf(b0ProjectTitleAndSlugSystemMessage, a.cfg.Model), prompt),
-	}
+// 	agentToken := &AgentToken{
+// 		Input: fmt.Sprintf(`
+// 		%s
 
-	client := a.client()
+// 		%s
+// 		`, fmt.Sprintf(b0ProjectTitleAndSlugSystemMessage, a.cfg.Model), prompt),
+// 	}
 
-	schemaParam := openai.ResponseFormatJSONSchemaJSONSchemaParam{
-		Name:        openai.F("project"),
-		Description: openai.F("Project title, description and slug"),
-		Schema:      openai.F(ProjectTitleAndSlugResponseSchema),
-		Strict:      openai.Bool(true),
-	}
+// 	client := a.client()
 
-	chat, err := client.Chat.Completions.New(ctx, openai.ChatCompletionNewParams{
-		Messages: openai.F([]openai.ChatCompletionMessageParamUnion{
-			openai.SystemMessage(fmt.Sprintf(b0ProjectTitleAndSlugSystemMessage, a.cfg.Model)),
-			openai.UserMessage(prompt),
-		}),
-		ResponseFormat: openai.F[openai.ChatCompletionNewParamsResponseFormatUnion](
-			openai.ResponseFormatJSONSchemaParam{
-				Type:       openai.F(openai.ResponseFormatJSONSchemaTypeJSONSchema),
-				JSONSchema: openai.F(schemaParam),
-			},
-		),
-		Model: openai.F(openai.ChatModelGPT4o2024_08_06),
-	})
+// 	schemaParam := openai.ResponseFormatJSONSchemaJSONSchemaParam{
+// 		Name:        "project",
+// 		Description: openai.F("Project title, description and slug"),
+// 		Schema:      ProjectTitleAndSlugResponseSchema,
+// 		Strict:      openai.Bool(true),
+// 	}
 
-	if err != nil {
-		return nil, agentToken, err
-	}
+// 	chat, err := client.Chat.Completions.New(ctx, openai.ChatCompletionNewParams{
+// 		Messages: []openai.ChatCompletionMessageParamUnion{
+// 			openai.SystemMessage(fmt.Sprintf(b0ProjectTitleAndSlugSystemMessage, a.cfg.Model)),
+// 			openai.UserMessage(prompt),
+// 		},
+// 		ResponseFormat: openai.ChatCompletionNewParamsResponseFormatUnion{
+// 			openai.ResponseFormatJSONSchemaParam{
+// 				Type:       openai.F(openai.ResponseFormatJSONSchemaTypeJSONSchema),
+// 				JSONSchema: openai.F(schemaParam),
+// 			},
+// 		},
+// 		Model: openai.F(openai.ChatModelGPT4o2024_08_06),
+// 	})
 
-	// extract into a well-typed struct
-	dst := ProjectTitleAndSlug{}
-	_ = json.Unmarshal([]byte(chat.Choices[0].Message.Content), &dst)
+// 	if err != nil {
+// 		return nil, agentToken, err
+// 	}
 
-	return &dst, agentToken, nil
-}
+// 	// extract into a well-typed struct
+// 	dst := ProjectTitleAndSlug{}
+// 	_ = json.Unmarshal([]byte(chat.Choices[0].Message.Content), &dst)
+
+// 	return &dst, agentToken, nil
+// }
 
 // GenerateTitleAndSlug generates a title and slug for a new project based on the given prompt.
 func (a *Agent) GenerateTitleAndSlug(ctx context.Context, prompt string, opts ...OptionFunc) (*ProjectTitleAndSlug, *AgentToken, error) {
@@ -133,11 +133,11 @@ func (a *Agent) GenerateTitleAndSlug(ctx context.Context, prompt string, opts ..
 	client := a.client()
 
 	chat, err := client.Chat.Completions.New(ctx, openai.ChatCompletionNewParams{
-		Messages: openai.F([]openai.ChatCompletionMessageParamUnion{
+		Messages: []openai.ChatCompletionMessageParamUnion{
 			openai.SystemMessage(fmt.Sprintf(b0ProjectTitleAndSlugSystemMessage, a.cfg.Model)),
 			openai.UserMessage(prompt),
-		}),
-		Model: openai.F(openai.ChatModel(a.cfg.Model)),
+		},
+		Model: openai.ChatModel(a.cfg.Model),
 	})
 
 	if err != nil {
@@ -204,11 +204,11 @@ func (a *Agent) GenerateWorkflow(ctx context.Context, options WorkflowGeneration
 	}
 
 	chat, err := client.Chat.Completions.New(ctx, openai.ChatCompletionNewParams{
-		Messages: openai.F([]openai.ChatCompletionMessageParamUnion{
+		Messages: []openai.ChatCompletionMessageParamUnion{
 			openai.SystemMessage(systemPrompt),
 			openai.UserMessage(options.Prompt),
-		}),
-		Model: openai.F(openai.ChatModel(a.cfg.Model)),
+		},
+		Model: openai.ChatModel(a.cfg.Model),
 	})
 
 	if err != nil {
@@ -273,11 +273,11 @@ func (a *Agent) CodeGeneration(ctx context.Context, prompt string, option CodeGe
 	client := a.client()
 
 	chat, err := client.Chat.Completions.New(ctx, openai.ChatCompletionNewParams{
-		Messages: openai.F([]openai.ChatCompletionMessageParamUnion{
+		Messages: []openai.ChatCompletionMessageParamUnion{
 			openai.SystemMessage(fmt.Sprintf(b0WorkflowToCodeGenerationSystemMessage, a.cfg.Model, option.Language, option.FrameworkInsructions, workflowToString)),
 			openai.UserMessage(prompt),
-		}),
-		Model: openai.F(openai.ChatModel(a.cfg.Model)),
+		},
+		Model: openai.ChatModel(a.cfg.Model),
 	})
 
 	if err != nil {
