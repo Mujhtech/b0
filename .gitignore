@@ -45,3 +45,6 @@ dump.rdb
 
 # b0 temp directory
 b0-temp
+
+# letsencrypt
+letsencrypt
