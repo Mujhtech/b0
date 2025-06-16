@@ -20,6 +20,10 @@ import (
 	"github.com/rs/zerolog"
 )
 
+var (
+	TempFolder = filepath.Join(os.Getenv("HOME"), "dev", "b0-temp")
+)
+
 func sendEvent(ctx context.Context, projectID string, eventType sse.EventType, data AgentData, event sse.Streamer) {
 
 	var errorMsg string
@@ -44,7 +48,7 @@ func sendEvent(ctx context.Context, projectID string, eventType sse.EventType, d
 
 func checkIfProjectFolderExists(userId, projectSlug string) (bool, error) {
 	// check if folder exists
-	path := filepath.Join("b0-temp", userId, projectSlug)
+	path := filepath.Join(TempFolder, userId, projectSlug)
 	_, err := os.Stat(path)
 
 	if os.IsNotExist(err) {
@@ -55,7 +59,7 @@ func checkIfProjectFolderExists(userId, projectSlug string) (bool, error) {
 }
 
 func createProjectFolder(userId, projectSlug string) error {
-	path := filepath.Join("b0-temp", userId, projectSlug)
+	path := filepath.Join(TempFolder, userId, projectSlug)
 
 	err := os.MkdirAll(path, os.ModePerm) // #nosec G301
 
@@ -68,7 +72,7 @@ func createProjectFolder(userId, projectSlug string) error {
 
 // removeProjectFolder removes the project folder
 func removeProjectFolder(userId, projectSlug string) error {
-	path := filepath.Join("b0-temp", userId, projectSlug)
+	path := filepath.Join(TempFolder, userId, projectSlug)
 
 	err := os.RemoveAll(path)
 
@@ -80,7 +84,7 @@ func removeProjectFolder(userId, projectSlug string) error {
 }
 
 func setupProjectContents(userId, projectSlug string, code *agent.CodeGeneration) error {
-	baseDir := filepath.Join("b0-temp", userId, projectSlug)
+	baseDir := filepath.Join(TempFolder, userId, projectSlug)
 
 	// create all the files
 	for _, file := range code.FileContents {
@@ -107,7 +111,7 @@ func setupProjectContents(userId, projectSlug string, code *agent.CodeGeneration
 }
 
 func cloneProjectToTar(userId, projectSlug string) (io.ReadCloser, error) {
-	localPath := filepath.Join("b0-temp", userId, projectSlug)
+	localPath := filepath.Join(TempFolder, userId, projectSlug)
 
 	tar, err := archive.TarWithOptions(localPath, &archive.TarOptions{})
 	if err != nil {

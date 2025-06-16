@@ -1,103 +1,140 @@
-version: '3.9'
 services:
-  db:
-    image: postgres:14-alpine
-    ports:
-      - "5432:5432"
-    volumes:
-      - postgres-data:/var/lib/postgresql/data
-    environment:
-      POSTGRES_PASSWORD: b0
-      POSTGRES_USER: b0
-      POSTGRES_DB: b0
+  # db:
+  #   image: postgres:14-alpine
+  #   ports:
+  #     - "5432:5432"
+  #   volumes:
+  #     - postgres-data:/var/lib/postgresql/data
+  #   environment:
+  #     POSTGRES_PASSWORD: b0
+  #     POSTGRES_USER: b0
+  #     POSTGRES_DB: b0
+  #   networks:
+  #     - b0-network
 
-  redis:
-    image: redis
-    container_name: b0-redis
-    environment:
-      - ALLOW_EMPTY_PASSWORD=yes
-    ports:
-      - 6379:6379
-    volumes:
-      - redis_data:/data
+  # redis:
+  #   image: redis
+  #   container_name: b0-redis
+  #   environment:
+  #     - ALLOW_EMPTY_PASSWORD=yes
+  #   ports:
+  #     - 6379:6379
+  #   volumes:
+  #     - redis_data:/data
+  #   networks:
+  #     - b0-network
 
-  db-migration:
-    container_name: b0-db-migration
-    build:
-      context: ./backend
-      dockerfile: Dockerfile
-    entrypoint: ["./b0", "migrate", "up"]
-    depends_on:
-      - db
-    env_file:
-      - .env
-    ports:
-      - 5555:5555
-    environment:
-      - DB_DRIVER=postgres
-      - DB_USER=b0
-      - DB_PASSWORD=b0
-      - DB_DATABASE=b0
-      - DB_HOST=db
-      - DB_PORT=5432
-    volumes:
-      - ./backend/src:/app/src
+  # db-migration:
+  #   container_name: b0-db-migration
+  #   build:
+  #     context: ./backend
+  #     dockerfile: Dockerfile
+  #   entrypoint: ["./b0", "migrate", "up"]
+  #   depends_on:
+  #     - db
+  #   env_file:
+  #     - ./backend/.env
+  #   ports:
+  #     - 5555:5555
+  #   environment:
+  #     - DB_DRIVER=postgres
+  #     - DB_USER=b0
+  #     - DB_PASSWORD=b0
+  #     - DB_DATABASE=b0
+  #     - DB_HOST=db
+  #     - DB_PORT=5432
+  #   volumes:
+  #     - ./backend/src:/app/src
+  #   networks:
+  #     - b0-network
 
-  backend:
-    container_name: b0-api
-    build:
-      context: ./backend
-      dockerfile: Dockerfile
-    entrypoint: ["./b0", "server"]
-    depends_on:
-      db:
-        condition: service_started
-      redis:
-        condition: service_started
-      db-migration:
-        condition: service_completed_successfully
-    env_file:
-      - .env
-    ports:
-      - 5555:5555
-    environment:
-      - DB_DRIVER=postgres
-      - DB_USER=b0
-      - DB_PASSWORD=b0
-      - DB_DATABASE=b0
-      - DB_HOST=db
-      - DB_PORT=5432
-    volumes:
-      - ./backend/src:/app/src
+  # backend:
+  #   container_name: b0-api
+  #   build:
+  #     context: ./backend
+  #     dockerfile: Dockerfile
+  #   entrypoint: ["./b0", "serve"]
+  #   depends_on:
+  #     db:
+  #       condition: service_started
+  #     redis:
+  #       condition: service_started
+  #     db-migration:
+  #       condition: service_completed_successfully
+  #   env_file:
+  #     - ./backend/.env
+  #   ports:
+  #     - 5555:5555
+  #   environment:
+  #     - DB_DRIVER=postgres
+  #     - DB_USER=b0
+  #     - DB_PASSWORD=b0
+  #     - DB_DATABASE=b0
+  #     - DB_HOST=db
+  #     - DB_PORT=5432
+  #     - REDIS_HOST=b0-redis
+  #     - AUTH_UI_REDIRECT_URL=http://localhost:3000/auth/callback
+  #   volumes:
+  #     - ./backend/src:/app/src
+  #   networks:
+  #     - b0-network
 
-  frontend:
-    container_name: b0-frontend
-    restart: unless-stopped
-    depends_on:
-      - backend
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile
-    volumes:
-      - ./frontend/src:/app/src/ # mounted whole src to avoid missing reload on new files
-      - ./frontend/public:/app/public
-    env_file: .env
-    environment:
-      - NODE_ENV=development
-      - SESSION_SECRET=b0
+  # frontend:
+  #   container_name: b0-frontend
+  #   restart: unless-stopped
+  #   depends_on:
+  #     - backend
+  #   build:
+  #     context: ./frontend
+  #     dockerfile: Dockerfile
+  #   volumes:
+  #     - ./frontend/src:/app/src/ # mounted whole src to avoid missing reload on new files
+  #     - ./frontend/public:/app/public
+  #   env_file: ./frontend/.env
+  #   ports:
+  #     - 3000:3000
+  #   environment:
+  #     - BACKEND_URL=http://backend.b0.orb.local/api
+  #     - PLATFORM_URL=http://backend.b0.orb.local/api/platform
+  #   networks:
+  #     - b0-network
 
   traefik:
     container_name: b0-traefik
     image: traefik:v3.3
-    command: --api.insecure=true --providers.docker
+    env_file:
+      - ./.env
+    command:
+      - "--api.insecure=true"
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--entrypoints.web.address=:80"
+      - "--entrypoints.websecure.address=:443"
+      - "--entrypoints.web.http.redirections.entryPoint.to=websecure"
+      - "--entrypoints.web.http.redirections.entryPoint.scheme=https"
+      - "--certificatesresolvers.myresolver.acme.tlschallenge=true"
+      - "--certificatesresolvers.myresolver.acme.email=${ACME_EMAIL}"
+      - "--certificatesresolvers.myresolver.acme.storage=/letsencrypt/acme.json"
+      - "--certificatesresolvers.myresolver.acme.caServer=https://acme-staging-v02.api.letsencrypt.org/directory"
+      - "--log.level=DEBUG"
     ports:
       - "80:80"
+      - "443:443"
       - "8080:8080"
     volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./letsencrypt:/letsencrypt
+    networks:
+      - b0-network
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
 
 volumes:
   postgres-data:
     driver: local
   redis_data:
     driver: local
+
+networks:
+  b0-network:
+    driver: bridge

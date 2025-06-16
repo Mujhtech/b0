@@ -21,6 +21,25 @@ export const EndpointWorkflowCaseSchema = z.object({
 
 export type EndpointWorkflowCase = z.infer<typeof EndpointWorkflowCaseSchema>;
 
+export const EndpointWorkflowType = z.enum([
+  "request",
+  "response",
+  "if",
+  "variable",
+  "switch",
+  "codeblock",
+  "resend",
+  "stripe",
+  "openai",
+  "github",
+  "telegram",
+  "discord",
+  "slack",
+  "supabase",
+]);
+
+export type EndpointWorkflowType = z.infer<typeof EndpointWorkflowType>;
+
 export const EndpointWorkflowSchema = z.object({
   name: z.string().optional(),
   action_id: z.string().optional(),
@@ -28,22 +47,7 @@ export const EndpointWorkflowSchema = z.object({
   condition: z.string().optional(),
   method: z.string().optional(),
   url: z.string().optional(),
-  type: z.enum([
-    "request",
-    "response",
-    "if",
-    "variable",
-    "switch",
-    "codeblock",
-    "resend",
-    "stripe",
-    "openai",
-    "github",
-    "telegram",
-    "discord",
-    "slack",
-    "supabase",
-  ]),
+  type: EndpointWorkflowType,
   value: z.unknown().optional(),
   cases: z.array(EndpointWorkflowCaseSchema),
   then: z.unknown().optional(),

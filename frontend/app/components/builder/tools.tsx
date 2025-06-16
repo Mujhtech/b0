@@ -17,8 +17,68 @@ import {
 import React from "react";
 import { usePlayground } from "./playground/provider";
 import { cn } from "~/lib/utils";
-import Draggable from "react-draggable";
+import { useSortable } from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 import { Icons } from "../icons";
+
+export const TOOLS = {
+  "tool-if": {
+    name: "IF",
+    icon: <TreeStructure className="mr-1" />,
+  },
+  "tool-loop": {
+    name: "Loop",
+    icon: <Repeat className="mr-1" />,
+  },
+  "tool-switch": {
+    name: "Switch",
+    icon: <AlignCenterHorizontal className="mr-1" />,
+  },
+  "tool-variable": {
+    name: "Variable",
+    icon: <X className="mr-1" />,
+  },
+  "tool-output": {
+    name: "Output",
+    icon: <SignOut className="mr-1" />,
+  },
+  "tool-codeblock": {
+    name: "Codeblock",
+    icon: <Code className="mr-1" />,
+  },
+  "tool-openai": {
+    name: "OpenAI",
+    icon: <OpenAiLogo className="mr-1" />,
+  },
+  "tool-stripe": {
+    name: "Stripe",
+    icon: <StripeLogo className="mr-1" />,
+  },
+  "tool-github": {
+    name: "GitHub",
+    icon: <GithubLogo className="mr-1" />,
+  },
+  "tool-slack": {
+    name: "Slack",
+    icon: <SlackLogo className="mr-1" />,
+  },
+  "tool-telegram": {
+    name: "Telegram",
+    icon: <TelegramLogo className="mr-1" />,
+  },
+  "tool-discord": {
+    name: "Discord",
+    icon: <DiscordLogo className="mr-1" />,
+  },
+  "tool-supabase": {
+    name: "Supabase",
+    icon: <Icons.Supabase className="mr-1 h-3 w-3 grayscale" />,
+  },
+  "tool-resend": {
+    name: "Resend",
+    icon: <Icons.Resend className="mr-1 h-3 w-3 grayscale" />,
+  },
+};
 
 export default function BuilderTools() {
   const { handleExpandToolPanel, expandToolPanel } = usePlayground();
@@ -52,62 +112,15 @@ export default function BuilderTools() {
         {expandToolPanel && (
           <div className="p-2 flex flex-col gap-2">
             <div className="flex flex-col">
-              <h3 className="text-muted-foreground text-xs font-medium font-mono mb-1">
+              {/* <h3 className="text-muted-foreground text-xs font-medium font-mono mb-1">
                 Flow
-              </h3>
+              </h3> */}
               <div className="grid grid-cols-2 gap-2">
-                <ToolCard>
-                  <TreeStructure className="mr-1" /> IF
-                </ToolCard>
-                <ToolCard>
-                  <Repeat className="mr-1" /> Loop
-                </ToolCard>
-                <ToolCard>
-                  <AlignCenterHorizontal className="mr-1" /> Switch
-                </ToolCard>
-                <ToolCard>
-                  <X className="mr-1" /> Variable
-                </ToolCard>
-                <ToolCard>
-                  <SignOut className="mr-1" /> Output
-                </ToolCard>
-                <ToolCard>
-                  <Code className="mr-1" /> Codeblock
-                </ToolCard>
-              </div>
-            </div>
-            <div className="flex flex-col">
-              <h3 className="text-muted-foreground text-xs font-medium font-mono mb-1">
-                Integration
-              </h3>
-              <div className="grid grid-cols-2 gap-2">
-                <ToolCard>
-                  <OpenAiLogo className="mr-1" /> OpenAI
-                </ToolCard>
-
-                <ToolCard>
-                  <StripeLogo className="mr-1" /> Stripe
-                </ToolCard>
-                <ToolCard>
-                  <GithubLogo className="mr-1" /> GitHub
-                </ToolCard>
-
-                <ToolCard>
-                  <SlackLogo className="mr-1" /> Slack
-                </ToolCard>
-                <ToolCard>
-                  <TelegramLogo className="mr-1" /> Telegram
-                </ToolCard>
-                <ToolCard>
-                  <DiscordLogo className="mr-1" /> Discord
-                </ToolCard>
-                <ToolCard>
-                  <Icons.Supabase className="mr-1 h-3 w-3 grayscale" /> Supabase
-                </ToolCard>
-                <ToolCard>
-                  <Icons.Resend className="mr-1 h-3 w-3 grayscale" />
-                  Resend
-                </ToolCard>
+                {Object.entries(TOOLS).map(([id, tool]) => (
+                  <ToolCard key={id} id={id}>
+                    {tool.icon} {tool.name}
+                  </ToolCard>
+                ))}
               </div>
             </div>
           </div>
@@ -117,12 +130,30 @@ export default function BuilderTools() {
   );
 }
 
-const ToolCard = ({ children }: { children: React.ReactNode }) => {
+export const ToolCard = ({
+  children,
+  id,
+}: {
+  children: React.ReactNode;
+  id: string;
+}) => {
+  const { attributes, listeners, setNodeRef, transform, transition } =
+    useSortable({ id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+  };
+
   return (
-    <Draggable>
-      <div className="cursor-grab border border-input px-2 py-1 flex items-center text-sm bg-background drop-shadow-md">
-        {children}
-      </div>
-    </Draggable>
+    <div
+      ref={setNodeRef}
+      style={style}
+      {...attributes}
+      {...listeners}
+      className="cursor-grab border border-input px-2 py-1 flex items-center text-sm bg-background drop-shadow-md"
+    >
+      {children}
+    </div>
   );
 };

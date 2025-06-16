@@ -218,8 +218,6 @@ func HandleDeployProject(aesCfb encrypt.Encrypt, cfg *config.Config, store *stor
 			}
 		}
 
-		serverUrl := fmt.Sprintf("http://%s:%s", "localhost", serverPort)
-
 		// TODO: deploy project to container
 		if !project.ContainerID.Valid || project.ContainerID.String == "" {
 			// Check if container already exists
@@ -236,6 +234,8 @@ func HandleDeployProject(aesCfb encrypt.Encrypt, cfg *config.Config, store *stor
 			}
 
 			if !existContainerWithName {
+				// Generate a unique domain for the container
+				containerDomain := fmt.Sprintf("%s.b0.dev", project.Slug)
 
 				sendEvent(ctx, project.ID, sse.EventTypeTaskUpdate, AgentData{
 					Message: "b0 is currently creating a container for your project...",
@@ -282,40 +282,14 @@ func HandleDeployProject(aesCfb encrypt.Encrypt, cfg *config.Config, store *stor
 
 				if code.EnvVars != nil {
 					for _, env := range code.EnvVars {
-
 						if env.Key == "B0_PORT" {
 							continue
 						}
 
 						if env.Key == "B0_SERVER_URL" {
-							envs = append(envs, fmt.Sprintf("B0_SERVER_URL=%s", serverUrl))
+							envs = append(envs, fmt.Sprintf("B0_SERVER_URL=https://%s", containerDomain))
 							continue
 						}
-
-						// if env.Key == "B0_GEMINI_KEY" {
-						// 	envs = append(envs, fmt.Sprintf("B0_GEMINI_KEY=%s", cfg.Agent.GeminiKey))
-						// 	continue
-						// }
-
-						// if env.Key == "B0_OPENAI_KEY" {
-						// 	envs = append(envs, fmt.Sprintf("B0_OPENAI_KEY=%s", cfg.Agent.GeminiKey))
-						// 	continue
-						// }
-
-						// if env.Key == "B0_TELEGRAM_KEY" {
-						// 	envs = append(envs, fmt.Sprintf("B0_TELEGRAM_KEY=%s", cfg.Integrations.Telegram.TelegramBotToken))
-						// 	continue
-						// }
-
-						// if env.Key == "B0_DISCORD_KEY" {
-						// 	envs = append(envs, fmt.Sprintf("B0_DISCORD_KEY=%s", cfg.Integrations.Discord.DiscordBotToken))
-						// 	continue
-						// }
-
-						// if env.Key == "B0_DISCORD_CHANNEL_ID" {
-						// 	envs = append(envs, fmt.Sprintf("B0_DISCORD_CHANNEL_ID=%s", cfg.Integrations.Discord.ChannelID))
-						// 	continue
-						// }
 
 						envs = append(envs, fmt.Sprintf("%s=%s", env.Key, env.Value))
 					}
@@ -346,9 +320,11 @@ func HandleDeployProject(aesCfb encrypt.Encrypt, cfg *config.Config, store *stor
 					Env:             envs,
 					Labels: map[string]string{
 						"traefik.enable": "true",
-						fmt.Sprintf("traefik.http.routers.%s.rule", project.Slug):        fmt.Sprintf("Host(`%s`)", strings.Replace(serverUrl, "https://", "", 1)),
-						fmt.Sprintf("traefik.http.routers.%s.entrypoints", project.Slug): "websecure",
-						fmt.Sprintf("traefik.http.routers.%s.tls", project.Slug):         "true",
+						fmt.Sprintf("traefik.http.routers.%s.rule", project.Slug):                      fmt.Sprintf("Host(`%s`)", containerDomain),
+						fmt.Sprintf("traefik.http.routers.%s.entrypoints", project.Slug):               "websecure",
+						fmt.Sprintf("traefik.http.routers.%s.tls", project.Slug):                       "true",
+						fmt.Sprintf("traefik.http.routers.%s.tls.certresolver", project.Slug):          "myresolver",
+						fmt.Sprintf("traefik.http.services.%s.loadbalancer.server.port", project.Slug): serverPort,
 						"project_id":   project.ID,
 						"project_name": project.Name,
 					},

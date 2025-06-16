@@ -48,8 +48,7 @@ RUN pnpm run build
 # Finally, build the production image with minimal footprint
 FROM base
 
-ENV NODE_ENV production
-
+ENV NODE_ENV=production
 
 WORKDIR /app
 
