@@ -218,6 +218,37 @@ func HandleDeployProject(aesCfb encrypt.Encrypt, cfg *config.Config, store *stor
 			}
 		}
 
+		// Early check: if project has ContainerID but container doesn't exist, clear the ContainerID
+		if project.ContainerID.Valid && project.ContainerID.String != "" {
+			containerExists, err := docker.IsContainerExist(ctx, con.FilterContainerOption{
+				ID: project.ContainerID.String,
+			})
+
+			if err != nil {
+				sendEvent(ctx, project.ID, sse.EventTypeTaskFailed, AgentData{
+					Message: "b0 failed to check if container exists",
+					Error:   err.Error(),
+				}, event)
+				return nil
+			}
+
+			if !containerExists {
+				// Container doesn't exist, clear the ContainerID from database
+				project.ContainerID = null.String{}
+				project.Port = null.String{}
+
+				if err = store.ProjectRepo.UpdateProject(ctx, project); err != nil {
+					sendEvent(ctx, project.ID, sse.EventTypeTaskFailed, AgentData{
+						Message: "b0 failed to update project after clearing invalid container ID",
+						Error:   err.Error(),
+					}, event)
+					return nil
+				}
+
+				zerolog.Ctx(ctx).Info().Msgf("cleared invalid container ID for project: %s", project.ID)
+			}
+		}
+
 		// TODO: deploy project to container
 		if !project.ContainerID.Valid || project.ContainerID.String == "" {
 			// Check if container already exists
