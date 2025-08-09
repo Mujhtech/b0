@@ -1,0 +1,59 @@
+# Dynamic configuration file for Traefik
+# This file can be used to define additional routers, services, and middlewares
+
+# TLS Options
+tls:
+  options:
+    default:
+      sslStrategies:
+        - "tls.SniStrict"
+      minVersion: "VersionTLS12"
+      cipherSuites:
+        - "TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384"
+        - "TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305"
+        - "TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256"
+
+# HTTP to HTTPS redirect middleware
+http:
+  middlewares:
+    redirect-to-https:
+      redirectScheme:
+        scheme: https
+        permanent: true
+
+    secure-headers:
+      headers:
+        accessControlAllowMethods:
+          - GET
+          - OPTIONS
+          - PUT
+          - POST
+          - DELETE
+        accessControlMaxAge: 100
+        hostsProxyHeaders:
+          - "X-Forwarded-Host"
+        referrerPolicy: "same-origin"
+        sslRedirect: true
+        stsSeconds: 31536000
+        stsIncludeSubdomains: true
+        stsPreload: true
+        forceSTSHeader: true
+        contentTypeNosniff: true
+        browserXssFilter: true
+        customFrameOptionsValue: "SAMEORIGIN"
+
+  # Example routers and services can be defined here
+  # routers:
+  #   api:
+  #     rule: "Host(`api.example.com`)"
+  #     middlewares:
+  #       - secure-headers
+  #     service: api
+  #     tls:
+  #       certResolver: letsencrypt
+  #
+  # services:
+  #   api:
+  #     loadBalancer:
+  #       servers:
+  #         - url: "http://backend:5555"

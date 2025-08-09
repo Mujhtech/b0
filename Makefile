@@ -5,3 +5,6 @@ run-backend:
 # Run the frontend
 run-frontend:
 	cd frontend && pnpm run dev
+
+run-dev:
+	docker compose -f docker-compose.dev.yaml up -d
