@@ -80,7 +80,6 @@ services:
       - "traefik.http.routers.backend.rule=Host(`b0-backend.local`)"
       - "traefik.http.routers.backend.entrypoints=web"
       - "traefik.http.services.backend.loadbalancer.server.port=5555"
-      - "traefik.http.routers.backend.middlewares=secure-headers@file"
 
   frontend:
     container_name: b0-frontend
@@ -106,7 +105,6 @@ services:
       - "traefik.http.routers.frontend.rule=Host(`b0-frontend.local`)"
       - "traefik.http.routers.frontend.entrypoints=web"
       - "traefik.http.services.frontend.loadbalancer.server.port=3000"
-      - "traefik.http.routers.frontend.middlewares=secure-headers@file"
 
 volumes:
   postgres-data:
