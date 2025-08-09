@@ -97,8 +97,8 @@ services:
     ports:
       - 3000:3000
     environment:
-      - BACKEND_URL=http://backend.b0.orb.local/api
-      - PLATFORM_URL=http://backend.b0.orb.local/api/platform
+      - BACKEND_URL=http://b0-backend.local/api
+      - PLATFORM_URL=http://b0-backend.local/api/platform
     networks:
       - web
     labels:
