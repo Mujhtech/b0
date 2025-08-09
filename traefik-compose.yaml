@@ -15,7 +15,11 @@ services:
       # Docker Provider
       - "--providers.docker=true"
       - "--providers.docker.exposedbydefault=false"
-      - "--providers.docker.network=b0-network"
+      - "--providers.docker.network=web"
+      
+      # File Provider for dynamic config
+      - "--providers.file.directory=/etc/traefik/dynamic"
+      - "--providers.file.watch=true"
 
       # Entrypoints
       - "--entrypoints.web.address=:80"
@@ -49,7 +53,7 @@ services:
       - ./traefik/letsencrypt:/letsencrypt
       - ./traefik/config:/etc/traefik/dynamic:ro
     networks:
-      - b0-network
+      - web
     extra_hosts:
       - "host.docker.internal:host-gateway"
     labels:
@@ -59,7 +63,7 @@ services:
       - "traefik.http.services.traefik.loadbalancer.server.port=8080"
 
 networks:
-  b0-network:
+  web:
     external: true
 
 volumes:
