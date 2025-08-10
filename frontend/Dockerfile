@@ -58,4 +58,4 @@ COPY --from=build /app /app
 
 EXPOSE 3000
 
-CMD ["pnpm", "run", "start", "--host", "0.0.0.0"]
+CMD ["pnpm", "run", "start"]
