@@ -1,0 +1,80 @@
+# -----------------------------------------------------------------------------
+# Tasks generated from existing GitHub Actions workflows
+# You can tweak commands / dependencies to better fit Dagryn.
+# -----------------------------------------------------------------------------
+
+[workflow]
+name = "default"
+default = true
+
+[plugins]
+golangci-lint = "github:golangci/golangci-lint@v2.8.0"
+golang-vul = "go:golang.org/x/vuln/cmd/govulncheck@latest"
+
+[tasks.frontend-install]
+workdir = "frontend"
+command = "pnpm install --frozen-lockfile"
+inputs = ["package.json", "pnpm-lock.yaml"]
+outputs = ["node_modules/**"]
+timeout = "5m"
+
+[tasks.frontend-typecheck]
+workdir = "frontend"
+command = "pnpm run typecheck"
+needs = ["frontend-install"]
+inputs = ["src/**", ".eslintrc*", "eslint.config.*", "package.json"]
+timeout = "5m"
+
+[tasks.frontend-test]
+workdir = "frontend"
+command = "pnpm run test"
+needs = ["frontend-install"]
+inputs = ["src/**", "test/**", "tests/**", "__tests__/**", "package.json"]
+timeout = "5m"
+
+
+[tasks.backend-install]
+workdir = "backend"
+command = "go mod download && go mod verify"
+inputs = ["go.mod", "go.sum"]
+timeout = "5m"
+
+
+[tasks.backend-build]
+workdir = "backend"
+command = "go build -o b0 ./cmd"
+needs = ["backend-install"]
+inputs = ["go.mod", "go.sum", "**/*.go"]
+timeout = "10m"
+outputs = ["bin/**"]
+
+
+[tasks.backend-vet-and-lint]
+workdir = "backend"
+uses = ["golangci-lint"]
+command = "go vet ./... && golangci-lint run ./..."
+needs = ["backend-install", "backend-build"]
+inputs = ["**/*.go", ".golangci.yml", ".golangci.yaml"]
+timeout = "10m"
+
+
+[tasks.backend-test]
+workdir = "backend"
+command = "go test -v -race -coverprofile=coverage.out ./..."
+needs = ["backend-install", "backend-build"]
+inputs = ["**/*.go", "go.mod", "go.sum"]
+outputs = ["coverage.out"]
+timeout = "10m"
+
+
+[tasks.backend-vulnerability-scan]
+command = "govulncheck -C ./... -json > gosec-report.json"
+uses = ["golang-vul"]
+needs = ["backend-install", "backend-build"]
+inputs = ["**/*.go", "go.mod", "go.sum"]
+outputs = ["gosec-report.json"]
+timeout = "5m"
+
+[workflow.trigger]
+[workflow.trigger.push]
+branches = ["main"]
