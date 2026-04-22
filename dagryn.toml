@@ -8,12 +8,16 @@ name = "default"
 default = true
 
 [plugins]
+setup-node = "official:setup-node@v0.2.1"
+setup-pnpm = "official:setup-pnpm@v0.2.1"
+setup-go = "official:setup-go@v0.2.1"
 golangci-lint = "github:golangci/golangci-lint@v2.8.0"
 golang-vul = "go:golang.org/x/vuln/cmd/govulncheck@latest"
 
 [tasks.frontend-install]
 workdir = "frontend"
 command = "pnpm install --frozen-lockfile"
+uses = ["setup-node", "setup-pnpm"]
 inputs = ["package.json", "pnpm-lock.yaml"]
 outputs = ["node_modules/**"]
 timeout = "5m"
@@ -21,6 +25,7 @@ timeout = "5m"
 [tasks.frontend-typecheck]
 workdir = "frontend"
 command = "pnpm run typecheck"
+uses = ["setup-node", "setup-pnpm"]
 needs = ["frontend-install"]
 inputs = ["src/**", ".eslintrc*", "eslint.config.*", "package.json"]
 timeout = "5m"
@@ -28,6 +33,7 @@ timeout = "5m"
 [tasks.frontend-test]
 workdir = "frontend"
 command = "pnpm run test"
+uses = ["setup-node", "setup-pnpm"]
 needs = ["frontend-install"]
 inputs = ["src/**", "test/**", "tests/**", "__tests__/**", "package.json"]
 timeout = "5m"
@@ -35,6 +41,7 @@ timeout = "5m"
 
 [tasks.backend-install]
 workdir = "backend"
+uses = ["setup-go"]
 command = "go mod download && go mod verify"
 inputs = ["go.mod", "go.sum"]
 timeout = "5m"
@@ -42,6 +49,7 @@ timeout = "5m"
 
 [tasks.backend-build]
 workdir = "backend"
+uses = ["setup-go"]
 command = "go build -o b0 ./cmd"
 needs = ["backend-install"]
 inputs = ["go.mod", "go.sum", "**/*.go"]
@@ -51,7 +59,7 @@ outputs = ["bin/**"]
 
 [tasks.backend-vet-and-lint]
 workdir = "backend"
-uses = ["golangci-lint"]
+uses = ["setup-go", "golangci-lint"]
 command = "go vet ./... && golangci-lint run ./..."
 needs = ["backend-install", "backend-build"]
 inputs = ["**/*.go", ".golangci.yml", ".golangci.yaml"]
@@ -60,6 +68,7 @@ timeout = "10m"
 
 [tasks.backend-test]
 workdir = "backend"
+uses = ["setup-go"]
 command = "go test -v -race -coverprofile=coverage.out ./..."
 needs = ["backend-install", "backend-build"]
 inputs = ["**/*.go", "go.mod", "go.sum"]
@@ -69,7 +78,7 @@ timeout = "10m"
 
 [tasks.backend-vulnerability-scan]
 command = "govulncheck -C ./... -json > gosec-report.json"
-uses = ["golang-vul"]
+uses = ["setup-go", "golang-vul"]
 needs = ["backend-install", "backend-build"]
 inputs = ["**/*.go", "go.mod", "go.sum"]
 outputs = ["gosec-report.json"]
