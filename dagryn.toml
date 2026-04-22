@@ -77,6 +77,7 @@ timeout = "10m"
 
 
 [tasks.backend-vulnerability-scan]
+workdir = "backend"
 command = "govulncheck ./... -json > gosec-report.json"
 uses = ["setup-go", "golang-vul"]
 needs = ["backend-install", "backend-build"]
