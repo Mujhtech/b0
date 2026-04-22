@@ -32,7 +32,7 @@ timeout = "5m"
 
 [tasks.frontend-test]
 workdir = "frontend"
-command = "pnpm run test"
+command = "pnpm run test:run"
 uses = ["setup-node", "setup-pnpm"]
 needs = ["frontend-install"]
 inputs = ["src/**", "test/**", "tests/**", "__tests__/**", "package.json"]
